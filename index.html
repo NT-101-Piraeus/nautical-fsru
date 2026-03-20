@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚓ Nautical OS V3.0 - FSRU Technical Suite</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        :root { --marine-blue: #0A2463; --safety-red: #D92525; --tech-gray: #f4f7f6; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--tech-gray); margin: 0; padding: 20px; }
+        .app-grid { display: grid; grid-template-columns: 1fr 1.5fr; gap: 20px; max-width: 1200px; margin: auto; }
+        
+        /* Control Panel */
+        .control-panel { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border-top: 5px solid var(--marine-blue); }
+        select, textarea, input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 6px; border: 1px solid #ccc; font-size: 14px; }
+        button { width: 100%; padding: 15px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn-send { background: var(--marine-blue); color: white; margin-top: 15px; }
+        .btn-pdf { background: #28a745; color: white; margin-bottom: 20px; }
+
+        /* Journal Report */
+        #official-report { background: white; padding: 40px; border-radius: 8px; min-height: 800px; border: 1px solid #ddd; }
+        .report-header { border-bottom: 3px solid var(--marine-blue); display: flex; justify-content: space-between; padding-bottom: 10px; margin-bottom: 25px; }
+        .log-entry { border-left: 4px solid var(--marine-blue); padding: 15px; background: #fafafa; margin-bottom: 15px; }
+        .hash-tag { font-family: monospace; font-size: 11px; color: #777; background: #eee; padding: 5px; display: block; margin-top: 8px; }
+        .simops-alert { background: #fff3cd; color: #856404; padding: 10px; border-radius: 5px; font-size: 13px; margin-bottom: 20px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="app-grid">
+    <div class="control-panel">
+        <h2 style="color: var(--marine-blue); margin-top:0;">🛠️ Engineer Control</h2>
+        
+        <label>Work Package (FSRU Scope)</label>
+        <select id="task-cat" onchange="updateProtocols()">
+            <option value="">-- Επιλογή Εργασίας --</option>
+            <option value="HOT WORKS">🔥 Hot Works & Welding</option>
+            <option value="LIFTING">🏗️ Lifting Operations</option>
+            <option value="NDT">🧪 NDT & Testing (ITP)</option>
+            <option value="ISOLATION">🔐 System Isolation / LOTO</option>
+        </select>
+
+        <label>Safety Protocol / Status</label>
+        <select id="task-status">
+            <option value="">-- Αναμονή Κατηγορίας --</option>
+        </select>
+
+        <textarea id="tech-notes" rows="4" placeholder="Τεχνικές Σημειώσεις (π.χ. Spool ID, WPS Number)..."></textarea>
+        
+        <button class="btn-send" onclick="sendToCloud()">🚀 ΚΑΤΑΧΩΡΙΣΗ ΣΤΟ JOURNAL</button>
+    </div>
+
+    <div class="report-view">
+        <button class="btn-pdf" onclick="exportDossier()">📥 EXPORT TECHNICAL DOSSIER (PDF)</button>
+        
+        <div id="official-report">
+            <div class="report-header">
+                <div>
+                    <h2 style="margin:0; color: var(--marine-blue);">FSRU ALEXANDROUPOLIS</h2>
+                    <p style="margin:5px 0;"><strong>Project Journal:</strong> Technical Safety Supervision</p>
+                    <small>Supervisor: <strong>Matthaios Sykiniotis</strong></small>
+                </div>
+                <div style="text-align:right; font-size:12px;">
+                    <strong>NAUTICAL TECHNOLOGY</strong><br>DNV & GAC COMPLIANT
+                </div>
+            </div>
+
+            <div class="simops-alert">⚠️ ACTIVE SIMOPS: Concurrent Piping Installation & Cryogenic Insulation.</div>
+
+            <div id="journal-entries">
+                <p style="text-align:center; color:#999;">Φόρτωση δεδομένων από το Cloud...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_URL = "https://omdarjncczohpfzrqqhr.supabase.co/rest/v1/safety_logs";
+    const API_KEY = "sb_publishable_V-nfUDy5MxEG4SlXkisFBg_GBlD_4Y9";
+
+    // 1. Δυναμικά Πρωτόκολλα βάσει Scope
+    function updateProtocols() {
+        const cat = document.getElementById('task-cat').value;
+        const status = document.getElementById('task-status');
+        status.innerHTML = '';
+        
+        let options = [];
+        if(cat === 'HOT WORKS') options = ['Gas Free Certified', 'WPS/PQR Alignment Checked', 'Firewatch Deployed'];
+        else if(cat === 'LIFTING') options = ['Offshore Crane SWL Verified', 'Certified Rigging Gear', 'SIMOPS Cleared'];
+        else if(cat === 'NDT') options = ['VT/PT Inspection Passed', 'Radiography Area Evacuated', 'ITP Stage Validated'];
+        else if(cat === 'ISOLATION') options = ['LOTO Applied', 'Zero Energy Verified', 'Inerting Oxygen <1%'];
+
+        options.forEach(opt => {
+            let el = document.createElement('option');
+            el.value = opt; el.textContent = opt;
+            status.appendChild(el);
+        });
+    }
+
+    // 2. Αποστολή στο Supabase
+    async function sendToCloud() {
+        const payload = {
+            officer_id: "Matthaios_Sykiniotis", // Θα γίνει δυναμικό με το Auth
+            issue_description: `[${document.getElementById('task-cat').value}] ${document.getElementById('task-status').value} - ${document.getElementById('tech-notes').value}`,
+            encryption_hash: "FSRU-" + Math.random().toString(36).substring(7).toUpperCase()
+        };
+
+        const res = await fetch(API_URL, {
+            method: 'POST',
+            headers: { "apikey": API_KEY, "Authorization": `Bearer ${API_KEY}`, "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+        if(res.ok) { fetchJournal(); document.getElementById('tech-notes').value = ""; }
+    }
+
+    // 3. Φόρτωση Journal
+    async function fetchJournal() {
+        const res = await fetch(`${API_URL}?select=*&limit=10`, {
+            headers: { "apikey": API_KEY, "Authorization": `Bearer ${API_KEY}` }
+        });
+        const data = await res.json();
+        document.getElementById('journal-entries').innerHTML = data.reverse().map(entry => `
+            <div class="log-entry">
+                <strong style="color:var(--marine-blue);">${entry.issue_description}</strong><br>
+                <small>🕒 ${new Date(entry.created_at).toLocaleString('el-GR')}</small>
+                <span class="hash-tag">🔐 INTEGRITY KEY: ${entry.encryption_hash}</span>
+            </div>
+        `).join('');
+    }
+
+    // 4. Export PDF
+    function exportDossier() {
+        const element = document.getElementById('official-report');
+        html2pdf().from(element).set({ margin:10, filename:'FSRU_Tech_Dossier.pdf', html2canvas:{scale:2} }).save();
+    }
+
+    fetchJournal();
+</script>
+</body>
+</html>

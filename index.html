@@ -3,157 +3,140 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nautical OS V6.0 - Professional Load Testing Suite</title>
+    <title>Nautical OS V7.0 - Multi-Service Engineering Suite</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        :root { --marine: #0A2463; --danger: #D92525; --warning: #ffc107; --tech: #F4F7F6; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--tech); padding: 20px; color: #333; }
-        .fleet-container { background: var(--marine); color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
-        .fleet-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-top: 15px; }
-        .ship-card { background: rgba(255,255,255,0.1); padding: 12px; border-radius: 8px; text-align: center; cursor: pointer; transition: 0.3s; font-size: 13px; }
-        .ship-card.active { border: 2px solid var(--warning); background: rgba(255,255,255,0.25); }
+        :root { --marine: #0A2463; --tech-gray: #F4F7F6; --action: #17a2b8; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--tech-gray); padding: 15px; }
+        
+        /* Dashboard */
+        .header-panel { background: var(--marine); color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+        .service-nav { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-top: 15px; }
+        .nav-btn { background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px; text-align: center; cursor: pointer; border: 1px solid rgba(255,255,255,0.3); transition: 0.3s; font-weight: bold; }
+        .nav-btn.active { background: var(--action); border-color: white; }
 
-        .grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 20px; }
-        .panel { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        h3 { color: var(--marine); border-bottom: 2px solid var(--marine); padding-bottom: 10px; margin-top: 0; }
+        .main-grid { display: grid; grid-template-columns: 1fr 1.3fr; gap: 20px; }
+        .input-card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         
-        select, input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
-        .checklist-box { background: #fdfdfd; border: 1px solid #eee; padding: 15px; border-radius: 5px; margin-top: 15px; display: none; }
-        .check-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
+        select, input, textarea { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
+        .check-item { display: flex; align-items: center; gap: 10px; padding: 8px; border-bottom: 1px solid #f9f9f9; font-size: 13.5px; }
         
-        button { width: 100%; padding: 15px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.3s; }
-        .btn-main { background: var(--marine); color: white; }
-        .btn-pdf { background: #28a745; color: white; margin-bottom: 15px; }
+        #report-box { background: white; padding: 40px; border: 1px solid #ddd; min-height: 800px; position: relative; }
+        .stamp-block { margin-top: 50px; border-top: 2px solid var(--marine); padding-top: 10px; font-family: monospace; font-size: 12px; }
         
-        #report { background: white; padding: 50px; border: 1px solid #ddd; min-height: 800px; }
-        .header { display: flex; justify-content: space-between; border-bottom: 3px solid var(--marine); margin-bottom: 30px; }
-        .stamp { margin-top: 60px; border-top: 2px solid var(--marine); padding-top: 10px; font-family: 'Courier New', monospace; font-size: 13px; color: var(--marine); }
+        .btn-exe { background: var(--marine); color: white; border: none; padding: 15px; border-radius: 5px; width: 100%; cursor: pointer; font-weight: bold; }
+        .btn-pdf { background: #28a745; color: white; margin-bottom: 15px; border:none; padding:10px; border-radius:5px; cursor:pointer; width:100%; font-weight:bold; }
     </style>
 </head>
 <body>
 
-<div class="fleet-container">
-    <h2 style="margin:0;">🚢 Nautical Technology | Fleet Asset Management</h2>
-    <div class="fleet-grid">
-        <div class="ship-card" onclick="selectShip('FSRU ALEXANDROUPOLIS')">FSRU Alexandroupolis</div>
-        <div class="ship-card" onclick="selectShip('RIGEL III')">Rigel III</div>
-        <div class="ship-card" onclick="selectShip('3B DESTINY')">3B Destiny</div>
-        <div class="ship-card" onclick="selectShip('ARTEMIS')">Artemis</div>
+<div class="header-panel">
+    <h2 style="margin:0;">⚓ Nautical Technology Management</h2>
+    <div class="service-nav">
+        <div class="nav-btn" onclick="setMode('ship')">🚢 Τ.Α. Πλοίων</div>
+        <div class="nav-btn" onclick="setMode('corp')">🏢 Τ.Α. Επιχειρήσεων</div>
+        <div class="nav-btn" onclick="setMode('load')">⚖️ Load Testing</div>
+        <div class="nav-btn" onclick="setMode('utm')">📏 UTM Measurements</div>
     </div>
 </div>
 
-<div class="grid">
-    <div class="panel">
-        <h3>🔧 Load Testing & Inspection</h3>
-        <label>Τύπος Υπηρεσίας (Service Category)</label>
-        <select id="service-type" onchange="loadServiceChecklist()">
-            <option value="">-- Επιλέξτε Υπηρεσία --</option>
-            <option value="cargo">Cargo Gear Inspection & Load Testing</option>
-            <option value="access">Means of Access Inspection & Load Testing</option>
-            <option value="winch">Mooring Winches Brake Test (BHC)</option>
-            <option value="lashing">Ramps, Stoppers & Pad Eye Testing</option>
-            <option value="bollard">Bollard Pull Test</option>
-        </select>
-
-        <div id="service-checklist" class="checklist-box">
-            <h4 id="service-title" style="margin:0 0 10px 0; color: #17a2b8;">Technical Checks</h4>
-            <div id="checklist-items"></div>
-            <button class="btn-main" style="background:#17a2b8;" onclick="submitService()">📝 Confirm & Log Service</button>
+<div class="main-grid">
+    <div class="input-card">
+        <h3 id="mode-title">Επιλέξτε Κατηγορία</h3>
+        <div id="dynamic-inputs">
+            </div>
+        <div id="checklist-area" style="margin-top:20px; display:none;">
+            <h4 style="color:var(--action);">📋 Safety & Tech Checklist</h4>
+            <div id="checks"></div>
+            <button class="btn-exe" onclick="logEntry()">Καταχώριση στο Report</button>
         </div>
     </div>
 
-    <div class="display">
-        <button class="btn-pdf" onclick="makePDF()">📥 Download Official Certificate (PDF)</button>
-        <div id="report">
-            <div class="header">
+    <div>
+        <button class="btn-pdf" onclick="generatePDF()">📥 Εξαγωγή Πιστοποιητικού / Report (PDF)</button>
+        <div id="report-box">
+            <div style="display:flex; justify-content:space-between; border-bottom:3px solid var(--marine); padding-bottom:10px;">
                 <div>
-                    <h1 id="rep-ship" style="margin:0; font-size: 24px;">SELECT VESSEL</h1>
-                    <p style="margin:5px 0; font-weight: bold; color: #666;">CERTIFICATION & INSPECTION LOG</p>
-                    <small>Date: <span id="current-date"></span></small>
+                    <h2 style="margin:0; color:var(--marine);">OFFICIAL TECHNICAL REPORT</h2>
+                    <p style="margin:5px 0;">Project: <span id="cur-proj">---</span></p>
                 </div>
-                <div style="text-align:right;">
-                    <strong style="color:var(--marine);">NAUTICAL TECHNOLOGY</strong><br>
-                    <small>DNV & GAC COMPLIANT SERVICE</small>
+                <div style="text-align:right; font-size:11px;">
+                    <strong>NAUTICAL TECHNOLOGY</strong><br>Safety & Engineering Services
                 </div>
             </div>
+            
+            <div id="content-log" style="margin-top:30px; min-height:400px;"></div>
 
-            <div id="log-content">
-                <p style="text-align:center; color:#999; margin-top:100px;">No services logged for the current session.</p>
-            </div>
-
-            <div class="stamp">
-                <strong>MATTHAIOS SYKINIOΤIS</strong><br>
-                MECH. ENGINEER (T.E.E. 35144)<br>
-                NAUTICAL TECHNOLOGY SAFETY SUPERVISOR
+            <div class="stamp-block">
+                <strong>ΜΑΤΘΑΙΟΣ ΣΥΚΙΝΙΩΤΗΣ</strong><br>
+                ΔΙΠΛ. ΜΗΧΑΝΟΛΟΓΟΣ ΜΗΧΑΝΙΚΟΣ (Τ.Ε.Ε. 35144)<br>
+                ΤΗΛ: 6906 170 294 | ΑΦΜ: 132251947
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    document.getElementById('current-date').innerText = new Date().toLocaleDateString('el-GR');
-    let activeVessel = "";
-
-    const serviceData = {
-        "cargo": ["Visual inspection of wire ropes & sheaves", "Static load test (125% of SWL)", "Dynamic test (110% of SWL)", "Crack detection on hooks (NDT)"],
-        "access": ["Inspection of gangway/accommodation ladder", "Load test with water bags/weights", "Winch & wire rope integrity check"],
-        "winch": ["Brake lining thickness measurement", "Brake Holding Capacity (BHC) Verification", "Hydraulic pressure & leak test"],
-        "lashing": ["Visual check of stoppers & lashing points", "Pull test on pad eyes", "Ramp hydraulic function test"],
-        "bollard": ["Tug pull capacity verification", "Bollard structural integrity inspection", "Safe working load confirmation"]
+    let currentMode = '';
+    const data = {
+        ship: {
+            title: "Τεχνικός Ασφαλείας Πλοίων (Π.Δ. 70/90)",
+            services: ["Hot Works Supervision", "Confined Space Entry", "Gas Free Verification", "SIMOPS Monitoring"],
+            checks: ["Έλεγχος Gas Free πιστοποιητικού", "Βαλβίδες αντεπιστροφής & φλογοπαγίδες", "Παρουσία πυροσβέστη με μάνικα υπό πίεση"]
+        },
+        corp: {
+            title: "Τεχνικός Ασφαλείας Επιχειρήσεων (Ν. 3850/2010)",
+            services: ["Εκτίμηση Επαγγελματικού Κινδύνου", "Έλεγχος Πυρασφάλειας", "Εκπαίδευση Προσωπικού"],
+            checks: ["Σήμανση εξόδων κινδύνου", "Έλεγχος πυροσβεστήρων & φωτισμού ασφαλείας", "Επικαιροποίηση Βιβλίου Ατυχημάτων"]
+        },
+        load: {
+            title: "Load Testing Services",
+            services: ["Cargo Gear", "Means of Access", "Mooring Winches (BHC)", "Bollard Pull Test"],
+            checks: ["Στατική δοκιμή 125% SWL", "Δυναμική δοκιμή 110% SWL", "Πιστοποίηση βαρών δοκιμής"]
+        },
+        utm: {
+            title: "UTM (Ultrasonic Thickness Measurement)",
+            services: ["Hull Gauging", "Tank Inspection", "Pipe Wall Thickness"],
+            checks: ["Βαθμονόμηση (Calibration) οργάνου", "Καθαρισμός σημείων μέτρησης", "Καταγραφή ελάχιστου εναπομείναντος πάχους"]
+        }
     };
 
-    function selectShip(name) {
-        activeVessel = name;
-        document.getElementById('rep-ship').innerText = name;
-        document.querySelectorAll('.ship-card').forEach(c => c.classList.remove('active'));
+    function setMode(mode) {
+        currentMode = mode;
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
         event.currentTarget.classList.add('active');
-    }
-
-    function loadServiceChecklist() {
-        const type = document.getElementById('service-type').value;
-        const box = document.getElementById('service-checklist');
-        const items = document.getElementById('checklist-items');
-        if(!type) { box.style.display = 'none'; return; }
+        document.getElementById('mode-title').innerText = data[mode].title;
         
-        items.innerHTML = serviceData[type].map(check => `
-            <div class="check-item">
-                <input type="checkbox" class="srv-check" data-desc="${check}">
-                <span>${check}</span>
-            </div>
+        let html = `<input type="text" id="proj-name" placeholder="Όνομα Πλοίου / Επιχείρησης" oninput="document.getElementById('cur-proj').innerText=this.value">`;
+        html += `<select id="sub-service"><option value="">-- Επιλέξτε Υπηρεσία --</option>`;
+        data[mode].services.forEach(s => html += `<option value="${s}">${s}</option>`);
+        html += `</select>`;
+        
+        document.getElementById('dynamic-inputs').innerHTML = html;
+        document.getElementById('checks').innerHTML = data[mode].checks.map(c => `
+            <div class="check-item"><input type="checkbox" class="c-box" data-val="${c}"> ${c}</div>
         `).join('');
-        box.style.display = 'block';
+        document.getElementById('checklist-area').style.display = 'block';
     }
 
-    function submitService() {
-        if(!activeVessel) return alert("Select Vessel first!");
-        const checks = Array.from(document.querySelectorAll('.srv-check:checked')).map(c => c.getAttribute('data-desc'));
-        if(checks.length === 0) return alert("Select at least one technical check!");
+    function logEntry() {
+        const service = document.getElementById('sub-service').value;
+        const checks = Array.from(document.querySelectorAll('.c-box:checked')).map(c => c.getAttribute('data-val'));
+        if(!service || checks.length === 0) return alert("Συμπληρώστε Υπηρεσία και Checkbox!");
 
-        const log = document.getElementById('log-content');
-        if(log.innerHTML.includes("No services")) log.innerHTML = '';
-        
-        const serviceName = document.getElementById('service-type').options[document.getElementById('service-type').selectedIndex].text;
-        
-        const entry = `
-            <div style="margin-bottom:25px; border-bottom:1px solid #eee; padding-bottom:10px;">
-                <h4 style="margin:0; color:var(--marine); text-transform:uppercase;">● ${serviceName}</h4>
-                <ul style="font-size:14px; margin:10px 0; color:#444;">
-                    ${checks.map(c => `<li>${c}</li>`).join('')}
-                </ul>
-                <div style="font-size:11px; color:green; font-weight:bold;">STATUS: VERIFIED | INTEGRITY HASH: NT-${Math.random().toString(36).substr(2, 9).toUpperCase()}</div>
+        const log = document.getElementById('content-log');
+        log.innerHTML += `
+            <div style="margin-bottom:20px; border-bottom:1px solid #eee; padding-bottom:10px;">
+                <h4 style="margin:0; color:var(--marine);">${service}</h4>
+                <ul style="font-size:13px; margin:10px 0;">${checks.map(c => `<li>${c}</li>`).join('')}</ul>
+                <small style="color:green;">Status: Verified | Security Hash: NT-${Math.random().toString(36).substr(2, 7).toUpperCase()}</small>
             </div>
         `;
-        log.innerHTML += entry;
     }
 
-    function makePDF() {
-        const element = document.getElementById('report');
-        html2pdf().from(element).set({
-            margin: 10,
-            filename: activeVessel + '_Inspection_Report.pdf',
-            html2canvas: { scale: 2 },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        }).save();
+    function generatePDF() {
+        const e = document.getElementById('report-box');
+        html2pdf().from(e).set({ margin:10, filename:'Nautical_Tech_Report.pdf', html2canvas:{scale:2} }).save();
     }
 </script>
 </body>

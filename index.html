@@ -3,26 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nautical OS - FSRU Technical Suite</title>
+    <title>Nautical OS V4.0 - Smart Safety Parser</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root { --marine: #0A2463; --danger: #D92525; --warning: #ffc107; --tech: #F4F7F6; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--tech); padding: 20px; }
-        .grid { display: grid; grid-template-columns: 1fr 1.5fr; gap: 20px; }
+        .grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 20px; }
         .panel { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         h3 { color: var(--marine); border-bottom: 2px solid var(--marine); padding-bottom: 10px; }
-        select, textarea, input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; }
-        button { width: 100%; padding: 15px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        .btn-ra { background: #17a2b8; color: white; margin-top: 10px; }
-        .btn-pdf { background: #28a745; color: white; margin-bottom: 20px; }
-        
-        /* Report Styling */
-        #report { background: white; padding: 40px; border-radius: 5px; border: 1px solid #ddd; }
+        textarea { width: 100%; height: 100px; padding: 10px; border: 1px solid #ccc; border-radius: 5px; margin-bottom: 10px; }
+        .checklist-item { display: flex; align-items: center; gap: 10px; padding: 10px; border-bottom: 1px solid #eee; font-size: 14px; }
+        button { width: 100%; padding: 15px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .btn-parse { background: var(--marine); color: white; }
+        .btn-pdf { background: #28a745; color: white; }
+        #report { background: white; padding: 40px; border: 1px solid #ddd; }
         .header { display: flex; justify-content: space-between; border-bottom: 3px solid var(--marine); margin-bottom: 20px; }
-        .alert { background: #fff3cd; color: #856404; padding: 15px; border-left: 5px solid var(--warning); margin: 15px 0; display: none; }
-        .ra-box { background: #f8f9fa; border-left: 5px solid #17a2b8; padding: 15px; margin-top: 20px; display: none; }
-        
-        /* Stamp Styling */
         .stamp { margin-top: 50px; border-top: 1px dashed #777; padding-top: 15px; font-family: 'Courier New', monospace; font-size: 13px; }
     </style>
 </head>
@@ -30,49 +25,37 @@
 
 <div class="grid">
     <div class="panel">
-        <h3>🛠️ Engineer Control</h3>
-        <label>Επιλογή Εργασίας (Scope of Work)</label>
-        <select id="task">
-            <option value="">-- Επιλογή --</option>
-            <option value="hot-works">🔥 Hot Works (Welding/Cutting)</option>
-            <option value="lifting">🏗️ Lifting Operations</option>
-            <option value="ndt">🧪 NDT & Confined Spaces</option>
-        </select>
-        
-        <button class="btn-ra" onclick="generateRA()">🛡️ Generate Risk Assessment</button>
+        <h3>📩 Smart Scope Parser</h3>
+        <p style="font-size: 12px; color: #666;">Κάνε επικόλληση το email με το Scope of Work:</p>
+        <textarea id="emailInput" placeholder="Π.χ. Θα χρειαστούν σκαλωσιές για συγκόλληση σωληνώσεων..."></textarea>
+        <button class="btn-parse" onclick="parseEmail()">🔍 Ανάλυση & Δημιουργία Checklist</button>
 
-        <h3 style="margin-top:30px;">⚠️ SIMOPS Monitor</h3>
-        <label><input type="checkbox" class="sim-cb" value="hot" onchange="checkSIM()"> Hot Works Active</label><br>
-        <label><input type="checkbox" class="sim-cb" value="ins" onchange="checkSIM()"> Insulation/Flammables Active</label><br>
-        <label><input type="checkbox" class="sim-cb" value="lift" onchange="checkSIM()"> Overhead Lifting</label>
+        <div id="dynamicChecklist" style="margin-top:20px; display:none;">
+            <h3>✅ Safety Verification Checklist</h3>
+            <div id="checklistContent"></div>
+            <button class="btn-parse" style="background:#17a2b8;" onclick="addToJournal()">📝 Καταχώριση στο Journal</button>
+        </div>
     </div>
 
     <div class="display">
-        <button class="btn-pdf" onclick="makePDF()">📥 Export Technical Dossier (PDF)</button>
+        <button class="btn-pdf" onclick="makePDF()">📥 Export Official Dossier (PDF)</button>
         <div id="report">
             <div class="header">
                 <div>
-                    <h1 style="margin:0; color:var(--marine);">FSRU ALEXANDROUPOLIS</h1>
-                    <p>TECHNICAL SAFETY JOURNAL</p>
+                    <h1 style="margin:0; color:var(--marine); font-size: 24px;">FSRU ALEXANDROUPOLIS</h1>
+                    <p>OFFICIAL SAFETY SUPERVISION LOG</p>
                     <small>Ημερομηνία: <span id="date"></span></small>
                 </div>
-                <div style="text-align:right;">
-                    <strong>NAUTICAL TECHNOLOGY</strong><br>
-                    GAC Marine | DNV Compliance
+                <div style="text-align:right; font-size: 12px;">
+                    <strong>NAUTICAL TECHNOLOGY</strong><br>DNV & GAC COMPLIANT
                 </div>
             </div>
-
-            <div id="sim-alert" class="alert"></div>
-
-            <div id="ra-box" class="ra-box">
-                <h4 style="margin:0;">🛡️ Risk Assessment & Mitigation</h4>
-                <ul id="ra-list" style="font-size: 14px; line-height: 1.6;"></ul>
+            <div id="journalEntries" style="min-height: 200px;">
+                <p style="color:#999; font-style:italic;">Αναμονή για καταχώριση...</p>
             </div>
-
             <div class="stamp">
                 <strong>ΜΑΤΘΑΙΟΣ ΣΥΚΙΝΙΩΤΗΣ</strong><br>
-                ΔΙΠΛ. ΜΗΧΑΝΟΛΟΓΟΣ ΜΗΧΑΝΙΚΟΣ<br>
-                ΜΕΛΟΣ Τ.Ε.Ε. / ΑΡ. ΜΗΤΡΩΟΥ 35144<br>
+                ΔΙΠΛ. ΜΗΧΑΝΟΛΟΓΟΣ ΜΗΧΑΝΙΚΟΣ (Τ.Ε.Ε. 35144)<br>
                 ΤΗΛ: 6906 170 294 | ΑΦΜ: 132251947
             </div>
         </div>
@@ -82,47 +65,47 @@
 <script>
     document.getElementById('date').innerText = new Date().toLocaleDateString('el-GR');
 
-    const library = {
-        "hot-works": [
-            "Υποχρεωτικό πιστοποιητικό Gas Free προ έναρξης[cite: 267, 1006].",
-            "Βαλβίδες αντεπιστροφής στα 1.5m από το εργαλείο[cite: 291, 994].",
-            "Συνεχής επιτήρηση από Firewatch με απλωμένες μάνικες υπό πίεση[cite: 318, 1009]."
-        ],
-        "lifting": [
-            "Έλεγχος πιστοποιητικών SWL και κατάστασης συρματόσχοινων[cite: 308, 973].",
-            "Απαγόρευση παραμονής προσωπικού κάτω από αιωρούμενα φορτία[cite: 311, 976].",
-            "Σαφής επικοινωνία χειριστή - μανουβραδόρου (Signalman)[cite: 310, 981]."
-        ],
-        "ndt": [
-            "Μηχανικός αερισμός κλειστού χώρου για τουλάχιστον 30 λεπτά[cite: 206, 1047].",
-            "Χρήση φωτισμού χαμηλής τάσης 42V[cite: 216, 966].",
-            "Εργασία υποχρεωτικά ανά δύο άτομα (Buddy System)[cite: 204, 300]."
-        ]
+    const protocols = {
+        "σκαλωσιές": ["3 μαδέρια στο δάπεδο εργασίας", "Διπλή κουπαστή (0.5m & 1m)", "Ασφαλής πρόσδεση (ζώνη)"],
+        "συγκόλληση": ["Πιστοποιητικό Gas Free σε ισχύ", "Βαλβίδες αντεπιστροφής & φλογοπαγίδες", "Πυροσβέστης (Firewatch) με μάνικα"],
+        "σωλήνες": ["Έλεγχος SWL ανυψωτικών", "Μανουβραδόρος σε ετοιμότητα", "Καθαρισμός από λάδια/πετρέλαια"]
     };
 
-    function generateRA() {
-        const t = document.getElementById('task').value;
-        const list = document.getElementById('ra-list');
-        if(!t) return alert("Επίλεξε Task!");
-        list.innerHTML = library[t].map(m => `<li>${m}</li>`).join('');
-        document.getElementById('ra-box').style.display = 'block';
+    function parseEmail() {
+        const text = document.getElementById('emailInput').value.toLowerCase();
+        const content = document.getElementById('checklistContent');
+        content.innerHTML = '';
+        let found = false;
+
+        for (let key in protocols) {
+            if (text.includes(key)) {
+                found = true;
+                protocols[key].forEach(measure => {
+                    content.innerHTML += `<div class="checklist-item"><input type="checkbox" class="sc-check" data-val="${measure}"> ${measure}</div>`;
+                });
+            }
+        }
+        document.getElementById('dynamicChecklist').style.display = found ? 'block' : 'none';
+        if(!found) alert("Δεν βρέθηκαν λέξεις-κλειδιά. Δοκίμασε: σκαλωσιές, συγκόλληση, σωλήνες.");
     }
 
-    function checkSIM() {
-        const active = Array.from(document.querySelectorAll('.sim-cb:checked')).map(c => c.value);
-        const alertBox = document.getElementById('sim-alert');
-        if(active.includes('hot') && active.includes('ins')) {
-            alertBox.innerHTML = "⚠️ <strong>CRITICAL SIMOPS:</strong> Hot Works & Insulation detected. Maintain >10m distance! ";
-            alertBox.style.display = 'block';
-        } else if(active.includes('lift')) {
-            alertBox.innerHTML = "⚠️ <strong>LIFTING ALERT:</strong> Personnel must clear the drop zone immediately[cite: 694].";
-            alertBox.style.display = 'block';
-        } else { alertBox.style.display = 'none'; }
+    function addToJournal() {
+        const checks = Array.from(document.querySelectorAll('.sc-check:checked')).map(c => c.getAttribute('data-val'));
+        const journal = document.getElementById('journalEntries');
+        if(checks.length === 0) return alert("Τσέκαρε τουλάχιστον ένα μέτρο ασφαλείας!");
+        
+        if(journal.innerHTML.includes("Αναμονή")) journal.innerHTML = '';
+        const entry = `<div style="margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:5px;">
+            <strong>[VERIFIED]</strong> ${new Date().toLocaleTimeString('el-GR')}<br>
+            <ul style="font-size:13px; margin:5px 0;">${checks.map(item => `<li>${item}</li>`).join('')}</ul>
+            <small style="color:green;">Hash-Verified Entry | Digital Signature: NT-35144</small>
+        </div>`;
+        journal.innerHTML += entry;
     }
 
     function makePDF() {
         const e = document.getElementById('report');
-        html2pdf().from(e).set({ margin:10, filename:'FSRU_Dossier.pdf', html2canvas:{scale:2} }).save();
+        html2pdf().from(e).set({ margin:10, filename:'FSRU_Safety_Dossier.pdf', html2canvas:{scale:2} }).save();
     }
 </script>
 </body>

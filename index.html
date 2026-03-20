@@ -3,56 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nautical OS V4.0 - Smart Safety Parser</title>
+    <title>Nautical OS V5.0 - Fleet & Load Test Manager</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root { --marine: #0A2463; --danger: #D92525; --warning: #ffc107; --tech: #F4F7F6; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--tech); padding: 20px; }
+        
+        /* Dashboard Styling */
+        .fleet-container { background: var(--marine); color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+        .fleet-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-top: 15px; }
+        .ship-card { background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); text-align: center; cursor: pointer; transition: 0.3s; }
+        .ship-card:hover { background: rgba(255,255,255,0.2); transform: translateY(-3px); }
+        .ship-card.active { border: 2px solid var(--warning); background: rgba(255,255,255,0.25); }
+
         .grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 20px; }
         .panel { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         h3 { color: var(--marine); border-bottom: 2px solid var(--marine); padding-bottom: 10px; }
-        textarea { width: 100%; height: 100px; padding: 10px; border: 1px solid #ccc; border-radius: 5px; margin-bottom: 10px; }
-        .checklist-item { display: flex; align-items: center; gap: 10px; padding: 10px; border-bottom: 1px solid #eee; font-size: 14px; }
-        button { width: 100%; padding: 15px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        textarea { width: 100%; height: 80px; padding: 10px; border: 1px solid #ccc; border-radius: 5px; margin-bottom: 10px; }
+        .checklist-item { display: flex; align-items: center; gap: 10px; padding: 8px; border-bottom: 1px solid #eee; font-size: 13px; }
+        button { width: 100%; padding: 12px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; margin-top: 10px; }
         .btn-parse { background: var(--marine); color: white; }
         .btn-pdf { background: #28a745; color: white; }
         #report { background: white; padding: 40px; border: 1px solid #ddd; }
         .header { display: flex; justify-content: space-between; border-bottom: 3px solid var(--marine); margin-bottom: 20px; }
-        .stamp { margin-top: 50px; border-top: 1px dashed #777; padding-top: 15px; font-family: 'Courier New', monospace; font-size: 13px; }
+        .stamp { margin-top: 40px; border-top: 1px dashed #777; padding-top: 15px; font-family: 'Courier New', monospace; font-size: 12px; }
     </style>
 </head>
 <body>
 
+<div class="fleet-container">
+    <h2 style="margin:0;">🚢 Active Project Fleet (Nautical Technology)</h2>
+    <div class="fleet-grid">
+        <div class="ship-card" onclick="selectShip('FSRU ALEXANDROUPOLIS')"><strong>FSRU Alexandroupolis</strong><br><small>Current Scope</small></div>
+        <div class="ship-card" onclick="selectShip('RIGEL III')"><strong>Rigel III</strong><br><small>NEZ Perama</small></div>
+        <div class="ship-card" onclick="selectShip('3B DESTINY')"><strong>3B Destiny</strong><br><small>Chalkis Shipyards</small></div>
+        <div class="ship-card" onclick="selectShip('ARTEMIS')"><strong>Artemis</strong><br><small>Elefsis Shipyards</small></div>
+    </div>
+</div>
+
 <div class="grid">
     <div class="panel">
-        <h3>📩 Smart Scope Parser</h3>
-        <p style="font-size: 12px; color: #666;">Κάνε επικόλληση το email με το Scope of Work:</p>
-        <textarea id="emailInput" placeholder="Π.χ. Θα χρειαστούν σκαλωσιές για συγκόλληση σωληνώσεων..."></textarea>
-        <button class="btn-parse" onclick="parseEmail()">🔍 Ανάλυση & Δημιουργία Checklist</button>
+        <h3>🔍 Smart Safety Parser</h3>
+        <p style="font-size: 12px; color: #666;">Επικόλληση Scope (Email):</p>
+        <textarea id="emailInput" placeholder="Π.χ. Θα γίνει load test στον γερανό Νο2..."></textarea>
+        <button class="btn-parse" onclick="parseEmail()">Ανάλυση Scope</button>
 
         <div id="dynamicChecklist" style="margin-top:20px; display:none;">
-            <h3>✅ Safety Verification Checklist</h3>
+            <h3 id="checklistTitle">✅ Verification Checklist</h3>
             <div id="checklistContent"></div>
             <button class="btn-parse" style="background:#17a2b8;" onclick="addToJournal()">📝 Καταχώριση στο Journal</button>
         </div>
     </div>
 
     <div class="display">
-        <button class="btn-pdf" onclick="makePDF()">📥 Export Official Dossier (PDF)</button>
+        <button class="btn-pdf" onclick="makePDF()">📥 Export Technical Dossier (PDF)</button>
         <div id="report">
             <div class="header">
                 <div>
-                    <h1 style="margin:0; color:var(--marine); font-size: 24px;">FSRU ALEXANDROUPOLIS</h1>
-                    <p>OFFICIAL SAFETY SUPERVISION LOG</p>
+                    <h1 id="rep-ship-name" style="margin:0; color:var(--marine); font-size: 22px;">ΕΠΙΛΕΞΤΕ ΠΛΟΙΟ</h1>
+                    <p id="rep-project-status">OFFICIAL SAFETY SUPERVISION LOG</p>
                     <small>Ημερομηνία: <span id="date"></span></small>
                 </div>
-                <div style="text-align:right; font-size: 12px;">
+                <div style="text-align:right; font-size: 11px;">
                     <strong>NAUTICAL TECHNOLOGY</strong><br>DNV & GAC COMPLIANT
                 </div>
             </div>
-            <div id="journalEntries" style="min-height: 200px;">
-                <p style="color:#999; font-style:italic;">Αναμονή για καταχώριση...</p>
-            </div>
+            <div id="journalEntries" style="min-height: 200px;"></div>
             <div class="stamp">
                 <strong>ΜΑΤΘΑΙΟΣ ΣΥΚΙΝΙΩΤΗΣ</strong><br>
                 ΔΙΠΛ. ΜΗΧΑΝΟΛΟΓΟΣ ΜΗΧΑΝΙΚΟΣ (Τ.Ε.Ε. 35144)<br>
@@ -64,11 +80,20 @@
 
 <script>
     document.getElementById('date').innerText = new Date().toLocaleDateString('el-GR');
+    let currentShip = "";
+
+    function selectShip(name) {
+        currentShip = name;
+        document.getElementById('rep-ship-name').innerText = name;
+        document.querySelectorAll('.ship-card').forEach(c => c.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+        document.getElementById('journalEntries').innerHTML = `<p style="color:green; font-size:12px;">🚢 Port of registry: ${name} connected. System ready.</p>`;
+    }
 
     const protocols = {
+        "load test": ["Έλεγχος πιστοποιητικού SWL του ανυψωτικού", "Πιστοποίηση βάρους δοκιμής (Certified Weights)", "Έλεγχος φρένων & ορίων διαδρομής (Limit Switches)", "Οριοθέτηση ζώνης δοκιμής - Απαγόρευση διέλευσης"],
         "σκαλωσιές": ["3 μαδέρια στο δάπεδο εργασίας", "Διπλή κουπαστή (0.5m & 1m)", "Ασφαλής πρόσδεση (ζώνη)"],
-        "συγκόλληση": ["Πιστοποιητικό Gas Free σε ισχύ", "Βαλβίδες αντεπιστροφής & φλογοπαγίδες", "Πυροσβέστης (Firewatch) με μάνικα"],
-        "σωλήνες": ["Έλεγχος SWL ανυψωτικών", "Μανουβραδόρος σε ετοιμότητα", "Καθαρισμός από λάδια/πετρέλαια"]
+        "συγκόλληση": ["Πιστοποιητικό Gas Free σε ισχύ", "Βαλβίδες αντεπιστροφής & φλογοπαγίδες", "Πυροσβέστης (Firewatch) με μάνικα"]
     };
 
     function parseEmail() {
@@ -86,26 +111,23 @@
             }
         }
         document.getElementById('dynamicChecklist').style.display = found ? 'block' : 'none';
-        if(!found) alert("Δεν βρέθηκαν λέξεις-κλειδιά. Δοκίμασε: σκαλωσιές, συγκόλληση, σωλήνες.");
     }
 
     function addToJournal() {
         const checks = Array.from(document.querySelectorAll('.sc-check:checked')).map(c => c.getAttribute('data-val'));
         const journal = document.getElementById('journalEntries');
-        if(checks.length === 0) return alert("Τσέκαρε τουλάχιστον ένα μέτρο ασφαλείας!");
+        if(checks.length === 0) return alert("Τσέκαρε τουλάχιστον ένα μέτρο!");
         
-        if(journal.innerHTML.includes("Αναμονή")) journal.innerHTML = '';
-        const entry = `<div style="margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:5px;">
-            <strong>[VERIFIED]</strong> ${new Date().toLocaleTimeString('el-GR')}<br>
-            <ul style="font-size:13px; margin:5px 0;">${checks.map(item => `<li>${item}</li>`).join('')}</ul>
-            <small style="color:green;">Hash-Verified Entry | Digital Signature: NT-35144</small>
+        const entry = `<div style="margin-bottom:12px; border-bottom:1px solid #eee; padding-bottom:5px; font-size:13px;">
+            <strong>[${currentShip || 'GENERAL'}]</strong> ${new Date().toLocaleTimeString('el-GR')}<br>
+            <ul style="margin:5px 0;">${checks.map(item => `<li>${item}</li>`).join('')}</ul>
+            <small style="color:#0A2463;">Verified by Nautical Tech Integrity Engine</small>
         </div>`;
         journal.innerHTML += entry;
     }
 
     function makePDF() {
-        const e = document.getElementById('report');
-        html2pdf().from(e).set({ margin:10, filename:'FSRU_Safety_Dossier.pdf', html2canvas:{scale:2} }).save();
+        html2pdf().from(document.getElementById('report')).set({ margin:10, filename: currentShip + '_Dossier.pdf', html2canvas:{scale:2} }).save();
     }
 </script>
 </body>

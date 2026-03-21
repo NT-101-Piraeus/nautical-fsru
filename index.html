@@ -1,35 +1,195 @@
-import React, { useState } from 'react';
-import Dashboard from './Dashboard'; // Το component με τα 8 Tiles
-import SafetyForm from './SafetyForm'; // Αυτό που βλέπεις τώρα στην εικόνα
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>X-INTEL STRATEGY HUB | Lainas Group</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .tile-active:active { transform: scale(0.95); }
+    </style>
+</head>
+<body class="bg-slate-100">
+    <div id="root"></div>
 
-function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(true); // Είσαι ήδη μέσα
-  const [currentView, setCurrentView] = useState('dashboard'); // Ξεκινάμε από το Dashboard
+    <script type="text/babel">
+        const { useState, useEffect } = React;
 
-  if (!isLoggedIn) {
-    return <LoginScreen onLogin={() => setIsLoggedIn(true)} />;
-  }
+        // --- Mock Data για Merchant Agent (Navaltech) ---
+        const MERCHANT_DATA = [
+            { id: 1, product: "Υφαλόχρωμα A+ Ultra", navaltech_price: "145.50€", status: "up" },
+            { id: 2, product: "Σχοινί Πρόσδεσης 20mm", navaltech_price: "88.00€", status: "down" },
+            { id: 3, product: "Ηλεκτρόδια 6013", navaltech_price: "12.20€", status: "stable" }
+        ];
 
-  return (
-    <div className="min-h-screen bg-gray-100">
-      {/* 1. Header με κουμπί "Πίσω" αν δεν είμαστε στο Dashboard */}
-      {currentView !== 'dashboard' && (
-        <button 
-          onClick={() => setCurrentView('dashboard')}
-          className="m-4 text-blue-600 font-bold flex items-center"
-        >
-          ← Επιστροφή στο Menu
-        </button>
-      )}
+        // --- Main App Component ---
+        function App() {
+            const [view, setView] = useState('dashboard');
+            const [isLoggedIn, setIsLoggedIn] = useState(false);
+            const [passcode, setPasscode] = useState('');
 
-      {/* 2. Conditional Rendering: Τι θα δείξει η οθόνη */}
-      {currentView === 'dashboard' ? (
-        <Dashboard onSelectTile={(tile) => setCurrentView(tile)} />
-      ) : currentView === 'safety_report' ? (
-        <SafetyForm />
-      ) : (
-        <div className="p-10 text-center text-gray-400">Η λειτουργία αυτή ετοιμάζεται...</div>
-      )}
-    </div>
-  );
-}
+            // Login Logic
+            const handleLogin = (e) => {
+                e.preventDefault();
+                if (passcode === 'NT2026') setIsLoggedIn(true);
+                else alert("Λάθος Κωδικός!");
+            };
+
+            if (!isLoggedIn) {
+                return (
+                    <div className="h-screen flex items-center justify-center bg-slate-900 p-6">
+                        <div className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-sm text-center">
+                            <h1 className="text-2xl font-bold text-slate-800 mb-2">Nautical Tech V7.0</h1>
+                            <p className="text-slate-500 mb-6 text-sm">Lainas Group Intelligence</p>
+                            <form onSubmit={handleLogin}>
+                                <input 
+                                    type="password" 
+                                    className="w-full border-2 border-slate-200 p-3 rounded-xl mb-4 text-center focus:border-blue-500 outline-none"
+                                    placeholder="Κωδικός Πρόσβασης"
+                                    value={passcode}
+                                    onChange={(e) => setPasscode(e.target.value)}
+                                />
+                                <button className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold shadow-lg">Είσοδος</button>
+                            </form>
+                        </div>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="min-h-screen flex flex-col">
+                    {/* Header */}
+                    <header className="bg-slate-900 text-white p-4 shadow-md sticky top-0 z-50">
+                        <div className="flex justify-between items-center max-w-4xl mx-auto">
+                            <div>
+                                <h2 className="font-bold text-lg leading-tight text-blue-400">LAINAS GROUP</h2>
+                                <p className="text-[10px] uppercase tracking-widest opacity-70">X-Intel Strategy Hub</p>
+                            </div>
+                            {view !== 'dashboard' && (
+                                <button 
+                                    onClick={() => setView('dashboard')}
+                                    className="bg-white/10 hover:bg-white/20 px-3 py-1 rounded-lg text-xs font-bold transition-all"
+                                >
+                                    <i className="fa-solid fa-arrow-left mr-1"></i> MENU
+                                </button>
+                            )}
+                        </div>
+                    </header>
+
+                    {/* Content */}
+                    <main className="flex-1 max-w-4xl mx-auto w-full p-4">
+                        {view === 'dashboard' && <Dashboard setView={setView} />}
+                        {view === 'safety' && <SafetyReport />}
+                        {view === 'merchant' && <MerchantReport title="eShop Research" />}
+                        {view === 'competition' && <MerchantReport title="Competition Watch" />}
+                        {['arrivals', 'legislation', 'market', 'tenders', 'weather'].includes(view) && (
+                            <div className="text-center p-20 text-slate-400 italic">
+                                <i className="fa-solid fa-gears text-4xl mb-4 block"></i>
+                                Η ενότητα {view.toUpperCase()} είναι υπό κατασκευή...
+                            </div>
+                        )}
+                    </main>
+
+                    {/* Footer / Offline Indicator */}
+                    <footer className="p-2 bg-slate-200 text-center text-[10px] text-slate-500 font-bold uppercase">
+                        System Status: <span className="text-green-600">Secure (ISO 19848)</span>
+                    </footer>
+                </div>
+            );
+        }
+
+        // --- Dashboard Component (8 Tiles) ---
+        function Dashboard({ setView }) {
+            const tiles = [
+                { id: 'arrivals', title: "Ship Arrivals", sub: "Hunter Agent", icon: "fa-ship", color: "bg-blue-600" },
+                { id: 'safety', title: "Safety Report", sub: "Π.Δ. 70/90", icon: "fa-shield-halved", color: "bg-emerald-600" },
+                { id: 'legislation', title: "Legislation", sub: "IMO/DNV News", icon: "fa-gavel", color: "bg-slate-700" },
+                { id: 'market', title: "Maritime Market", sub: "Ναύλοι & Τάσεις", icon: "fa-chart-line", color: "bg-indigo-600" },
+                { id: 'merchant', title: "eShop Research", sub: "Price Scanner", icon: "fa-cart-shopping", color: "bg-orange-600" },
+                { id: 'competition', title: "Competition", sub: "Navaltech Intel", icon: "fa-eye", color: "bg-red-600" },
+                { id: 'tenders', title: "Tenders/ΕΣΠΑ", sub: "Live Alerts", icon: "fa-file-contract", color: "bg-amber-600" },
+                { id: 'weather', title: "Port Weather", sub: "Lifting Safety", icon: "fa-cloud-sun", color: "bg-sky-500" },
+            ];
+
+            return (
+                <div className="grid grid-cols-2 gap-4 py-4">
+                    {tiles.map(t => (
+                        <div 
+                            key={t.id}
+                            onClick={() => setView(t.id)}
+                            className={`${t.color} p-5 rounded-2xl shadow-lg flex flex-col items-center justify-center text-white tile-active cursor-pointer transition-all hover:brightness-110 h-36`}
+                        >
+                            <i className={`fa-solid ${t.icon} text-3xl mb-2`}></i>
+                            <span className="text-[11px] font-bold uppercase tracking-tight">{t.title}</span>
+                            <span className="text-[9px] opacity-80 mt-1">{t.sub}</span>
+                        </div>
+                    ))}
+                </div>
+            );
+        }
+
+        // --- Merchant Report Component (Navaltech Integration) ---
+        function MerchantReport({ title }) {
+            return (
+                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div className="bg-slate-50 p-4 border-b">
+                        <h3 className="font-bold text-slate-800">{title}</h3>
+                        <p className="text-xs text-slate-500">Πηγή: Navaltech.gr | Sync: 08:00 AM</p>
+                    </div>
+                    <div className="divide-y">
+                        {MERCHANT_DATA.map(item => (
+                            <div key={item.id} className="p-4 flex justify-between items-center">
+                                <div>
+                                    <p className="text-sm font-semibold">{item.product}</p>
+                                    <p className="text-[10px] text-slate-400">SKU: NT-00{item.id}</p>
+                                </div>
+                                <div className="text-right">
+                                    <p className="font-bold text-slate-800">{item.navaltech_price}</p>
+                                    <span className={`text-[9px] font-bold ${item.status === 'up' ? 'text-red-500' : 'text-green-500'}`}>
+                                        {item.status === 'up' ? '▲ ΑΥΞΗΣΗ' : '▼ ΜΕΙΩΣΗ'}
+                                    </span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        }
+
+        // --- Safety Report Component (Αυτό που είχες) ---
+        function SafetyReport() {
+            return (
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <h3 className="font-bold text-slate-800 mb-4 border-b pb-2">Τεχνικός Ασφαλείας Πλοίων (Π.Δ. 70/90)</h3>
+                    <div className="space-y-4">
+                        <div>
+                            <label className="text-xs font-bold text-slate-500 uppercase">Όνομα Πλοίου</label>
+                            <input type="text" className="w-full border p-2 rounded-lg mt-1" placeholder="π.χ. Rigel III" />
+                        </div>
+                        <div>
+                            <label className="text-xs font-bold text-slate-500 uppercase">Ημερολόγιο & Παρατηρήσεις</label>
+                            <textarea className="w-full border p-2 rounded-lg mt-1 h-32" placeholder="Καταγραφή SIMOPS / Gas Free..."></textarea>
+                        </div>
+                        <div>
+                            <label className="text-xs font-bold text-slate-500 uppercase">Φωτογραφία Έργου</label>
+                            <input type="file" className="block w-full text-xs mt-2" />
+                        </div>
+                        <button className="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl mt-4">
+                            ΚΑΤΑΧΩΡΗΣΗ ΣΤΟ REPORT
+                        </button>
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

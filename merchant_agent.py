@@ -2,47 +2,58 @@ import httpx
 from bs4 import BeautifulSoup
 import pandas as pd
 from datetime import datetime
+import os
 
-# Λίστα προϊόντων προς παρακολούθηση
+# Λίστα Στόχων
 WATCHLIST = [
-    {"name": "Marine Paint A", "url": "https://competitor-1.com/product1"},
-    {"name": "Steel Shackles 10mm", "url": "https://competitor-2.com/shackles"},
+    {"name": "Navaltech Color A", "url": "https://navaltech.gr/product/example-paint"}, # Αντικατάστησε με πραγματικά URLs
+    {"name": "Navaltech Tools", "url": "https://navaltech.gr/product/example-tool"},
 ]
 
-def scrape_price(url):
-    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+def scrape_navaltech_price(url):
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    }
     try:
-        response = httpx.get(url, headers=headers, timeout=10.0)
+        response = httpx.get(url, headers=headers, timeout=15.0)
+        if response.status_code != 200:
+            return f"Error {response.status_code}"
+            
         soup = BeautifulSoup(response.text, 'html.parser')
         
-        # Εδώ προσαρμόζεις το selector ανάλογα με το site του ανταγωνιστή
-        # Παράδειγμα: <span class="price">150.00€</span>
-        price_tag = soup.find("span", class_="price") or soup.find("div", id="current-price")
+        # Αναζήτηση τιμής: Συνήθως σε WooCommerce sites είναι στα παρακάτω tags
+        # Δοκιμάζουμε διαδοχικά τα πιο κοινά selectors
+        price_tag = (
+            soup.select_one("span.woocommerce-Price-amount bdi") or 
+            soup.select_one(".price .amount") or 
+            soup.select_one(".current-price")
+        )
         
         if price_tag:
-            return price_tag.text.strip().replace('€', '').replace(',', '.')
-        return "N/A"
+            # Καθαρισμός κειμένου από σύμβολα ευρώ και κενά
+            return price_tag.get_text().strip().replace('€', '').replace(',', '.')
+        return "Price Not Found"
     except Exception as e:
-        return f"Error: {str(e)}"
+        return f"Fail: {str(e)}"
 
-def generate_market_report():
+def run_merchant_intelligence():
     results = []
-    print("🚀 Starting Market Intelligence Scan...")
+    print(f"🚀 Έναρξη κατασκοπείας αγοράς: {datetime.now()}")
     
     for item in WATCHLIST:
-        price = scrape_price(item['url'])
+        price = scrape_navaltech_price(item['url'])
         results.append({
             "Product": item['name'],
-            "Competitor Price": price,
+            "Price": price,
+            "Source": "Navaltech",
             "Timestamp": datetime.now().strftime("%Y-%m-%d %H:%M")
         })
     
+    # Δημιουργία Report
     df = pd.DataFrame(results)
-    # Αποθήκευση σε CSV για το Dashboard ή αποστολή στη Supabase
-    df.to_csv("market_report.csv", index=False)
-    print("📊 Report Generated: market_report.csv")
+    df.to_csv("merchant_report.csv", index=False)
+    print("📊 Η αναφορά Merchant_Report.csv δημιουργήθηκε.")
     return results
 
 if __name__ == "__main__":
-    report = generate_market_report()
-    # Εδώ μπορείς να προσθέσεις logic για αποστολή Telegram αν η τιμή πέσει κάτω από ένα όριο
+    run_merchant_intelligence()

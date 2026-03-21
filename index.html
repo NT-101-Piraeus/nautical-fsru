@@ -3,141 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nautical OS V7.0 - Multi-Service Engineering Suite</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <title>Nautical Tech | Fleet Management</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --marine: #0A2463; --tech-gray: #F4F7F6; --action: #17a2b8; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--tech-gray); padding: 15px; }
-        
-        /* Dashboard */
-        .header-panel { background: var(--marine); color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
-        .service-nav { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-top: 15px; }
-        .nav-btn { background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px; text-align: center; cursor: pointer; border: 1px solid rgba(255,255,255,0.3); transition: 0.3s; font-weight: bold; }
-        .nav-btn.active { background: var(--action); border-color: white; }
-
-        .main-grid { display: grid; grid-template-columns: 1fr 1.3fr; gap: 20px; }
-        .input-card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        
-        select, input, textarea { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
-        .check-item { display: flex; align-items: center; gap: 10px; padding: 8px; border-bottom: 1px solid #f9f9f9; font-size: 13.5px; }
-        
-        #report-box { background: white; padding: 40px; border: 1px solid #ddd; min-height: 800px; position: relative; }
-        .stamp-block { margin-top: 50px; border-top: 2px solid var(--marine); padding-top: 10px; font-family: monospace; font-size: 12px; }
-        
-        .btn-exe { background: var(--marine); color: white; border: none; padding: 15px; border-radius: 5px; width: 100%; cursor: pointer; font-weight: bold; }
-        .btn-pdf { background: #28a745; color: white; margin-bottom: 15px; border:none; padding:10px; border-radius:5px; cursor:pointer; width:100%; font-weight:bold; }
+        body { font-family: sans-serif; background: #f4f7f6; margin: 0; padding: 20px; }
+        .login-screen { height: 100vh; display: flex; align-items: center; justify-content: center; background: #1a2b3c; }
+        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); text-align: center; }
+        .hidden { display: none; }
+        .sync-alert { background: #ffcc00; padding: 10px; text-align: center; font-weight: bold; border-radius: 5px; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
-<div class="header-panel">
-    <h2 style="margin:0;">⚓ Nautical Technology Management</h2>
-    <div class="service-nav">
-        <div class="nav-btn" onclick="setMode('ship')">🚢 Τ.Α. Πλοίων</div>
-        <div class="nav-btn" onclick="setMode('corp')">🏢 Τ.Α. Επιχειρήσεων</div>
-        <div class="nav-btn" onclick="setMode('load')">⚖️ Load Testing</div>
-        <div class="nav-btn" onclick="setMode('utm')">📏 UTM Measurements</div>
-    </div>
-</div>
-
-<div class="main-grid">
-    <div class="input-card">
-        <h3 id="mode-title">Επιλέξτε Κατηγορία</h3>
-        <div id="dynamic-inputs">
-            </div>
-        <div id="checklist-area" style="margin-top:20px; display:none;">
-            <h4 style="color:var(--action);">📋 Safety & Tech Checklist</h4>
-            <div id="checks"></div>
-            <button class="btn-exe" onclick="logEntry()">Καταχώριση στο Report</button>
+    <div id="loginSection" class="login-screen">
+        <div class="card">
+            <h2>Nautical Tech V7.0</h2>
+            <input type="password" id="passInput" placeholder="Κωδικός Πρόσβασης" style="padding: 10px; width: 80%;"><br><br>
+            <button onclick="checkLogin()" style="background: #004d99; color: white; padding: 10px 25px; border: none; border-radius: 5px; cursor: pointer;">Είσοδος</button>
         </div>
     </div>
 
-    <div>
-        <button class="btn-pdf" onclick="generatePDF()">📥 Εξαγωγή Πιστοποιητικού / Report (PDF)</button>
-        <div id="report-box">
-            <div style="display:flex; justify-content:space-between; border-bottom:3px solid var(--marine); padding-bottom:10px;">
-                <div>
-                    <h2 style="margin:0; color:var(--marine);">OFFICIAL TECHNICAL REPORT</h2>
-                    <p style="margin:5px 0;">Project: <span id="cur-proj">---</span></p>
-                </div>
-                <div style="text-align:right; font-size:11px;">
-                    <strong>NAUTICAL TECHNOLOGY</strong><br>Safety & Engineering Services
-                </div>
-            </div>
+    <div id="dashboard" class="hidden">
+        <div id="offlineBanner" class="sync-alert hidden">⚠️ Εκκρεμεί συγχρονισμός έργων (Offline Mode)</div>
+        <h1>Τεχνικός Ασφαλείας Πλοίων (Π.Δ. 70/90)</h1>
+        
+        <div class="card" style="text-align: left;">
+            <label>Όνομα Πλοίου:</label><br>
+            <input type="text" id="vesselName" style="width: 100%; padding: 8px; margin-bottom: 15px;"><br>
             
-            <div id="content-log" style="margin-top:30px; min-height:400px;"></div>
-
-            <div class="stamp-block">
-                <strong>ΜΑΤΘΑΙΟΣ ΣΥΚΙΝΙΩΤΗΣ</strong><br>
-                ΔΙΠΛ. ΜΗΧΑΝΟΛΟΓΟΣ ΜΗΧΑΝΙΚΟΣ (Τ.Ε.Ε. 35144)<br>
-                ΤΗΛ: 6906 170 294 | ΑΦΜ: 132251947
-            </div>
+            <label>Ημερολόγιο & Παρατηρήσεις:</label><br>
+            <textarea id="journal" style="width: 100%; height: 100px; padding: 8px;"></textarea><br><br>
+            
+            <label>Φωτογραφία Έργου:</label><br>
+            <input type="file" id="photoFile" accept="image/*"><br><br>
+            
+            <button onclick="saveProject()" style="background: #28a745; color: white; padding: 15px; width: 100%; border: none; font-weight: bold;">ΚΑΤΑΧΩΡΗΣΗ ΣΤΟ REPORT</button>
         </div>
     </div>
-</div>
 
-<script>
-    let currentMode = '';
-    const data = {
-        ship: {
-            title: "Τεχνικός Ασφαλείας Πλοίων (Π.Δ. 70/90)",
-            services: ["Hot Works Supervision", "Confined Space Entry", "Gas Free Verification", "SIMOPS Monitoring"],
-            checks: ["Έλεγχος Gas Free πιστοποιητικού", "Βαλβίδες αντεπιστροφής & φλογοπαγίδες", "Παρουσία πυροσβέστη με μάνικα υπό πίεση"]
-        },
-        corp: {
-            title: "Τεχνικός Ασφαλείας Επιχειρήσεων (Ν. 3850/2010)",
-            services: ["Εκτίμηση Επαγγελματικού Κινδύνου", "Έλεγχος Πυρασφάλειας", "Εκπαίδευση Προσωπικού"],
-            checks: ["Σήμανση εξόδων κινδύνου", "Έλεγχος πυροσβεστήρων & φωτισμού ασφαλείας", "Επικαιροποίηση Βιβλίου Ατυχημάτων"]
-        },
-        load: {
-            title: "Load Testing Services",
-            services: ["Cargo Gear", "Means of Access", "Mooring Winches (BHC)", "Bollard Pull Test"],
-            checks: ["Στατική δοκιμή 125% SWL", "Δυναμική δοκιμή 110% SWL", "Πιστοποίηση βαρών δοκιμής"]
-        },
-        utm: {
-            title: "UTM (Ultrasonic Thickness Measurement)",
-            services: ["Hull Gauging", "Tank Inspection", "Pipe Wall Thickness"],
-            checks: ["Βαθμονόμηση (Calibration) οργάνου", "Καθαρισμός σημείων μέτρησης", "Καταγραφή ελάχιστου εναπομείναντος πάχους"]
+    <script>
+        const _supabase = supabase.createClient('URL_ΣΟΥ', 'ANON_KEY_ΣΟΥ');
+
+        function checkLogin() {
+            if(document.getElementById('passInput').value === 'NT2026') {
+                document.getElementById('loginSection').classList.add('hidden');
+                document.getElementById('dashboard').classList.remove('hidden');
+            } else { alert('Λάθος Κωδικός!'); }
         }
-    };
 
-    function setMode(mode) {
-        currentMode = mode;
-        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-        event.currentTarget.classList.add('active');
-        document.getElementById('mode-title').innerText = data[mode].title;
-        
-        let html = `<input type="text" id="proj-name" placeholder="Όνομα Πλοίου / Επιχείρησης" oninput="document.getElementById('cur-proj').innerText=this.value">`;
-        html += `<select id="sub-service"><option value="">-- Επιλέξτε Υπηρεσία --</option>`;
-        data[mode].services.forEach(s => html += `<option value="${s}">${s}</option>`);
-        html += `</select>`;
-        
-        document.getElementById('dynamic-inputs').innerHTML = html;
-        document.getElementById('checks').innerHTML = data[mode].checks.map(c => `
-            <div class="check-item"><input type="checkbox" class="c-box" data-val="${c}"> ${c}</div>
-        `).join('');
-        document.getElementById('checklist-area').style.display = 'block';
-    }
+        async function saveProject() {
+            const data = {
+                vessel: document.getElementById('vesselName').value,
+                journal: document.getElementById('journal').value,
+                timestamp: new Date().toISOString()
+            };
+            
+            if (!navigator.onLine) {
+                const pending = JSON.parse(localStorage.getItem('offline_projects') || '[]');
+                pending.push(data);
+                localStorage.setItem('offline_projects', JSON.stringify(pending));
+                document.getElementById('offlineBanner').classList.remove('hidden');
+                alert("Αποθηκεύτηκε τοπικά!");
+            } else {
+                // Logic για upload στο 'project-photos' bucket
+                alert("Συγχρονισμός με Supabase...");
+            }
+        }
 
-    function logEntry() {
-        const service = document.getElementById('sub-service').value;
-        const checks = Array.from(document.querySelectorAll('.c-box:checked')).map(c => c.getAttribute('data-val'));
-        if(!service || checks.length === 0) return alert("Συμπληρώστε Υπηρεσία και Checkbox!");
-
-        const log = document.getElementById('content-log');
-        log.innerHTML += `
-            <div style="margin-bottom:20px; border-bottom:1px solid #eee; padding-bottom:10px;">
-                <h4 style="margin:0; color:var(--marine);">${service}</h4>
-                <ul style="font-size:13px; margin:10px 0;">${checks.map(c => `<li>${c}</li>`).join('')}</ul>
-                <small style="color:green;">Status: Verified | Security Hash: NT-${Math.random().toString(36).substr(2, 7).toUpperCase()}</small>
-            </div>
-        `;
-    }
-
-    function generatePDF() {
-        const e = document.getElementById('report-box');
-        html2pdf().from(e).set({ margin:10, filename:'Nautical_Tech_Report.pdf', html2canvas:{scale:2} }).save();
-    }
-</script>
+        window.addEventListener('online', () => {
+            document.getElementById('offlineBanner').classList.add('hidden');
+            // Αυτόματος συγχρονισμός εδώ
+        });
+    </script>
 </body>
 </html>

@@ -1,0 +1,31 @@
+name: Merchant Agent Daily Intelligence
+
+on:
+  schedule:
+    - cron: '0 6 * * *' # 08:00 AM ώρα Ελλάδας (6:00 UTC)
+  workflow_dispatch: # Για να το τρέχεις χειροκίνητα όποτε θες
+
+jobs:
+  market-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          pip install httpx beautifulsoup4 pandas
+
+      - name: Run Merchant Agent
+        run: python merchant_agent.py
+
+      - name: Upload Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: market-intelligence-report
+          path: merchant_report.csv

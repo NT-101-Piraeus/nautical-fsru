@@ -1,34 +1,40 @@
 <!DOCTYPE html><html lang="el"><head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SafeShip Manager V33.1</title>
+    <title>SafeShip Intelligence V34</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@300;400;600;800&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #020617; color: white; margin: 0; touch-action: manipulation; }
         .brand { font-family: 'Orbitron', sans-serif; }
         .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.05); }
-        .status-btn { transition: 0.2s; opacity: 0.3; border: 1px solid rgba(255,255,255,0.1); }
         .active-ok { background: #10b981 !important; opacity: 1; }
         .active-wait { background: #f59e0b !important; opacity: 1; }
         .active-block { background: #ef4444 !important; opacity: 1; }
-        .specialty-active { background: #3b82f6 !important; border-color: #60a5fa !important; }
         input, textarea { background: #0f172a !important; border: 1px solid #1e293b !important; color: white !important; outline: none; }
+        .suggestion-chip { background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); color: #60a5fa; font-size: 10px; padding: 4px 10px; border-radius: 8px; cursor: pointer; }
     </style></head><body>
     <div id="root"></div>
     <script type="text/babel">
         const { useState, useEffect } = React;
-        const TRADES = ["Ηλεκτρολόγοι", "Μηχανικοί", "Ελασματουργοί", "Σκαλωσέρ", "Καθαριστές"];
-        const SHIP_LOCS = {
-            "Tanker": ["Deck", "Engine Room", "Pump Room", "Chimney", "Cargo Tanks", "Accommodation"],
-            "Ferry": ["Deck", "Engine Room", "Garage", "Chimney", "Accommodation", "Pax Areas"],
-            "Cargo": ["Deck", "Engine Room", "Holds", "Chimney", "Accommodation"]
+
+        // ΣΥΝΔΕΣΗ SUPABASE
+        const SUPABASE_URL = "https://omdarjncczohpffwunfy.supabase.co"; 
+        const SUPABASE_KEY = "sb_publishable_V-nfUDy5MxEG4SlXkisFBg_GBlD_4Y9"; 
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // ΒΑΣΗ ΓΝΩΣΗΣ (KNOWLEDGE BASE)
+        const SMART_SUGGESTIONS = {
+            "ΣΚΑΛΩΣΙΕΣ": ["Πιστοποιητικό ανέγερσης", "Προστατευτικές μπάρες", "Σωστή έδραση", "Δίχτυ προστασίας"],
+            "ΘΕΡΜΕΣ": ["Πυροσβεστήρας στα 2μ", "Fire Watch παρών", "Απομάκρυνση εύφλεκτων", "Κάλυψη με πυρίμαχα"],
+            "ΗΛΕΚΤΡΟΛΟΓΟΙ": ["Μόνωση καλωδίων", "Πίνακες κλειδωμένοι", "Γείωση εργαλείων"],
+            "ΚΑΘΑΡΙΣΜΟΙ": ["Gas-Free σε ισχύ", "Αντιεκρηκτικός φωτισμός", "Εξαερισμός On"]
         };
+
         const INITIAL_SHIPS = [
             { id: 1, name: "FELIX", port: "Δραπετσώνα", time: "07:00", type: "Tanker" },
             { id: 2, name: "BADJI MOKHTAR III", port: "ΕΛΕΥΣΙΝΑ", time: "11:00", type: "Ferry" },
@@ -36,28 +42,50 @@
             { id: 4, name: "RIGEL III", port: "Πέραμα", time: "15:00", type: "Ferry" }
         ];
 
+        const SHIP_LOCS = {
+            "Tanker": ["Deck", "Engine Room", "Pump Room", "Chimney", "Cargo Tanks", "Accommodation"],
+            "Ferry": ["Deck", "Engine Room", "Garage", "Chimney", "Accommodation"],
+            "Cargo": ["Deck", "Engine Room", "Holds", "Chimney", "Accommodation"]
+        };
+
         function App() {
             const [view, setView] = useState('DASHBOARD');
             const [activeId, setActiveId] = useState(null);
             const [projects, setProjects] = useState(() => {
-                try {
-                    const saved = JSON.parse(localStorage.getItem('ntg_v33_data'));
-                    return (saved && saved.ships) ? saved.ships : INITIAL_SHIPS.map(s => ({ ...s, data: {}, signedToday: false }));
-                } catch(e) { return INITIAL_SHIPS.map(s => ({ ...s, data: {}, signedToday: false })); }
+                const saved = JSON.parse(localStorage.getItem('ntg_v34_data'));
+                return (saved && saved.ships) ? saved.ships : INITIAL_SHIPS.map(s => ({ ...s, data: {}, signedToday: false }));
             });
 
-            useEffect(() => { localStorage.setItem('ntg_v33_data', JSON.stringify({ ships: projects })); }, [projects]);
+            useEffect(() => { localStorage.setItem('ntg_v34_data', JSON.stringify({ ships: projects })); }, [projects]);
+
+            const uploadPhoto = async (shipId, loc, obsId, file) => {
+                const fileName = `${shipId}_${loc}_${obsId}_${Date.now()}.jpg`;
+                const { data, error } = await _supabase.storage.from('safety-photos').upload(fileName, file);
+                if (data) {
+                    const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/safety-photos/${data.path}`;
+                    updateObs(shipId, loc, obsId, 'photoUrl', publicUrl);
+                }
+            };
 
             const addObs = (shipId, loc) => {
-                setProjects(projects.map(p => p.id === shipId ? { ...p, data: { ...p.data, [loc]: { observations: [...(p.data[loc]?.observations || []), { id: Date.now(), text: '', isTask: false, status: 'ok', trades: [] }] } } } : p));
+                setProjects(projects.map(p => p.id === shipId ? { ...p, data: { ...p.data, [loc]: { observations: [...(p.data[loc]?.observations || []), { id: Date.now(), text: '', isTask: false, status: 'ok', trades: [], photoUrl: null }] } } } : p));
+            };
+
+            const updateObs = (shipId, loc, obsId, field, val) => {
+                setProjects(projects.map(p => {
+                    if (p.id === shipId) {
+                        const updated = p.data[loc].observations.map(o => o.id === obsId ? { ...o, [field]: val } : o);
+                        return { ...p, data: { ...p.data, [loc]: { ...p.data[loc], observations: updated } } };
+                    }
+                    return p;
+                }));
             };
 
             const ship = projects.find(s => s.id === activeId);
-            const allTasks = projects.flatMap(p => Object.entries(p.data || {}).flatMap(([loc, d]) => (d.observations || []).filter(o => o.isTask).map(o => ({ ship: p.name, loc, ...o }))));
 
             if (view === 'DASHBOARD') return (
                 <div className="max-w-xl mx-auto p-5 pb-32 animate-fadeIn">
-                    <header className="py-6 flex justify-between items-center"><h1 className="brand text-xs font-black text-red-500 uppercase">SafeShip Pro</h1><a href="index.html" className="bg-slate-800 w-10 h-10 rounded-full flex items-center justify-center"><i className="fa-solid fa-house"></i></a></header>
+                    <header className="py-6 flex justify-between items-center border-b border-white/5 mb-6"><h1 className="brand text-xs font-black text-red-500 uppercase">SafeShip Pro</h1><a href="index.html" className="text-slate-600"><i className="fa-solid fa-house"></i></a></header>
                     <div className="space-y-4">
                         {projects.map(s => (
                             <div key={s.id} onClick={()=>{setActiveId(s.id); setView('INSPECTION')}} className={`glass p-6 rounded-[35px] flex justify-between items-center ${s.signedToday ? 'border-l-8 border-emerald-500' : 'border border-white/5'}`}>
@@ -71,43 +99,48 @@
 
             if (view === 'INSPECTION' && ship) return (
                 <div className="max-w-xl mx-auto p-5 pb-32 animate-fadeIn">
-                    <button onClick={()=>setView('DASHBOARD')} className="text-slate-500 text-[10px] font-black uppercase mb-6">← Πίσω</button>
-                    <div className="glass p-8 rounded-[40px] border-l-4 border-red-600 text-center mb-8"><h2 className="brand text-2xl font-black uppercase">{ship.name}</h2></div>
-                    <div className="space-y-10">
+                    <button onClick={()=>setView('DASHBOARD')} className="text-slate-500 text-[10px] font-black uppercase mb-6 tracking-widest">← Fleet Status</button>
+                    <div className="glass p-8 rounded-[40px] border-l-4 border-red-600 text-center mb-10"><h2 className="brand text-2xl font-black uppercase tracking-tighter">{ship.name}</h2></div>
+                    
+                    <div className="space-y-12">
                         {SHIP_LOCS[ship.type].map(loc => {
                             const d = (ship.data && ship.data[loc]) || { observations: [] };
                             return (
-                                <div key={loc} className="glass p-6 rounded-[40px] border border-white/5 space-y-4">
-                                    <div className="flex justify-between items-center"><h4 className="text-[12px] font-black text-red-500 uppercase">{loc}</h4><button onClick={()=>addObs(ship.id, loc)} className="bg-slate-800 px-3 py-1 rounded-lg text-[9px] font-black">+ Add</button></div>
+                                <div key={loc} className="space-y-4">
+                                    <div className="flex justify-between items-center px-2"><h4 className="text-[12px] font-black uppercase text-red-500 tracking-widest">{loc}</h4><button onClick={()=>addObs(ship.id, loc)} className="bg-slate-800 px-3 py-1.5 rounded-lg text-[9px] font-black border border-white/10">+ New Log</button></div>
+                                    
                                     {d.observations.map(o => (
-                                        <div key={o.id} className="bg-slate-900/50 p-4 rounded-3xl space-y-4 border border-white/5">
-                                            <div className="flex flex-wrap gap-1.5">{TRADES.map(t => (
-                                                <button key={t} onClick={()=>{
-                                                    const newTrades = o.trades.includes(t) ? o.trades.filter(x=>x!==t) : [...o.trades, t];
-                                                    setProjects(projects.map(p=>p.id===ship.id?{...p, data:{...p.data,[loc]:{observations:p.data[loc].observations.map(x=>x.id===o.id?{...x, trades:newTrades}:x)}}}:p));
-                                                }} className={`px-2 py-1 rounded-md text-[7px] font-bold ${o.trades.includes(t) ? 'specialty-active' : 'bg-slate-950'}`}>{t}</button>
-                                            ))}</div>
+                                        <div key={o.id} className="glass p-6 rounded-[35px] border border-white/5 space-y-4">
                                             <div className="grid grid-cols-4 gap-1.5">{['ok','wait','block','na'].map(st => (
-                                                <button key={st} onClick={()=>{
-                                                    setProjects(projects.map(p=>p.id===ship.id?{...p, data:{...p.data,[loc]:{observations:p.data[loc].observations.map(x=>x.id===o.id?{...x, status:st}:x)}}}:p));
-                                                }} className={`p-2 rounded-xl text-[7px] font-black uppercase ${o.status===st?`active-${st}`:'bg-slate-800 opacity-40'}`}>{st}</button>
+                                                <button key={st} onClick={()=>updateObs(ship.id,loc,o.id,'status',st)} className={`p-2.5 rounded-xl text-[7px] font-black uppercase transition-all ${o.status===st?`active-${st}`:'bg-slate-800 opacity-40'}`}>{st}</button>
                                             ))}</div>
-                                            <textarea className="p-4 rounded-2xl text-xs h-20" value={o.text} onChange={(e)=>{
-                                                setProjects(projects.map(p=>p.id===ship.id?{...p, data:{...p.data,[loc]:{observations:p.data[loc].observations.map(x=>x.id===o.id?{...x, text:e.target.value}:x)}}}:p));
-                                            }} />
-                                            <div className="flex gap-2">
-                                                <button onClick={()=>document.getElementById('cam').click()} className="flex-1 bg-slate-900 p-3 rounded-xl border border-white/10 text-[9px] font-black uppercase"><i className="fa-solid fa-camera text-red-500 mr-2"></i> Photo</button>
-                                                <input type="file" id="cam" capture="camera" className="hidden" />
-                                                <button onClick={()=>{
-                                                    setProjects(projects.map(p=>p.id===ship.id?{...p, data:{...p.data,[loc]:{observations:p.data[loc].observations.map(x=>x.id===o.id?{...x, isTask:!x.isTask}:x)}}}:p));
-                                                }} className={`flex-1 p-3 rounded-xl text-[9px] font-black uppercase ${o.isTask ? 'bg-red-600' : 'bg-slate-800'}`}>Task</button>
+                                            
+                                            <textarea className="p-4 rounded-2xl text-xs h-24" placeholder="Findings..." value={o.text} onChange={(e)=>updateObs(ship.id,loc,o.id,'text',e.target.value)} />
+                                            
+                                            {/* SMART SUGGESTIONS HUB */}
+                                            <div className="flex flex-wrap gap-2">
+                                                {Object.entries(SMART_SUGGESTIONS).map(([key, list]) => 
+                                                    o.text.toUpperCase().includes(key) && list.map(sug => (
+                                                        <span key={sug} onClick={()=>updateObs(ship.id,loc,o.id,'text', o.text + '\n- ' + sug)} className="suggestion-chip">💡 {sug}</span>
+                                                    ))
+                                                )}
                                             </div>
+
+                                            <div className="flex gap-2">
+                                                <button onClick={()=>document.getElementById(`cam-${o.id}`).click()} className={`flex-1 p-3 rounded-xl border border-white/10 text-[9px] font-black uppercase flex items-center justify-center gap-2 ${o.photoUrl ? 'bg-emerald-600/20 text-emerald-500' : 'bg-slate-900'}`}>
+                                                    <i className="fa-solid fa-camera"></i> {o.photoUrl ? 'Photo Uploaded' : 'Capture Photo'}
+                                                </button>
+                                                <input type="file" id={`cam-${o.id}`} capture="camera" className="hidden" onChange={(e)=>uploadPhoto(ship.id, loc, o.id, e.target.files[0])} />
+                                                <button onClick={()=>updateObs(ship.id,loc,o.id,'isTask',!o.isTask)} className={`flex-1 p-3 rounded-xl text-[9px] font-black uppercase ${o.isTask ? 'bg-red-600' : 'bg-slate-800 opacity-40'}`}>Task</button>
+                                            </div>
+                                            {o.photoUrl && <img src={o.photoUrl} className="w-full h-32 object-cover rounded-2xl border border-white/10" />}
                                         </div>
                                     ))}
                                 </div>
                             );
                         })}
                     </div>
+                    <button onClick={()=>{setProjects(projects.map(p=>p.id===ship.id?{...p, signedToday:true}:p)); setView('DASHBOARD');}} className="w-full bg-emerald-600 p-6 rounded-[35px] font-black uppercase text-xs shadow-xl mt-10">Sign-Off Inspection</button>
                 </div>
             );
         }

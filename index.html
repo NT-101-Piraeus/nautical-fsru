@@ -1,256 +1,90 @@
 <!DOCTYPE html><html lang="el"><head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NTG | COMMAND CENTER V12.0</title>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NTG COMMAND | LEGAL INTEL V48</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.26.0/cytoscape.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;700&display=swap');
-        :root { --ntg-blue: #3b82f6; --ntg-red: #ef4444; --ntg-gold: #d4af37; }
-        body { font-family: 'Inter', sans-serif; background-color: #020617; color: #f8fafc; overflow-x: hidden; }
-        .brand-font { font-family: 'Orbitron', sans-serif; }
-        .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
-        .btn-active { transform: scale(0.95); }
-        .luxury-card { background: linear-gradient(135deg, #1a1a1a 0%, #000 100%); border: 1px solid var(--ntg-gold); }
-        .status-led { width: 8px; height: 8px; border-radius: 50%; display: inline-block; box-shadow: 0 0 8px currentColor; }
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@400;700;900&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #020617; color: white; margin: 0; overflow: hidden; }
+        .brand { font-family: 'Orbitron', sans-serif; }
+        .glass { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.05); }
+        #cy { width: 100%; height: 500px; background: rgba(0,0,0,0.2); border-radius: 30px; }
+        .sidebar { transform: translateX(100%); transition: 0.3s ease; }
+        .sidebar.open { transform: translateX(0); }
     </style></head><body>
     <div id="root"></div>
-
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
         function App() {
-            const [activeTab, setActiveTab] = useState('intel'); // intel, projects, tools, business
-            const [sysHealth, setSysHealth] = useState('online');
-            const [projects, setProjects] = useState([
-                { id: 1, name: "RIGEL III - Annual", services: ["UTM", "e1", "safety_pd70"] }
-            ]);
+            const [view, setView] = useState('HUB'); // HUB, LEGAL
+            const [selectedNode, setSelectedNode] = useState(null);
+            const cyRef = useRef(null);
 
-            return (
-                <div className="min-h-screen flex flex-col pb-24">
-                    {/* --- HEADER --- */}
-                    <header className="p-5 border-b border-slate-800 glass sticky top-0 z-[100]">
-                        <div className="max-w-xl mx-auto flex justify-between items-center">
-                            <div>
-                                <h1 className="brand-font text-blue-500 text-lg font-black leading-none">NTG GROUP</h1>
-                                <p className="text-[8px] font-bold text-slate-500 tracking-[0.4em] uppercase">Intel Division • V12.0</p>
-                            </div>
-                            <div className="flex items-center gap-2 px-3 py-1 bg-slate-900 rounded-full border border-slate-700">
-                                <span className={`status-led ${sysHealth === 'online' ? 'text-emerald-500' : 'text-red-500'} bg-current`}></span>
-                                <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">System {sysHealth}</span>
-                            </div>
-                        </div>
+            useEffect(() => {
+                if (view === 'LEGAL') {
+                    const cy = cytoscape({
+                        container: document.getElementById('cy'),
+                        elements: [
+                            { data: { id: 'term', label: 'TERME TERŞANESI', type: 'COMPANY' } },
+                            { data: { id: 'erkan', label: 'Erkan Zorlu', type: 'PERSON' } },
+                            { data: { id: 'nafto', label: 'NAFTOCEMENT IV', type: 'VESSEL' } },
+                            { data: { id: 'yapi', label: 'Yapi Kredi NL', type: 'BANK' } },
+                            { data: { source: 'erkan', target: 'term', label: 'OWNER' } },
+                            { data: { source: 'term', target: 'nafto', label: 'ASSET' } },
+                            { data: { source: 'erkan', target: 'yapi', label: 'FUNDS' } }
+                        ],
+                        style: [
+                            { selector: 'node', style: { 'label': 'data(label)', 'color': '#fff', 'background-color': '#3b82f6', 'font-size': '10px', 'text-valign': 'center', 'width': 40, 'height': 40 } },
+                            { selector: 'edge', style: { 'width': 2, 'line-color': '#1e293b', 'target-arrow-color': '#1e293b', 'target-arrow-shape': 'triangle', 'curve-style': 'bezier', 'label': 'data(label)', 'font-size': '8px', 'color': '#64748b' } },
+                            { selector: 'node[type="VESSEL"]', style: { 'background-color': '#ef4444' } },
+                            { selector: 'node[type="BANK"]', style: { 'background-color': '#10b981' } }
+                        ],
+                        layout: { name: 'cose' }
+                    });
+                    cy.on('tap', 'node', (evt) => setSelectedNode(evt.target.data()));
+                }
+            }, [view]);
+
+            if (view === 'LEGAL') return (
+                <div className="h-screen flex flex-col p-6 animate-fadeIn">
+                    <header className="flex justify-between items-center mb-6">
+                        <button onClick={()=>setView('HUB')} className="bg-slate-800 px-6 py-3 rounded-2xl text-[10px] font-black uppercase">← Back</button>
+                        <h1 className="brand text-red-500 text-xl italic uppercase">Legal Department</h1>
                     </header>
 
-                    {/* --- MAIN CONTENT --- */}
-                    <main className="flex-1 p-5 max-w-xl mx-auto w-full">
-                        {activeTab === 'intel' && <IntelTab />}
-                        {activeTab === 'projects' && <ProjectsTab projects={projects} />}
-                        {activeTab === 'tools' && <ToolsTab />}
-                        {activeTab === 'business' && <BusinessTab />}
-                    </main>
+                    <div id="cy" className="flex-1 glass shadow-2xl"></div>
 
-                    {/* --- BOTTOM NAV --- */}
-                    <nav className="fixed bottom-0 left-0 right-0 glass border-t border-slate-800 flex justify-around p-4 z-[100]">
-                        <NavButton active={activeTab==='intel'} icon="fa-tower-broadcast" label="Intel" onClick={()=>setActiveTab('intel')} />
-                        <NavButton active={activeTab==='projects'} icon="fa-folder-open" label="Projects" onClick={()=>setActiveTab('projects')} />
-                        <NavButton active={activeTab==='tools'} icon="fa-screwdriver-wrench" label="Tools" onClick={()=>setActiveTab('tools')} />
-                        <NavButton active={activeTab==='business'} icon="fa-crown" label="Mykonos" onClick={()=>setActiveTab('business')} />
-                    </nav>
-                </div>
-            );
-        }
-
-        // --- TABS COMPONENTS ---
-
-        function IntelTab() {
-            return (
-                <div className="space-y-6 animate-fadeIn">
-                    <h2 className="brand-font text-blue-500 text-xs border-l-4 border-blue-600 pl-3">LIVE INTELLIGENCE FEED</h2>
-                    
-                    <div className="bg-slate-900 border border-red-900/30 p-5 rounded-3xl relative overflow-hidden">
-                        <div className="absolute top-0 right-0 p-2"><i className="fa-solid fa-bolt text-red-500 animate-pulse text-xs"></i></div>
-                        <h4 className="text-[10px] font-black text-red-500 uppercase mb-2">Forensics: Naftocement IV</h4>
-                        <p className="text-xs text-slate-400 mb-4 italic">"Detected AIS Silence (Aug 2026) near Terme Yard gate 4."</p>
-                        <button className="text-[9px] font-bold bg-slate-800 px-3 py-1 rounded text-blue-400 uppercase tracking-widest">Save as Source</button>
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-4">
-                        <div className="p-4 bg-slate-900 rounded-2xl border border-slate-800 flex items-center gap-4">
-                            <i className="fa-solid fa-ship text-blue-500"></i>
-                            <div className="text-[11px]"><span className="font-bold">Repair Zone:</span> 8 ships entered Perama Zone (Live AIS)</div>
-                        </div>
-                        <div className="p-4 bg-slate-900 rounded-2xl border border-slate-800 flex items-center gap-4">
-                            <i className="fa-solid fa-user-ninja text-orange-500"></i>
-                            <div className="text-[11px]"><span className="font-bold">Board Watch:</span> No new registrations for Tugrul Karaca.</div>
-                        </div>
-                    </div>
-                </div>
-            );
-        }
-
-        function ProjectsTab({ projects }) {
-            const [view, setView] = useState('list'); // list, create, details
-            const [selectedServices, setSelectedServices] = useState([]);
-
-            const servicesList = [
-                { id: 'safety_pd70', label: 'Safety: Π.Δ. 70/90', group: 'Safety' },
-                { id: 'utm', label: 'UTM: Hull Gauging', group: 'Measurement' },
-                { id: 'e1', label: 'LT: Cargo Gear (ε1)', group: 'Testing' },
-                { id: 'e2', label: 'LT: Means of Access (ε2)', group: 'Testing' },
-                { id: 'e5', label: 'LT: Bollard Pull (ε5)', group: 'Testing' }
-            ];
-
-            return (
-                <div className="space-y-6">
-                    <div className="flex justify-between items-center">
-                        <h2 className="brand-font text-blue-500 text-xs uppercase tracking-widest">Project Management</h2>
-                        {view === 'list' && (
-                            <button onClick={()=>setView('create')} className="bg-blue-600 text-[10px] font-black px-4 py-2 rounded-full">+ NEW PROJECT</button>
+                    <div className={`fixed top-0 right-0 w-80 h-full glass border-l border-white/10 p-8 sidebar ${selectedNode ? 'open' : ''} z-50`}>
+                        <button onClick={()=>setSelectedNode(null)} className="mb-8 text-slate-500 text-xs uppercase font-black">Close ✕</button>
+                        {selectedNode && (
+                            <div className="space-y-6">
+                                <h2 className="brand text-lg text-white uppercase">{selectedNode.label}</h2>
+                                <span className="px-3 py-1 bg-blue-600/20 text-blue-400 text-[10px] font-bold rounded-full">{selectedNode.type}</span>
+                                <div className="space-y-4 pt-6">
+                                    <p className="text-xs text-slate-400"><i className="fa-solid fa-file-invoice-dollar mr-2"></i> IBAN: NL12 YAPI 0000 XXXX</p>
+                                    <p className="text-xs text-slate-400"><i className="fa-solid fa-gavel mr-2"></i> Case: Naftotrade vs Terme</p>
+                                    <button className="w-full bg-slate-800 py-4 rounded-2xl text-[10px] font-black uppercase">View Documents</button>
+                                </div>
+                            </div>
                         )}
                     </div>
-
-                    {view === 'create' && (
-                        <div className="bg-slate-900 p-6 rounded-3xl border border-slate-800 space-y-4 animate-fadeIn">
-                            <input className="w-full bg-slate-800 p-3 rounded-xl border border-slate-700 outline-none focus:border-blue-500 text-sm" placeholder="Project Name (e.g. RIGEL III)" />
-                            
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Select Services</label>
-                                <div className="grid grid-cols-1 gap-2">
-                                    {servicesList.map(s => (
-                                        <label key={s.id} className="flex items-center gap-3 bg-slate-800/50 p-3 rounded-xl cursor-pointer hover:bg-slate-800">
-                                            <input type="checkbox" className="w-4 h-4 rounded text-blue-600" onChange={() => {}} />
-                                            <span className="text-xs font-bold text-slate-300">{s.label}</span>
-                                        </label>
-                                    ))}
-                                </div>
-                            </div>
-                            
-                            <div className="flex gap-2">
-                                <button onClick={()=>setView('list')} className="flex-1 bg-slate-800 py-3 rounded-xl text-xs font-bold">CANCEL</button>
-                                <button className="flex-1 bg-blue-600 py-3 rounded-xl text-xs font-bold">CREATE & LAUNCH</button>
-                            </div>
-                        </div>
-                    )}
-
-                    {view === 'list' && (
-                        <div className="space-y-3">
-                            {projects.map(p => (
-                                <div key={p.id} className="bg-slate-900 p-5 rounded-3xl border border-slate-800 flex justify-between items-center group active:scale-95 transition-all">
-                                    <div>
-                                        <h4 className="font-bold text-sm text-slate-200">{p.name}</h4>
-                                        <div className="flex gap-1 mt-1">
-                                            {p.services.map(s => <span key={s} className="text-[8px] bg-blue-900/30 text-blue-400 px-2 py-0.5 rounded uppercase font-black">{s}</span>)}
-                                        </div>
-                                    </div>
-                                    <i className="fa-solid fa-chevron-right text-slate-600 text-xs"></i>
-                                </div>
-                            ))}
-                        </div>
-                    )}
                 </div>
             );
-        }
-
-        function ToolsTab() {
-            const [val, setVal] = useState('');
-            const [calc, setCalc] = useState(0);
 
             return (
-                <div className="space-y-6 animate-fadeIn pb-10">
-                    <h2 className="brand-font text-blue-500 text-xs border-l-4 border-blue-600 pl-3">SMART TOOLBOX</h2>
-                    
-                    {/* Weight Calc */}
-                    <div className="bg-slate-900 p-5 rounded-3xl border border-slate-800">
-                        <h4 className="text-[10px] font-black text-slate-500 uppercase mb-3">Iron Weight Calc (Steel Density 7.85)</h4>
-                        <div className="grid grid-cols-3 gap-2 mb-3">
-                            <input type="number" placeholder="L(m)" className="bg-slate-800 p-2 rounded-lg text-xs outline-none focus:border-blue-500" />
-                            <input type="number" placeholder="W(m)" className="bg-slate-800 p-2 rounded-lg text-xs outline-none focus:border-blue-500" />
-                            <input type="number" placeholder="T(mm)" className="bg-slate-800 p-2 rounded-lg text-xs outline-none focus:border-blue-500" />
-                        </div>
-                        <button className="w-full bg-blue-600 py-2 rounded-xl text-xs font-bold uppercase">Calculate KG</button>
-                    </div>
-
-                    {/* Warehouse */}
-                    <div className="bg-slate-900 p-5 rounded-3xl border border-slate-800 overflow-hidden">
-                        <h4 className="text-[10px] font-black text-slate-500 uppercase mb-3">Equipment Warehouse</h4>
-                        <table className="w-full text-[10px]">
-                            <thead className="text-slate-500 border-b border-slate-800">
-                                <tr className="text-left">
-                                    <th className="pb-2">TOOL</th>
-                                    <th className="pb-2 text-center">CALIBRATION</th>
-                                    <th className="pb-2 text-right">STATUS</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-800">
-                                <tr>
-                                    <td className="py-2 font-bold">UTL Gauge #1</td>
-                                    <td className="py-2 text-center text-slate-400">12/05/2026</td>
-                                    <td className="py-2 text-right text-emerald-500 font-bold uppercase tracking-widest">OK</td>
-                                </tr>
-                                <tr>
-                                    <td className="py-2 font-bold">Load Cell 20t</td>
-                                    <td className="py-2 text-center text-slate-400">01/01/2026</td>
-                                    <td className="py-2 text-right text-red-500 font-bold uppercase tracking-widest">EXP</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                <div className="h-screen flex flex-col items-center justify-center p-6 text-center">
+                    <h1 className="brand text-blue-500 text-3xl mb-12 italic">NTG HUB</h1>
+                    <div className="grid grid-cols-1 gap-6 w-full max-w-sm">
+                        <a href="safety_ships.html" className="glass p-8 rounded-[40px] flex items-center gap-6"><i className="fa-solid fa-user-shield text-red-500 text-2xl"></i><span className="brand text-xs uppercase tracking-widest">Safety Officer</span></a>
+                        <button onClick={() => { if(prompt("LEGAL ACCESS PIN")==="2026") setView('LEGAL'); }} className="glass p-8 rounded-[40px] flex items-center gap-6 border border-red-500/20"><i className="fa-solid fa-scale-balanced text-blue-500 text-2xl"></i><span className="brand text-xs uppercase tracking-widest text-blue-400">Legal Department</span></button>
                     </div>
                 </div>
             );
         }
-
-        function BusinessTab() {
-            return (
-                <div className="space-y-6 animate-fadeIn">
-                    <div className="luxury-card p-6 rounded-3xl text-white">
-                        <div className="flex justify-between items-center mb-6">
-                            <h2 className="brand-font text-xs tracking-widest uppercase" style={{color: 'var(--ntg-gold)'}}>Live In Mykonos</h2>
-                            <i className="fa-solid fa-crown text-yellow-500 text-xl"></i>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4 mb-6">
-                            <div className="p-4 bg-white/5 rounded-2xl border border-white/10">
-                                <span className="text-[10px] opacity-60 uppercase font-black block mb-1">Bookings</span>
-                                <span className="text-xl font-bold">88%</span>
-                            </div>
-                            <div className="p-4 bg-white/5 rounded-2xl border border-white/10">
-                                <span className="text-[10px] opacity-60 uppercase font-black block mb-1">Cleaning</span>
-                                <span className="text-xl font-bold text-emerald-400">DONE</span>
-                            </div>
-                        </div>
-                        <button className="w-full border border-yellow-500 text-yellow-500 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all active:bg-yellow-500 active:text-black">
-                            Luxury Management Access
-                        </button>
-                    </div>
-
-                    {/* eShop Placeholder */}
-                    <div className="p-6 bg-indigo-900/20 border border-indigo-500/30 rounded-3xl flex items-center justify-between">
-                        <div>
-                            <h4 className="brand-font text-indigo-400 text-xs uppercase">E-Shop Division</h4>
-                            <p className="text-[10px] text-slate-400 mt-1 uppercase font-bold">Separate Infrastructure Active</p>
-                        </div>
-                        <i className="fa-solid fa-cart-shopping text-indigo-500"></i>
-                    </div>
-                </div>
-            );
-        }
-
-        // --- UI HELPERS ---
-
-        function NavButton({ active, icon, label, onClick }) {
-            return (
-                <button onClick={onClick} className={`flex flex-col items-center gap-1 transition-all ${active ? 'text-blue-500 scale-110' : 'text-slate-600 opacity-60'}`}>
-                    <i className={`fa-solid ${icon} text-xl`}></i>
-                    <span className="text-[8px] font-black uppercase tracking-widest">{label}</span>
-                    {active && <div className="w-1 h-1 bg-blue-500 rounded-full mt-1"></div>}
-                </button>
-            );
-        }
-
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
     </script></body></html>

@@ -1,7 +1,7 @@
 <!DOCTYPE html><html lang="el"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NTG | COMMAND CENTER V12.7</title>
+    <title>NTG | COMMAND CENTER V12.8</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -13,7 +13,8 @@
         body { font-family: 'Inter', sans-serif; background-color: #020617; color: #f8fafc; margin: 0; }
         .brand-font { font-family: 'Orbitron', sans-serif; letter-spacing: 1px; }
         .glass { background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.05); }
-        .glow-blue { box-shadow: 0 0 20px rgba(59, 130, 246, 0.2); }
+        .glow-blue { box-shadow: 0 0 20px rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.4); }
+        .btn-disabled { opacity: 0.2; filter: grayscale(1); cursor: not-allowed; pointer-events: none; }
     </style></head><body>
     <div id="root"></div>
 
@@ -35,28 +36,32 @@
             useEffect(() => { if (isLoggedIn) fetchProjects(); }, [isLoggedIn]);
 
             async function fetchProjects() {
-                const { data, error } = await _supabase.from('ntg_projects').select('*').order('created_at', { ascending: false });
-                if (data) setProjects(data);
+                try {
+                    const { data, error } = await _supabase.from('ntg_projects').select('*').order('created_at', { ascending: false });
+                    if (data) setProjects(data);
+                } catch(e) { console.error(e); }
             }
 
             const handleLaunch = async (name, sel) => {
                 if(!name || sel.length === 0) { alert("Ελλιπή στοιχεία!"); return; }
                 const newProject = { name, services: sel, date: new Date().toLocaleDateString() };
-                const { data, error } = await _supabase.from('ntg_projects').insert([newProject]).select();
-                if (data) {
-                    setProjects([data[0], ...projects]);
-                    setActiveProject(data[0]);
-                    setIsAdding(false);
-                } else { alert("Σφάλμα Βάσης: " + error.message + ". Έχετε φτιάξει τον πίνακα ntg_projects;"); }
+                try {
+                    const { data, error } = await _supabase.from('ntg_projects').insert([newProject]).select();
+                    if (data) {
+                        setProjects([data[0], ...projects]);
+                        setActiveProject(data[0]);
+                        setIsAdding(false);
+                    } else { alert("Σφάλμα: " + error.message); }
+                } catch(err) { alert("Σφάλμα Δικτύου. Ελέγξτε το RLS στη Supabase."); }
             };
 
             if (!isLoggedIn) {
                 return (
                     <div className="h-screen flex items-center justify-center bg-slate-950 p-6">
                         <div className="glass p-10 rounded-[40px] glow-blue w-full max-w-sm text-center">
-                            <h1 className="brand-font text-blue-500 text-2xl mb-8 font-black uppercase tracking-tighter italic">NTG HUB</h1>
+                            <h1 className="brand-font text-blue-500 text-2xl mb-8 font-black uppercase italic tracking-tighter">NTG HUB</h1>
                             <form onSubmit={(e) => { e.preventDefault(); if(passcode==='NT2026') setIsLoggedIn(true); else alert("Wrong Pass"); }}>
-                                <input type="password" value={passcode} onChange={(e)=>setPasscode(e.target.value)} className="w-full bg-slate-800 border border-slate-700 p-5 rounded-3xl mb-4 text-center text-2xl text-white outline-none" placeholder="••••" />
+                                <input type="password" value={passcode} onChange={(e)=>setPasscode(e.target.value)} className="w-full bg-slate-800 border border-slate-700 p-5 rounded-3xl mb-4 text-center text-2xl text-white outline-none focus:border-blue-500" placeholder="••••" />
                                 <button className="w-full bg-blue-600 text-white py-5 rounded-3xl font-black brand-font text-xs uppercase tracking-widest">Connect</button>
                             </form>
                         </div>
@@ -103,7 +108,7 @@
             return (
                 <div className="space-y-6 animate-fadeIn">
                     <button onClick={onExit} className="text-slate-500 text-[10px] brand-font uppercase flex items-center gap-2"><i className="fa-solid fa-chevron-left text-[8px]"></i> Back to Fleet</button>
-                    <div className="bg-slate-900/80 p-8 rounded-[40px] border border-blue-500/20 glow-blue">
+                    <div className="bg-slate-900/80 p-8 rounded-[40px] border border-blue-500/20 glow-blue shadow-2xl">
                         <h2 className="brand-font text-blue-400 text-lg mb-1 leading-tight">{project.name}</h2>
                         <div className="flex flex-wrap gap-2 mt-4 italic">
                             {project.services.map(s => <span key={s} className="text-[8px] bg-blue-900/30 text-blue-300 px-2 py-1 rounded-lg font-black uppercase tracking-tighter border border-blue-500/10">{s}</span>)}
@@ -136,8 +141,8 @@
             return (
                 <div className="space-y-6">
                     <div className="flex justify-between items-center">
-                        <h2 className="brand-font text-blue-500 text-xs border-l-4 border-blue-600 pl-3 uppercase italic tracking-widest">Active Operations</h2>
-                        {!isAdding && <button onClick={() => setIsAdding(true)} className="w-12 h-12 bg-emerald-600 rounded-full flex items-center justify-center text-white shadow-lg active:scale-90 transition-all"><i className="fa-solid fa-plus text-xl"></i></button>}
+                        <h2 className="brand-font text-blue-500 text-xs border-l-4 border-blue-600 pl-3 uppercase italic tracking-widest leading-none">Active Operations</h2>
+                        {!isAdding && <button onClick={() => setIsAdding(true)} className="w-12 h-12 bg-emerald-600 rounded-full flex items-center justify-center text-white shadow-lg active:scale-90 transition-all shadow-emerald-900/40"><i className="fa-solid fa-plus text-xl"></i></button>}
                     </div>
                     {isAdding ? (
                         <div className="bg-slate-900 p-6 rounded-[35px] border border-slate-800 space-y-4 animate-fadeIn">
@@ -161,7 +166,7 @@
                                     <i className="fa-solid fa-chevron-right text-slate-700 text-xs"></i>
                                 </div>
                             ))}
-                            {projects.length === 0 && <p className="text-center text-slate-600 text-[10px] py-10 uppercase italic brand-font tracking-widest">Fleet Empty - Waiting for Command</p>}
+                            {projects.length === 0 && <p className="text-center text-slate-600 text-[10px] py-10 uppercase italic brand-font tracking-widest opacity-30">No active projects</p>}
                         </div>
                     )}
                 </div>
@@ -207,9 +212,9 @@
         function IntelTab() {
             return (
                 <div className="space-y-6 animate-fadeIn">
-                    <h2 className="brand-font text-blue-500 text-xs border-l-4 border-blue-600 pl-3 uppercase">Deep Intel Status</h2>
-                    <div className="bg-slate-900/50 p-10 rounded-[50px] border border-blue-500/10 text-center relative overflow-hidden">
-                        <div className="absolute top-0 left-0 w-full h-1 bg-blue-500 animate-[move_2s_infinite]"></div>
+                    <h2 className="brand-font text-blue-500 text-xs border-l-4 border-blue-600 pl-3 uppercase italic tracking-widest">Deep Intel Status</h2>
+                    <div className="bg-slate-900/50 p-10 rounded-[50px] border border-blue-500/10 text-center relative overflow-hidden shadow-2xl">
+                        <div className="absolute top-0 left-0 w-full h-1 bg-blue-500/30 animate-pulse"></div>
                         <i className="fa-solid fa-satellite-dish text-blue-500/40 text-3xl mb-4 animate-pulse"></i>
                         <p className="text-[9px] text-slate-500 uppercase font-black tracking-widest italic leading-relaxed">Awaiting AI 07:00 Deep Search Briefing from Agent "Aida"...</p>
                     </div>
@@ -221,7 +226,7 @@
             return (
                 <button onClick={onClick} className={`flex flex-col items-center gap-1.5 transition-all ${active ? 'text-blue-500 scale-110' : 'text-slate-600 opacity-60'}`}>
                     <i className={`fa-solid ${icon} text-lg`}></i>
-                    <span className="text-[8px] font-black uppercase tracking-tighter leading-none">{label}</span>
+                    <span className="text-[8px] font-black uppercase tracking-tighter leading-none italic">{label}</span>
                 </button>
             );
         }

@@ -1,7 +1,7 @@
 <!DOCTYPE html><html lang="el"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>X-INTEL HUB | Newsfeed Edition</title>
+    <title>X-INTEL | Workspaces</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -10,151 +10,162 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
-        .news-card { transition: all 0.2s ease; }
-        .news-card:active { transform: scale(0.98); }
+        .safe-area-bottom { padding-bottom: env(safe-area-inset-bottom); }
     </style></head><body>
     <div id="root"></div>
 
     <script type="text/babel">
         const { useState } = React;
 
-        function MainHub() {
-            const [isLoggedIn, setIsLoggedIn] = useState(false);
-            const [passcode, setPasscode] = useState('');
-            const [activeApp, setActiveApp] = useState('home');
-
-            // --- MOCK DATA ΓΙΑ ΤΟ NEWSFEED ---
-            const [news, setNews] = useState([
-                { id: 1, type: 'INTEL', title: '🚢 NAFTOCEMENT IV', info: 'Εντοπίστηκε είσοδος στο Πέραμα.', time: '10λ πριν', color: 'border-blue-500', icon: 'fa-ship' },
-                { id: 2, type: 'LEGAL', title: '⚖️ Υπόθεση Τερμέ', info: 'Νέο έγγραφο από δικηγόρο.', time: '2ω πριν', color: 'border-red-600', icon: 'fa-gavel' },
-                { id: 3, type: 'YARD', title: '🏭 Ναυπηγεία Τουρκίας', info: 'Αυξημένη κίνηση σε Bulk Carriers.', time: '5ω πριν', color: 'border-orange-500', icon: 'fa-industry' },
-                { id: 4, type: 'MARINE', title: '🛡️ Rigel III', info: 'Λήξη Gas Free σε 3 ώρες.', time: 'Τώρα', color: 'border-emerald-500', icon: 'fa-clock' }
-            ]);
-
-            const apps = [
-                { id: 'safety', name: 'Τεχνικός Ασφαλείας', icon: 'fa-user-shield', color: 'bg-emerald-600', group: 'MARINE' },
-                { id: 'utm', name: 'UTL / UTM Hull', icon: 'fa-ruler-combined', color: 'bg-blue-600', group: 'MARINE' },
-                { id: 'legal', name: 'Νομικές Υποθέσεις', icon: 'fa-gavel', color: 'bg-red-800', group: 'LEGAL' },
-                { id: 'intel', name: 'Ship & Yard Intel', icon: 'fa-tower-observation', color: 'bg-slate-800', group: 'INTEL' },
-                { id: 'airbnb', name: 'Airbnb Manager', icon: 'fa-bed', color: 'bg-pink-500', group: 'BUSINESS' }
-            ];
-
-            const handleLogin = (e) => {
-                e.preventDefault();
-                if (passcode === 'NT2026') setIsLoggedIn(true);
-                else alert("Λάθος Κωδικός!");
-            };
-
-            if (!isLoggedIn) {
-                return (
-                    <div className="h-screen flex items-center justify-center bg-slate-900 p-6">
-                        <div className="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-sm text-center">
-                            <h1 className="text-2xl font-black text-slate-800 mb-1">X-INTEL HUB</h1>
-                            <p className="text-slate-400 mb-6 text-[10px] font-bold uppercase tracking-widest leading-none">Lainas Group Command</p>
-                            <form onSubmit={handleLogin}>
-                                <input type="password" border className="w-full border-2 border-slate-100 p-4 rounded-2xl mb-4 text-center text-xl outline-none focus:border-blue-500" placeholder="••••" value={passcode} onChange={(e) => setPasscode(e.target.value)} />
-                                <button className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold shadow-lg">ΕΙΣΟΔΟΣ</button>
-                            </form>
-                        </div>
-                    </div>
-                );
-            }
-
-            if (activeApp === 'home') {
-                return (
-                    <div className="p-4 max-w-lg mx-auto pb-20">
-                        <header className="mb-6 flex justify-between items-center">
-                            <div>
-                                <h1 className="text-xl font-extrabold text-slate-900 leading-none">HQ DASHBOARD</h1>
-                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Lainas Group Strategy</p>
-                            </div>
-                            <div className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-[9px] font-bold animate-pulse">LIVE OPS</div>
-                        </header>
-
-                        {/* --- NEWSFEED SECTION --- */}
-                        <section className="mb-8">
-                            <h3 className="text-[10px] font-black text-slate-400 mb-3 tracking-[0.2em] uppercase">Live Intelligence Feed</h3>
-                            <div className="space-y-3">
-                                {news.map(item => (
-                                    <div key={item.id} className={`bg-white p-4 rounded-2xl shadow-sm border-l-4 ${item.color} news-card flex items-center gap-4`}>
-                                        <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-600">
-                                            <i className={`fa-solid ${item.icon}`}></i>
-                                        </div>
-                                        <div className="flex-1">
-                                            <div className="flex justify-between items-center">
-                                                <h4 className="font-bold text-xs text-slate-800">{item.title}</h4>
-                                                <span className="text-[9px] text-slate-400 font-bold uppercase">{item.time}</span>
-                                            </div>
-                                            <p className="text-[11px] text-slate-500 mt-0.5">{item.info}</p>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </section>
-
-                        {/* --- APPS SECTION --- */}
-                        <div className="space-y-8">
-                            {['MARINE', 'LEGAL', 'INTEL', 'BUSINESS'].map(group => (
-                                <div key={group}>
-                                    <h3 className="text-[10px] font-black text-slate-400 mb-3 border-b border-slate-200 pb-1 tracking-widest uppercase">{group}</h3>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        {apps.filter(a => a.group === group).map(app => (
-                                            <button key={app.id} onClick={() => setActiveApp(app.id)} className={`${app.color} p-5 rounded-3xl text-white shadow-lg active:scale-90 transition-all flex flex-col items-center justify-center h-28`}>
-                                                <i className={`fa-solid ${app.icon} text-2xl mb-2`}></i>
-                                                <span className="text-[9px] font-black uppercase text-center leading-tight">{app.name}</span>
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                );
-            }
+        // --- ΚΕΝΤΡΙΚΗ ΕΦΑΡΜΟΓΗ ---
+        function XIntelApp() {
+            const [currentPage, setCurrentPage] = useState('home'); // home, marine, legal, intel, business
 
             return (
-                <div className="min-h-screen bg-white flex flex-col">
-                    <header className="bg-slate-900 p-5 text-white flex justify-between items-center sticky top-0 z-50 shadow-xl">
-                        <span className="font-black text-xs uppercase tracking-widest">{apps.find(a => a.id === activeApp).name}</span>
-                        <button onClick={() => setActiveApp('home')} className="text-[10px] font-bold bg-white/10 px-4 py-2 rounded-full uppercase">Πίσω στο Menu</button>
+                <div className="min-h-screen flex flex-col pb-20">
+                    {/* Header (Πάντα ορατό) */}
+                    <header className="bg-slate-900 text-white p-4 sticky top-0 z-50 flex justify-between items-center shadow-lg">
+                        <div className="leading-none">
+                            <h1 className="text-sm font-black tracking-tighter text-blue-400">LAINAS GROUP</h1>
+                            <span className="text-[8px] uppercase opacity-50 font-bold">Command Center</span>
+                        </div>
+                        <div className="text-[10px] font-bold bg-white/10 px-3 py-1 rounded-full uppercase italic">
+                            {currentPage} mode
+                        </div>
                     </header>
-                    <div className="p-6 flex-1">
-                        {activeApp === 'legal' && <LegalModule />}
-                        {activeApp === 'intel' && <IntelModule />}
-                        {['safety', 'utm', 'airbnb'].includes(activeApp) && (
-                            <div className="text-center py-20 text-slate-300 italic">
-                                <i className="fa-solid fa-screwdriver-wrench text-5xl mb-4 block"></i>
-                                Η ενότητα {activeApp.toUpperCase()} παραμετροποιείται...
-                            </div>
-                        )}
+
+                    {/* Content Area (Εδώ αλλάζουν οι σελίδες) */}
+                    <main className="flex-1 p-4 max-w-lg mx-auto w-full">
+                        {currentPage === 'home' && <HomePage />}
+                        {currentPage === 'marine' && <MarineWorkspace />}
+                        {currentPage === 'legal' && <LegalWorkspace />}
+                        {currentPage === 'intel' && <IntelWorkspace />}
+                        {currentPage === 'business' && <BusinessWorkspace />}
+                    </main>
+
+                    {/* BOTTOM NAVIGATION (Η "γέφυρα" ελέγχου) */}
+                    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-around p-3 safe-area-bottom shadow-[0_-5px_15px_rgba(0,0,0,0.05)] z-50">
+                        <NavButton icon="fa-house" label="Home" active={currentPage==='home'} onClick={()=>setCurrentPage('home')} />
+                        <NavButton icon="fa-ship" label="Marine" active={currentPage==='marine'} onClick={()=>setCurrentPage('marine')} />
+                        <NavButton icon="fa-gavel" label="Legal" active={currentPage==='legal'} onClick={()=>setCurrentPage('legal')} />
+                        <NavButton icon="fa-tower-observation" label="Intel" active={currentPage==='intel'} onClick={()=>setCurrentPage('intel')} />
+                        <NavButton icon="fa-briefcase" label="Biz" active={currentPage==='business'} onClick={()=>setCurrentPage('business')} />
+                    </nav>
+                </div>
+            );
+        }
+
+        // --- COMPONENTS ΣΕΛΙΔΩΝ ---
+
+        function HomePage() {
+            return (
+                <div className="space-y-6">
+                    <h2 className="text-xl font-black text-slate-800 uppercase">Live Intel Feed</h2>
+                    <div className="bg-blue-600 p-5 rounded-3xl text-white shadow-blue-200 shadow-xl">
+                        <p className="text-[10px] font-bold opacity-80 uppercase">Τελευταίο Alert</p>
+                        <h3 className="text-lg font-bold mt-1">🚢 NAFTOCEMENT IV</h3>
+                        <p className="text-xs opacity-90">Είσοδος στη Ζώνη Περάματος πριν 15 λεπτά.</p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                        <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 italic text-[11px] text-slate-500">
+                            "Η τύχη ευνοεί τους καλά προετοιμασμένους."
+                        </div>
+                        <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
+                            <span className="text-[10px] font-bold text-red-600 block uppercase">Legal Alert</span>
+                            <span className="text-xs font-bold text-slate-800">Υπόθεση Τερμέ: +1 έγγραφο</span>
+                        </div>
                     </div>
                 </div>
             );
         }
 
-        function LegalModule() {
+        function MarineWorkspace() {
             return (
                 <div className="space-y-4">
-                    <div className="p-5 bg-red-50 border-l-4 border-red-800 rounded-r-2xl shadow-sm">
-                        <h4 className="font-black text-red-900 text-sm uppercase">Υπόθεση Τερμέ</h4>
-                        <p className="text-xs text-red-700 mt-1">Status: Αναμονή υπομνήματος.</p>
+                    <h2 className="text-xl font-black text-blue-800 uppercase">Marine Operations</h2>
+                    <div className="grid grid-cols-1 gap-3">
+                        <ToolCard icon="fa-user-shield" title="Τεχνικός Ασφαλείας" desc="Ημερολόγια & Π.Δ. 70/90" color="bg-emerald-600" />
+                        <ToolCard icon="fa-ruler-combined" title="UTM Hull Gauging" desc="Παχυμετρήσεις & UTL Reports" color="bg-blue-600" />
+                        <ToolCard icon="fa-weight-hanging" title="Load Testing" desc="Πιστοποιητικά & Δοκιμές" color="bg-cyan-600" />
                     </div>
                 </div>
             );
         }
 
-        function IntelModule() {
+        function LegalWorkspace() {
             return (
                 <div className="space-y-4">
-                    <div className="p-5 bg-blue-50 border border-blue-100 rounded-3xl shadow-sm">
-                        <h4 className="font-black text-blue-900 text-sm uppercase">🚢 NAFTOCEMENT IV</h4>
-                        <p className="text-[11px] text-blue-700 mt-1">Εντοπίστηκε: Πέραμα (Ζώνη)</p>
+                    <h2 className="text-xl font-black text-red-800 uppercase">Legal Shield</h2>
+                    <div className="bg-white p-5 rounded-3xl border-2 border-red-50 shadow-sm">
+                        <h4 className="font-black text-sm text-red-900 mb-2 underline">ΥΠΟΘΕΣΗ ΤΕΡΜΕ</h4>
+                        <ul className="text-xs space-y-2 text-slate-600">
+                            <li>• Κατάθεση υπομνήματος: 12/04</li>
+                            <li>• Μάρτυρες: Επιβεβαιώθηκαν</li>
+                        </ul>
                     </div>
                 </div>
             );
         }
 
-        const container = document.getElementById('root');
-        const root = ReactDOM.createRoot(container);
-        root.render(<MainHub />);
+        function IntelWorkspace() {
+            return (
+                <div className="space-y-4">
+                    <h2 className="text-xl font-black text-slate-800 uppercase">Global Intel</h2>
+                    <div className="relative">
+                        <input className="w-full p-4 rounded-2xl border-2 border-slate-200 outline-none focus:border-blue-500" placeholder="Αναζήτηση Πλοίου / Ναυπηγείου..." />
+                    </div>
+                    <div className="p-4 bg-slate-800 text-white rounded-2xl">
+                        <span className="text-[9px] font-bold opacity-50 block uppercase">Yard Watch</span>
+                        <p className="text-xs mt-1">Ναυπηγεία Τουρκίας: 12 Bulk Carriers υπό επισκευή.</p>
+                    </div>
+                </div>
+            );
+        }
+
+        function BusinessWorkspace() {
+            return (
+                <div className="space-y-4">
+                    <h2 className="text-xl font-black text-pink-600 uppercase">Venture Hub</h2>
+                    <div className="grid grid-cols-2 gap-3">
+                        <div className="bg-pink-500 p-5 rounded-2xl text-white">
+                            <i className="fa-solid fa-bed text-2xl mb-2"></i>
+                            <p className="text-[10px] font-bold uppercase">Airbnb</p>
+                            <p className="text-lg font-bold">4.8 ★</p>
+                        </div>
+                        <div className="bg-indigo-600 p-5 rounded-2xl text-white">
+                            <i className="fa-solid fa-cart-shopping text-2xl mb-2"></i>
+                            <p className="text-[10px] font-bold uppercase">eShop</p>
+                            <p className="text-lg font-bold">Live</p>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // --- HELPERS ---
+        function NavButton({ icon, label, active, onClick }) {
+            return (
+                <button onClick={onClick} className={`flex flex-col items-center gap-1 transition-all ${active ? 'text-blue-600 scale-110' : 'text-slate-400 opacity-60'}`}>
+                    <i className={`fa-solid ${icon} text-lg`}></i>
+                    <span className="text-[8px] font-bold uppercase tracking-tighter">{label}</span>
+                </button>
+            );
+        }
+
+        function ToolCard({ icon, title, desc, color }) {
+            return (
+                <div className={`${color} p-4 rounded-2xl text-white shadow-md flex items-center gap-4 active:scale-95 transition-all`}>
+                    <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center text-xl">
+                        <i className={`fa-solid ${icon}`}></i>
+                    </div>
+                    <div>
+                        <h4 className="font-bold text-sm leading-none">{title}</h4>
+                        <p className="text-[10px] opacity-80 mt-1">{desc}</p>
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<XIntelApp />);
     </script></body></html>

@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="el"><head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NTG COMMAND | DASHBOARD</title>
+    <title>NTG HUB | V35</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -20,22 +20,20 @@
             const [taskCount, setTaskCount] = useState(0);
 
             useEffect(() => {
-                try {
-                    const saved = JSON.parse(localStorage.getItem('ntg_v33_data'));
-                    if (saved && saved.ships) {
-                        const count = saved.ships.flatMap(s => Object.values(s.data || {}))
-                                          .flatMap(d => d.observations || [])
-                                          .filter(o => o && o.isTask).length;
-                        setTaskCount(count);
-                    }
-                } catch(e) { console.error("Memory Sync Error"); }
+                const saved = JSON.parse(localStorage.getItem('ntg_v35_data'));
+                if (saved && saved.ships) {
+                    const count = saved.ships.flatMap(s => Object.values(s.data || {}))
+                                      .flatMap(d => d.observations || [])
+                                      .filter(o => o.isTask).length;
+                    setTaskCount(count);
+                }
             }, []);
 
             if (!isAuth) return (
                 <div className="h-screen flex items-center justify-center bg-slate-950 p-6">
                     <form onSubmit={(e)=>{e.preventDefault(); if(e.target.p.value==='NT2026'){sessionStorage.setItem('ntg_auth','true');setIsAuth(true)}}} className="glass p-10 rounded-[40px] w-full max-w-sm text-center border border-blue-500/20">
-                        <h1 className="brand text-blue-500 text-2xl mb-8 uppercase italic">NTG COMMAND</h1>
-                        <input name="p" type="password" autoFocus className="w-full bg-slate-900 border border-slate-800 p-5 rounded-3xl mb-4 text-center text-white outline-none" placeholder="••••" />
+                        <h1 className="brand text-blue-500 text-2xl mb-8 uppercase italic">NTG HUB</h1>
+                        <input name="p" type="password" autoFocus className="w-full bg-slate-900 border border-slate-800 p-5 rounded-3xl mb-4 text-center text-white" placeholder="••••" />
                         <button className="w-full bg-blue-600 py-5 rounded-3xl font-black text-xs uppercase shadow-xl">Identify</button>
                     </form>
                 </div>
@@ -44,19 +42,20 @@
             return (
                 <div className="max-w-xl mx-auto p-5 py-10 animate-fadeIn">
                     <header className="flex justify-between items-center mb-12">
-                        <div><h1 className="brand text-blue-500 text-2xl font-black italic uppercase">NTG HUB</h1><p className="text-[9px] font-bold text-slate-500 tracking-[0.4em]">OPERATIONS CENTER V33.1</p></div>
-                        <button onClick={()=>{localStorage.clear(); window.location.reload();}} className="text-[8px] border border-white/10 p-2 rounded-lg opacity-30">RESET MEMORY</button>
+                        <div><h1 className="brand text-blue-500 text-2xl font-black italic uppercase leading-none">NTG HUB</h1><p className="text-[10px] text-slate-500 mt-2 font-bold tracking-[0.4em]">FLEET OPS V35.0</p></div>
                     </header>
-                    <div className="grid grid-cols-1 gap-4 mb-10">
-                        <div className="glass p-6 rounded-[35px] border-l-4 border-red-600 flex justify-between items-center">
-                            <div><h3 className="brand text-[10px] text-red-500 uppercase italic">Hazardous Findings</h3><p className="text-3xl font-black mt-1">{taskCount} <span className="text-xs text-slate-500">ACTIVE TASKS</span></p></div>
-                            <i className="fa-solid fa-triangle-exclamation text-red-500 text-2xl"></i>
+
+                    <a href="safety_ships.html?view=TASKS" className="grid grid-cols-1 gap-4 mb-10 block active:scale-95 transition-all">
+                        <div className="glass p-6 rounded-[35px] border-l-4 border-red-600 flex justify-between items-center bg-red-600/5">
+                            <div><h3 className="brand text-[10px] text-red-500 uppercase italic">Hazardous Findings</h3><p className="text-3xl font-black mt-1">{taskCount} <span className="text-xs text-slate-500 uppercase">Open Risks</span></p></div>
+                            <i className="fa-solid fa-triangle-exclamation text-red-500 text-2xl animate-pulse"></i>
                         </div>
-                    </div>
-                    <div className="grid grid-cols-1 gap-4">
-                        <a href="safety_ships.html" className="glass p-8 rounded-[40px] flex items-center gap-6 active:scale-95 transition-all">
-                            <div className="w-14 h-14 rounded-2xl bg-red-600/20 flex items-center justify-center"><i className="fa-solid fa-user-shield text-2xl text-red-500"></i></div>
-                            <div><h2 className="brand text-sm text-white uppercase italic">Safety Officer</h2><p className="text-[10px] text-slate-500 font-bold uppercase mt-1">Audit & Risk Management</p></div>
+                    </a>
+
+                    <div className="grid grid-cols-1 gap-6">
+                        <a href="safety_ships.html" className="glass p-8 rounded-[40px] flex items-center gap-6 active:scale-95 transition-all border border-white/5">
+                            <div className="w-14 h-14 rounded-2xl bg-red-600/20 flex items-center justify-center text-red-500 text-2xl"><i className="fa-solid fa-user-shield"></i></div>
+                            <div><h2 className="brand text-sm text-white uppercase italic leading-none">Safety Officer</h2><p className="text-[10px] text-slate-500 font-bold uppercase mt-2">Compliance Hub</p></div>
                         </a>
                     </div>
                 </div>

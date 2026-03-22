@@ -5,16 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>X-INTEL HUB | Lainas Group</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-        body { font-family: 'Inter', sans-serif; }
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
     </style>
 </head>
-<body class="bg-slate-100">
+<body>
     <div id="root"></div>
 
     <script type="text/babel">
@@ -27,9 +27,20 @@
 
             const handleLogin = (e) => {
                 e.preventDefault();
-                if (passcode === 'NT2026') setIsLoggedIn(true);
-                else alert("Λάθος Κωδικός!");
+                if (passcode === 'NT2026') {
+                    setIsLoggedIn(true);
+                } else {
+                    alert("Λάθος Κωδικός!");
+                }
             };
+
+            const apps = [
+                { id: 'safety', name: 'Τεχνικός Ασφαλείας', icon: 'fa-user-shield', color: 'bg-emerald-600', group: 'MARINE' },
+                { id: 'utm', name: 'UTL / UTM Hull', icon: 'fa-ruler-combined', color: 'bg-blue-600', group: 'MARINE' },
+                { id: 'legal', name: 'Νομικές Υποθέσεις', icon: 'fa-gavel', color: 'bg-red-800', group: 'LEGAL' },
+                { id: 'intel', name: 'Ship & Yard Intel', icon: 'fa-tower-observation', color: 'bg-slate-800', group: 'INTEL' },
+                { id: 'airbnb', name: 'Airbnb Manager', icon: 'fa-bed', color: 'bg-pink-500', group: 'BUSINESS' }
+            ];
 
             if (!isLoggedIn) {
                 return (
@@ -52,20 +63,12 @@
                 );
             }
 
-            const apps = [
-                { id: 'safety', name: 'Τεχνικός Ασφαλείας', icon: 'fa-user-shield', color: 'bg-emerald-600', group: 'MARINE' },
-                { id: 'utm', name: 'UTL / UTM Hull', icon: 'fa-ruler-combined', color: 'bg-blue-600', group: 'MARINE' },
-                { id: 'legal', name: 'Νομικές Υποθέσεις', icon: 'fa-gavel', color: 'bg-red-800', group: 'LEGAL' },
-                { id: 'intel', name: 'Ship & Yard Intel', icon: 'fa-tower-observation', color: 'bg-slate-800', group: 'INTEL' },
-                { id: 'airbnb', name: 'Airbnb Manager', icon: 'fa-bed', color: 'bg-pink-500', group: 'BUSINESS' }
-            ];
-
             if (activeApp === 'home') {
                 return (
                     <div className="p-6 max-w-lg mx-auto">
                         <header className="mb-8 flex justify-between items-center">
                             <div>
-                                <h1 className="text-2xl font-black text-slate-900 leading-none">X-INTEL</h1>
+                                <h1 className="text-2xl font-black text-slate-900 leading-none uppercase">X-INTEL</h1>
                                 <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em]">Lainas Group Hub</p>
                             </div>
                             <div className="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center">
@@ -76,7 +79,7 @@
                         <div className="space-y-8">
                             {['MARINE', 'LEGAL', 'INTEL', 'BUSINESS'].map(group => (
                                 <div key={group}>
-                                    <h3 className="text-[10px] font-black text-slate-400 mb-3 border-b border-slate-200 pb-1 tracking-widest">{group}</h3>
+                                    <h3 className="text-[10px] font-black text-slate-400 mb-3 border-b border-slate-200 pb-1 tracking-widest uppercase">{group}</h3>
                                     <div className="grid grid-cols-2 gap-4">
                                         {apps.filter(a => a.group === group).map(app => (
                                             <button 
@@ -106,12 +109,12 @@
                     <div className="p-6 flex-1">
                         {activeApp === 'legal' && <LegalModule />}
                         {activeApp === 'intel' && <IntelModule />}
-                        {['safety', 'utm', 'airbnb'].map(id => activeApp === id && (
-                            <div key={id} className="text-center py-20 text-slate-300 italic">
+                        {['safety', 'utm', 'airbnb'].includes(activeApp) && (
+                            <div className="text-center py-20 text-slate-300 italic">
                                 <i className="fa-solid fa-screwdriver-wrench text-5xl mb-4 block"></i>
-                                Η ενότητα {id.toUpperCase()} παραμετροποιείται...
+                                Η ενότητα {activeApp.toUpperCase()} παραμετροποιείται...
                             </div>
-                        ))}
+                        )}
                     </div>
                 </div>
             );
@@ -148,7 +151,8 @@
             );
         }
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
+        const container = document.getElementById('root');
+        const root = ReactDOM.createRoot(container);
         root.render(<MainHub />);
     </script>
 </body>

@@ -1,259 +1,119 @@
 <!DOCTYPE html><html lang="el"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NTG | COMMAND CENTER V13.1</title>
+    <title>NTG | UTM TOOL</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;700&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #020617; color: #f8fafc; margin: 0; }
-        .brand-font { font-family: 'Orbitron', sans-serif; letter-spacing: 1px; }
-        .glass { background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.05); }
-        .glow-blue { box-shadow: 0 0 20px rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); }
-        .animate-fadeIn { animation: fadeIn 0.4s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Inter:wght@400;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: white; margin: 0; }
+        .brand { font-family: 'Orbitron', sans-serif; letter-spacing: 1px; color: #3b82f6; }
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     </style></head><body>
     <div id="root"></div>
 
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        // --- ΑΥΤΟΜΑΤΟΣ ΚΑΘΑΡΙΣΜΟΣ ΚΛΕΙΔΙΩΝ (Sanitization) ---
-        const cleanStr = (s) => s.trim().replace(/[^\x20-\x7E]/g, "");
-        
-        const SUPABASE_URL = cleanStr("https://omdarjncczohpffwunfy.supabase.co"); 
-        const SUPABASE_KEY = cleanStr("sb_publishable_V-nfUDy5MxEG4SlXkisFBg_GBlD_4Y9"); 
-        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        function UTMApp() {
+            const [shipName, setShipName] = useState(() => localStorage.getItem('utm_ship') || '');
+            const [rows, setRows] = useState(() => {
+                const saved = localStorage.getItem('utm_data');
+                return saved ? JSON.parse(saved) : [{ id: 1, pt: 'A1', orig: 10.0, curr: '' }];
+            });
 
-        function App() {
-            const [isLoggedIn, setIsLoggedIn] = useState(false);
-            const [passcode, setPasscode] = useState('');
-            const [activeTab, setActiveTab] = useState('projects');
-            const [projects, setProjects] = useState([]);
-            const [activeProject, setActiveProject] = useState(null);
-            const [isAdding, setIsAdding] = useState(false);
+            // Αυτόματη αποθήκευση στο κινητό (Offline)
+            useEffect(() => {
+                localStorage.setItem('utm_data', JSON.stringify(rows));
+                localStorage.setItem('utm_ship', shipName);
+            }, [rows, shipName]);
 
-            useEffect(() => { if (isLoggedIn) fetchProjects(); }, [isLoggedIn]);
-
-            async function fetchProjects() {
-                try {
-                    const { data, error } = await _supabase.from('ntg_projects').select('*').order('created_at', { ascending: false });
-                    if (data) setProjects(data);
-                } catch(e) { console.error("Fetch failed"); }
-            }
-
-            const handleLaunch = async (name, sel) => {
-                try {
-                    const { data, error } = await _supabase.from('ntg_projects').insert([{ 
-                        name: name, 
-                        services: sel, 
-                        date: new Date().toISOString().split('T')[0] // Safe ASCII date
-                    }]).select();
-                    
-                    if (data) { 
-                        setProjects([data[0], ...projects]); 
-                        setActiveProject(data[0]); 
-                        setIsAdding(false); 
-                    } else { alert("Sync Error: " + error.message); }
-                } catch(err) { alert("Η σύνδεση απέτυχε. Παρακαλώ ελέγξτε αν έχετε AdBlocker ή αν το κλειδί είναι σωστό."); }
+            const addRow = () => {
+                const newId = rows.length + 1;
+                setRows([...rows, { id: newId, pt: `A${newId}`, orig: 10.0, curr: '' }]);
             };
 
-            if (!isLoggedIn) {
-                return (
-                    <div className="h-screen flex items-center justify-center bg-slate-950 p-6 animate-fadeIn">
-                        <div className="glass p-10 rounded-[40px] glow-blue w-full max-w-sm text-center">
-                            <h1 className="brand-font text-blue-500 text-2xl mb-8 font-black uppercase">NTG HUB</h1>
-                            <form onSubmit={(e) => { e.preventDefault(); if(passcode==='NT2026') setIsLoggedIn(true); else alert("Access Denied"); }}>
-                                <input type="password" value={passcode} onChange={(e)=>setPasscode(e.target.value)} className="w-full bg-slate-800 border border-slate-700 p-5 rounded-3xl mb-4 text-center text-2xl text-white outline-none" placeholder="••••" />
-                                <button className="w-full bg-blue-600 text-white py-5 rounded-3xl font-black brand-font text-xs uppercase">Unlock System</button>
-                            </form>
-                        </div>
-                    </div>
-                );
-            }
+            const updateRow = (id, field, val) => {
+                setRows(rows.map(r => r.id === id ? { ...r, [field]: val } : r));
+            };
+
+            const resetData = () => {
+                if(confirm("Διαγραφή όλων των μετρήσεων;")) {
+                    setRows([{ id: 1, pt: 'A1', orig: 10.0, curr: '' }]);
+                    setShipName('');
+                }
+            };
 
             return (
-                <div className="min-h-screen flex flex-col pb-24">
-                    <header className="p-5 border-b border-slate-800 glass sticky top-0 z-[100] flex justify-between items-center shadow-2xl">
-                        <h1 className="brand-font text-blue-500 text-sm font-black uppercase tracking-widest italic leading-none">NTG GROUP</h1>
-                        <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_#10b981]"></div>
+                <div className="max-w-xl mx-auto p-4 pb-20">
+                    <header className="flex justify-between items-center mb-8 py-4 border-b border-slate-800">
+                        <h1 className="brand text-sm uppercase">NTG UTM Division</h1>
+                        <button onClick={resetData} className="text-[10px] bg-red-900/30 text-red-400 px-3 py-1 rounded-full border border-red-500/20">RESET</button>
                     </header>
 
-                    <main className="flex-1 p-5 max-w-xl mx-auto w-full">
-                        {activeProject ? (
-                            <ProjectDashboard project={activeProject} onExit={() => setActiveProject(null)} />
-                        ) : (
-                            <>
-                                {activeTab === 'intel' && <IntelTab />}
-                                {activeTab === 'projects' && <ProjectsTab projects={projects} isAdding={isAdding} setIsAdding={setIsAdding} onLaunch={handleLaunch} onSelect={setActiveProject} />}
-                                {activeTab === 'tools' && <ToolsTab />}
-                            </>
-                        )}
-                    </main>
+                    <div className="mb-6">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase block mb-2 tracking-widest">Όνομα Πλοίου</label>
+                        <input 
+                            className="w-full bg-slate-900 border border-slate-700 p-4 rounded-2xl text-lg font-bold outline-none focus:border-blue-500"
+                            placeholder="π.χ. MT FELIX"
+                            value={shipName}
+                            onChange={(e) => setShipName(e.target.value.toUpperCase())}
+                        />
+                    </div>
 
-                    {!activeProject && (
-                        <nav className="fixed bottom-0 left-0 right-0 glass border-t border-slate-800 flex justify-around p-4 z-[100] shadow-2xl">
-                            <NavButton active={activeTab==='intel'} icon="fa-tower-broadcast" label="Intel" onClick={()=>setActiveTab('intel')} />
-                            <NavButton active={activeTab==='projects'} icon="fa-folder-tree" label="Projects" onClick={()=>setActiveTab('projects')} />
-                            <NavButton active={activeTab==='tools'} icon="fa-toolbox" label="Tools" onClick={()=>setActiveTab('tools')} />
-                        </nav>
-                    )}
-                </div>
-            );
-        }
-
-        function ProjectDashboard({ project, onExit }) {
-            const [view, setView] = useState('menu');
-            const [readings, setReadings] = useState([{ point: 'A1', orig: 10.0, curr: '' }]);
-
-            const hasUTM = project.services && project.services.some(s => s.toLowerCase().includes('utm'));
-
-            if (view === 'utm') return (
-                <div className="space-y-6 animate-fadeIn">
-                    <button onClick={() => setView('menu')} className="text-emerald-500 font-bold text-[10px] uppercase tracking-widest mb-4">← Back to Hub</button>
-                    <h2 className="brand-font text-xs uppercase mb-6 italic text-slate-400">UTM Readings: {project.name}</h2>
-                    <div className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
-                        <table className="w-full text-left text-xs">
-                            <thead className="bg-slate-800/50 text-[9px] font-black uppercase text-slate-500">
-                                <tr><th className="p-4">Point</th><th className="p-4">Original</th><th className="p-4">Current</th><th className="p-4">Dim%</th></tr>
+                    <div className="bg-slate-900 rounded-3xl border border-slate-800 overflow-hidden shadow-2xl">
+                        <table className="w-full text-left">
+                            <thead className="bg-slate-800 text-[10px] font-black uppercase text-slate-500">
+                                <tr>
+                                    <th className="p-4">Point</th>
+                                    <th className="p-4 text-center">Orig.</th>
+                                    <th className="p-4 text-center">Reading</th>
+                                    <th className="p-4 text-right">Dim%</th>
+                                </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-800">
-                                {readings.map((r, i) => {
-                                    const dim = r.curr ? (((r.orig - r.curr) / r.orig) * 100).toFixed(1) : 0;
+                                {rows.map((row) => {
+                                    const diminution = row.curr ? (((row.orig - row.curr) / row.orig) * 100).toFixed(1) : 0;
                                     return (
-                                        <tr key={i}>
-                                            <td className="p-4 font-bold text-blue-400">{r.point}</td>
-                                            <td className="p-4 text-slate-500">{r.orig}</td>
-                                            <td className="p-4">
-                                                <input type="number" className="bg-transparent border-b border-emerald-500/50 w-12 outline-none text-emerald-400 font-bold text-center" placeholder="--" value={r.curr} onChange={(e) => {
-                                                    const newR = [...readings]; newR[i].curr = e.target.value; setReadings(newR);
-                                                }} />
+                                        <tr key={row.id}>
+                                            <td className="p-4 font-bold text-blue-400">{row.pt}</td>
+                                            <td className="p-4 text-center text-slate-500">{row.orig}</td>
+                                            <td className="p-4 text-center">
+                                                <input 
+                                                    type="number" 
+                                                    step="0.1"
+                                                    className="bg-slate-800 border border-slate-700 w-16 p-2 rounded-lg text-center font-black text-emerald-400 outline-none"
+                                                    value={row.curr}
+                                                    onChange={(e) => updateRow(row.id, 'curr', e.target.value)}
+                                                />
                                             </td>
-                                            <td className={`p-4 font-black ${dim > 20 ? 'text-red-500' : 'text-emerald-500'}`}>{dim}%</td>
+                                            <td className={`p-4 text-right font-black ${diminution > 20 ? 'text-red-500' : 'text-emerald-500'}`}>
+                                                {diminution}%
+                                            </td>
                                         </tr>
                                     );
                                 })}
                             </tbody>
                         </table>
                     </div>
-                    <div className="flex gap-2">
-                        <button onClick={() => setReadings([...readings, { point: `A${readings.length + 1}`, orig: 10.0, curr: '' }])} className="flex-1 border border-slate-700 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest">+ Add Point</button>
-                        <button onClick={() => alert("Data Synced to Cloud!")} className="flex-1 bg-emerald-600 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl">Sync DB</button>
-                    </div>
+
+                    <button 
+                        onClick={addRow}
+                        className="w-full mt-6 bg-slate-800 border border-slate-700 p-5 rounded-2xl font-black text-xs uppercase tracking-widest active:scale-95 transition-all"
+                    >
+                        <i className="fa-solid fa-plus mr-2 text-blue-500"></i> Προσθήκη Σημείου
+                    </button>
+
+                    <footer className="fixed bottom-0 left-0 right-0 p-4 bg-slate-950/80 backdrop-blur-md border-t border-slate-800 text-center">
+                        <p className="text-[10px] text-slate-600 font-bold uppercase tracking-[0.3em]">Nautical Technology Group • Ready for Inspection</p>
+                    </footer>
                 </div>
             );
-
-            return (
-                <div className="space-y-6 animate-fadeIn">
-                    <button onClick={onExit} className="text-slate-500 text-[10px] brand-font uppercase tracking-widest flex items-center gap-2"><i className="fa-solid fa-chevron-left text-[8px]"></i> Exit Hub</button>
-                    <div className="bg-slate-900/80 p-8 rounded-[40px] border border-blue-500/20 glow-blue shadow-2xl">
-                        <h2 className="brand-font text-blue-400 text-lg mb-1 leading-tight uppercase italic">{project.name}</h2>
-                        <div className="flex flex-wrap gap-2 mt-4 italic">
-                            {project.services && project.services.map(s => <span key={s} className="text-[8px] bg-blue-900/30 text-blue-300 px-2 py-1 rounded-lg font-black uppercase tracking-tighter border border-blue-500/10">{s}</span>)}
-                        </div>
-                    </div>
-                    <div className="grid grid-cols-1 gap-3">
-                        <NavAction icon="fa-file-signature" label="Daily Progress Report" color="bg-blue-600" active={true} />
-                        <NavAction icon="fa-ruler-combined" label="UTM Readings Table" color="bg-emerald-600" active={hasUTM} onClick={() => setView('utm')} />
-                        <NavAction icon="fa-camera" label="Evidence Capture" color="bg-slate-800" active={true} onClick={() => document.getElementById('camIn').click()} />
-                        <input type="file" id="camIn" accept="image/*" capture="camera" className="hidden" />
-                    </div>
-                </div>
-            );
-        }
-
-        function NavAction({ icon, label, color, active, onClick }) {
-            return <button onClick={onClick} disabled={!active} className={`${!active ? 'opacity-20 grayscale' : color} p-6 rounded-3xl flex justify-between items-center active:scale-95 transition-all shadow-xl`}>
-                <span className="text-[11px] font-black uppercase tracking-widest">{label}</span>
-                <i className={`fa-solid ${icon} text-sm opacity-80`}></i>
-            </button>;
-        }
-
-        function ProjectsTab({ projects, isAdding, setIsAdding, onLaunch, onSelect }) {
-            const [name, setName] = useState('');
-            const [sel, setSel] = useState([]);
-            const services = ["Safety Division: Π.Δ. 70/90", "UTM: Hull Gauging", "Load Test ε1-ε5"];
-            return (
-                <div className="space-y-6 animate-fadeIn">
-                    <div className="flex justify-between items-center">
-                        <h2 className="brand-font text-blue-500 text-xs border-l-4 border-blue-600 pl-3 uppercase italic tracking-widest leading-none">Fleet Operations</h2>
-                        {!isAdding && <button onClick={() => setIsAdding(true)} className="w-12 h-12 bg-emerald-600 rounded-full flex items-center justify-center text-white shadow-lg active:scale-90 transition-all shadow-emerald-900/40"><i className="fa-solid fa-plus text-xl"></i></button>}
-                    </div>
-                    {isAdding ? (
-                        <div className="bg-slate-900 p-6 rounded-[35px] border border-slate-800 space-y-4 animate-fadeIn">
-                            <input className="w-full bg-slate-800 p-5 rounded-3xl text-sm border border-slate-700 outline-none font-bold text-white uppercase" placeholder="Ship Name" value={name} onChange={(e)=>setName(e.target.value)} />
-                            {services.map(s => (
-                                <label key={s} className="flex items-center gap-4 bg-slate-800/40 p-4 rounded-2xl cursor-pointer active:bg-slate-800">
-                                    <input type="checkbox" onChange={(e) => e.target.checked ? setSel([...sel, s]) : setSel(sel.filter(i => i !== s))} className="w-4 h-4 accent-emerald-500" />
-                                    <span className="text-xs font-bold text-slate-300 uppercase leading-none">{s}</span>
-                                </label>
-                            ))}
-                            <button onClick={()=>onLaunch(name, sel)} className="w-full bg-emerald-600 py-5 rounded-3xl font-black uppercase text-[10px] tracking-widest">Launch Sync Hub</button>
-                        </div>
-                    ) : (
-                        <div className="space-y-3">
-                            {projects && projects.map(p => (
-                                <div key={p.id} onClick={() => onSelect(p)} className="bg-slate-900 p-6 rounded-[30px] border border-slate-800 flex justify-between items-center cursor-pointer active:scale-95 transition-all hover:border-blue-500/50">
-                                    <div>
-                                        <h4 className="font-bold text-sm text-slate-200 uppercase tracking-tighter">{p.name}</h4>
-                                        <p className="text-[8px] text-slate-500 font-black uppercase mt-1.5">{p.services?.length || 0} Services Active</p>
-                                    </div>
-                                    <i className="fa-solid fa-chevron-right text-slate-700 text-xs"></i>
-                                </div>
-                            ))}
-                            {projects && projects.length === 0 && <p className="text-center text-slate-600 text-[10px] py-10 uppercase italic brand-font tracking-widest opacity-30">Fleet empty - awaiting command</p>}
-                        </div>
-                    )}
-                </div>
-            );
-        }
-
-        function ToolsTab() {
-            const calculateWeight = () => {
-                const l = prompt("Μήκος (m):"); const w = prompt("Πλάτος (m):"); const t = prompt("Πάχος (mm):");
-                if(l && w && t) alert("Υπολογισμός NTG: " + (l * w * t * 7.85).toFixed(2) + " kg");
-            };
-            const inchesToMm = () => {
-                const i = prompt("Inches:");
-                if(i) alert(i + " in = " + (i * 25.4).toFixed(2) + " mm");
-            };
-            const fToC = () => {
-                const f = prompt("Fahrenheit:");
-                if(f) alert(f + " °F = " + ((f-32)*5/9).toFixed(1) + " °C");
-            };
-            return (
-                <div className="space-y-6 animate-fadeIn">
-                    <h2 className="brand-font text-blue-500 text-xs border-l-4 border-blue-600 pl-3 uppercase italic tracking-widest leading-none">Field Engineering</h2>
-                    <div className="grid grid-cols-2 gap-4">
-                        <ToolBox icon="fa-weight-hanging" label="Iron Calc" onClick={calculateWeight} />
-                        <ToolBox icon="fa-ruler-horizontal" label="In ↔ mm" onClick={inchesToMm} />
-                        <ToolBox icon="fa-thermometer-half" label="F ↔ C" onClick={fToC} />
-                        <ToolBox icon="fa-coins" label="FX Rates" onClick={() => alert("Syncing Market Data...")} />
-                    </div>
-                </div>
-            );
-        }
-
-        function ToolBox({ icon, label, onClick }) {
-            return <div onClick={onClick} className="bg-slate-900 border border-slate-800 p-8 rounded-[40px] active:scale-95 transition-all text-center cursor-pointer hover:border-blue-500/30 shadow-2xl">
-                <i className={`fa-solid ${icon} text-blue-500 text-xl mb-3 opacity-80`}></i>
-                <span className="text-[10px] font-black uppercase block tracking-widest leading-none">{label}</span>
-            </div>;
-        }
-
-        function IntelTab() { return <div className="p-10 text-center opacity-30 brand-font text-[9px] uppercase italic tracking-[0.3em] py-40">Awaiting AI Deep Search Briefing from Agent "Aida"...</div>; }
-        
-        function NavButton({ active, icon, label, onClick }) {
-            return <button onClick={onClick} className={`flex flex-col items-center gap-1.5 transition-all ${active ? 'text-blue-500 scale-110' : 'text-slate-600 opacity-60'}`}>
-                <i className={`fa-solid ${icon} text-lg`}></i>
-                <span className="text-[8px] font-black uppercase tracking-tighter leading-none italic">{label}</span>
-            </button>;
         }
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
+        root.render(<UTMApp />);
     </script></body></html>

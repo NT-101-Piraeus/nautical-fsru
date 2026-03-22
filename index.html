@@ -11,43 +11,34 @@
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@400;700;900&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #020617; color: white; margin: 0; }
         .brand { font-family: 'Orbitron', sans-serif; }
-        .glass { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.05); }
+        .glass { background: rgba(30, 41, 59, 0.6); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.05); }
         .card { transition: all 0.3s ease; border: 1px solid rgba(255,255,255,0.03); }
         .card:active { transform: scale(0.95); background: rgba(59, 130, 246, 0.1); }
     </style></head><body>
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect } = React;
+        const { useState } = React;
 
         function Launchpad() {
             const [pass, setPass] = useState('');
-            // Ελέγχει αν υπάρχει ήδη έγκυρο session
-            const [isAuth, setIsAuth] = useState(() => {
-                return sessionStorage.getItem('ntg_auth') === 'true';
-            });
+            // Χρήση sessionStorage για να μη ζητάει κωδικό συνέχεια στο Home
+            const [isAuth, setIsAuth] = useState(() => sessionStorage.getItem('ntg_auth') === 'true');
 
             const handleLogin = (e) => {
                 e.preventDefault();
                 if(pass === 'NT2026') {
                     setIsAuth(true);
                     sessionStorage.setItem('ntg_auth', 'true');
-                } else {
-                    alert('Access Denied');
-                }
-            };
-
-            const handleLogout = () => {
-                setIsAuth(false);
-                sessionStorage.removeItem('ntg_auth');
+                } else { alert('Access Denied'); }
             };
 
             if (!isAuth) {
                 return (
                     <div className="h-screen flex items-center justify-center p-6 bg-slate-950">
-                        <div className="glass p-10 rounded-[40px] w-full max-w-sm text-center shadow-2xl">
-                            <h1 className="brand text-blue-500 text-2xl font-black mb-2 italic uppercase leading-none">NTG GROUP</h1>
-                            <p className="text-[9px] text-slate-500 uppercase tracking-[0.4em] mb-8 font-bold">Secure Link Initialized</p>
+                        <div className="glass p-10 rounded-[40px] w-full max-w-sm text-center shadow-2xl border border-blue-500/20">
+                            <h1 className="brand text-blue-500 text-2xl font-black mb-2 italic uppercase">NTG GROUP</h1>
+                            <p className="text-[9px] text-slate-500 uppercase tracking-[0.4em] mb-8 font-bold">Secure Ecosystem Link</p>
                             <form onSubmit={handleLogin}>
                                 <input type="password" value={pass} onChange={(e)=>setPass(e.target.value)} className="w-full bg-slate-900 border border-slate-800 p-5 rounded-3xl mb-4 text-center text-2xl text-white outline-none focus:border-blue-500" placeholder="••••" />
                                 <button className="w-full bg-blue-600 text-white py-5 rounded-3xl font-black brand text-xs tracking-widest uppercase">Connect</button>
@@ -63,19 +54,24 @@
                         <h1 className="brand text-3xl text-blue-500 font-black tracking-tighter uppercase italic">NTG HUB</h1>
                         <div className="flex justify-center items-center gap-2 mt-2">
                             <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
-                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.4em]">Fleet Active</p>
+                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.4em]">Fleet Online</p>
                         </div>
                     </header>
 
                     <div className="grid grid-cols-1 gap-4">
+                        {/* ΣΥΝΔΕΣΗ ΜΕ ΤΑ ΠΡΑΓΜΑΤΙΚΑ ΣΟΥ ΑΡΧΕΙΑ */}
                         <AppButton href="intel.html" icon="fa-tower-broadcast" label="Intel Division" sub="Hunter Agent & AIS" color="text-blue-400" />
-                        <AppButton href="safety.html" icon="fa-user-shield" label="Safety Officer" sub="Ship Compliance (Π.Δ. 70/90)" color="text-red-500" border="border-l-4 border-l-red-600" />
+                        
+                        <AppButton href="safety_ships.html" icon="fa-user-shield" label="Safety Officer" sub="Ship Compliance (Π.Δ. 70/90)" color="text-red-500" border="border-l-4 border-l-red-600" />
+                        
                         <AppButton href="tech.html" icon="fa-ruler-combined" label="Tech Gauging" sub="UTM & Load Test Hub" color="text-emerald-500" border="border-l-4 border-l-emerald-600" />
+                        
                         <AppButton href="tools.html" icon="fa-toolbox" label="Field Tools" sub="Calculators & Converters" color="text-amber-500" />
+                        
                         <AppButton href="luxury.html" icon="fa-crown" label="Luxury Hub" sub="Mykonos Management" color="text-yellow-500" border="border-l-4 border-l-yellow-500" />
                     </div>
                     
-                    <button onClick={handleLogout} className="w-full mt-12 text-slate-700 text-[10px] font-black uppercase tracking-widest">Terminate Session</button>
+                    <button onClick={() => { sessionStorage.removeItem('ntg_auth'); setIsAuth(false); }} className="w-full mt-12 text-slate-700 text-[10px] font-black uppercase tracking-widest">Terminate Session</button>
                 </div>
             );
         }

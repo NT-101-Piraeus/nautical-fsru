@@ -1,230 +1,216 @@
 <!DOCTYPE html><html lang="el"><head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SafeShip Manager | Professional Edition</title>
+    <title>SafeShip Manager V19 | NTG COMMAND</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@300;400;600;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@400;600;800&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #020617; color: white; margin: 0; touch-action: manipulation; }
         .brand { font-family: 'Orbitron', sans-serif; }
         .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.05); }
-        .btn-status { transition: all 0.2s; border: 1px solid rgba(255,255,255,0.1); }
-        .btn-status.active-ok { background: #10b981 !important; border-color: #34d399; }
-        .btn-status.active-wait { background: #334155 !important; border-color: #64748b; }
-        .btn-status.active-block { background: #ef4444 !important; border-color: #f87171; }
+        .safe-btn { transition: all 0.2s; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+        .safe-btn:active { transform: scale(0.95); opacity: 0.8; }
+        .status-ok { background: #10b981 !important; border-color: #34d399 !important; }
+        .status-wait { background: #f59e0b !important; border-color: #fbbf24 !important; }
+        .status-block { background: #ef4444 !important; border-color: #f87171 !important; }
         input, textarea { background: #0f172a !important; border: 1px solid #1e293b !important; color: white !important; outline: none; }
-        .safe-active:active { transform: scale(0.96); opacity: 0.9; }
     </style></head><body>
     <div id="root"></div>
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        const SUPABASE_URL = "https://omdarjncczohpffwunfy.supabase.co"; 
-        const SUPABASE_KEY = "sb_publishable_V-nfUDy5MxEG4SlXkisFBg_GBlD_4Y9"; 
-        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-        const PD_CATEGORIES = ["1. Καθαρισμοί & Gas-Free", "2. Θερμές Εργασίες", "3. Ελασματουργικές", "4. Μηχανολογικές", "5. Επιφανειακή Επεξεργασία", "6. Ηλεκτρολογικές", "7. Βοηθητικές/Σκαλωσιά"];
-        const SHIP_LOCATIONS = ["Κατάστρωμα (Deck)", "Μηχανοστάσιο (E/R)", "Δεξαμενές (Tanks)", "Αντλιοστάσιο", "Ενδιαίτηση", "Εξωτερικά (Hull/Dock)"];
+        const PD_CATS = ["1. Καθαρισμοί & Gas-Free", "2. Θερμές Εργασίες", "3. Ελασματουργικές", "4. Μηχανολογικές", "5. Επιφανειακή Επεξεργασία", "6. Ηλεκτρολογικές", "7. Βοηθητικές/Σκαλωσιά"];
+        const LOCATIONS = ["Deck", "Engine Room", "Tanks", "Pump Room", "Accommodation", "Hull/Dry Dock"];
 
         function SafeShipApp() {
-            const [view, setView] = useState('dashboard'); // dashboard, new_ship, scope, daily_report, tasks
-            const [projects, setProjects] = useState([]);
-            const [activeProject, setActiveProject] = useState(null);
-            const [loading, setLoading] = useState(true);
-            const [currentTime, setCurrentTime] = useState(new Date());
+            const [view, setView] = useState('dashboard');
+            const [projects, setProjects] = useState(() => JSON.parse(localStorage.getItem('safeship_v19_projects')) || []);
+            const [activeId, setActiveId] = useState(null);
             const [attendance, setAttendance] = useState(() => JSON.parse(localStorage.getItem('ntg_att')) || { in: '--:--', out: '--:--' });
+            const [now, setNow] = useState(new Date());
 
-            // 1. Clock Update & Data Fetch
             useEffect(() => {
-                const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-                fetchProjects();
+                const timer = setInterval(() => setNow(new Date()), 1000);
                 return () => clearInterval(timer);
             }, []);
 
-            async function fetchProjects() {
-                const { data } = await _supabase.from('ntg_projects').select('*').order('created_at', { ascending: false });
-                if (data) setProjects(data);
-                setLoading(false);
-            }
+            useEffect(() => {
+                localStorage.setItem('safeship_v19_projects', JSON.stringify(projects));
+            }, [projects]);
 
-            // 2. Attendance Logic
-            const handleAttendance = (type) => {
-                const timeStr = new Date().toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' });
-                const newAtt = { ...attendance, [type]: timeStr };
-                setAttendance(newAtt);
-                localStorage.setItem('ntg_att', JSON.stringify(newAtt));
-            };
+            const activeP = projects.find(p => p.id === activeId);
 
-            // 3. Project Logic
-            const createProject = async (e) => {
+            // --- FUNCTIONS ---
+            const handleCreate = (e) => {
                 e.preventDefault();
                 const name = e.target.shipName.value.toUpperCase();
-                const { data, error } = await _supabase.from('ntg_projects').insert([{ name, scope: [] }]).select();
-                if (data) {
-                    setProjects([data[0], ...projects]);
-                    setActiveProject(data[0]);
-                    setView('scope');
-                }
+                const newShip = { id: Date.now(), name, scope: [], checks: {} };
+                setProjects([newShip, ...projects]);
+                setActiveId(newShip.id);
+                setView('scope');
             };
 
-            const toggleScope = async (cat) => {
-                const newScope = activeProject.scope.includes(cat) 
-                    ? activeProject.scope.filter(c => c !== cat) 
-                    : [...activeProject.scope, cat];
-                const { error } = await _supabase.from('ntg_projects').update({ scope: newScope }).eq('id', activeProject.id);
-                if (!error) {
-                    const updated = { ...activeProject, scope: newScope };
-                    setActiveProject(updated);
-                    setProjects(projects.map(p => p.id === updated.id ? updated : p));
-                }
+            const toggleScope = (cat) => {
+                const updated = projects.map(p => {
+                    if (p.id === activeId) {
+                        const newScope = p.scope.includes(cat) ? p.scope.filter(c => c !== cat) : [...p.scope, cat];
+                        return { ...p, scope: newScope };
+                    }
+                    return p;
+                });
+                setProjects(updated);
             };
 
-            if (loading) return <div className="h-screen flex flex-col items-center justify-center brand animate-pulse"><p className="text-red-500 text-xl tracking-tighter uppercase italic">Initializing Command Center</p></div>;
+            const setStatus = (loc, status) => {
+                const updated = projects.map(p => {
+                    if (p.id === activeId) {
+                        return { ...p, checks: { ...p.checks, [loc]: { ...p.checks[loc], status } } };
+                    }
+                    return p;
+                });
+                setProjects(updated);
+            };
 
-            // --- VIEW: DASHBOARD ---
+            const setNote = (loc, note) => {
+                const updated = projects.map(p => {
+                    if (p.id === activeId) {
+                        return { ...p, checks: { ...p.checks, [loc]: { ...p.checks[loc], note } } };
+                    }
+                    return p;
+                });
+                setProjects(updated);
+            };
+
+            // --- VIEWS ---
+            
             if (view === 'dashboard') return (
                 <div className="max-w-xl mx-auto p-5 pb-32 animate-fadeIn">
                     <header className="flex justify-between items-start py-6 mb-4 border-b border-slate-800">
-                        <div>
-                            <h1 className="brand text-sm font-black italic tracking-tighter text-red-500 uppercase">SafeShip Manager</h1>
-                            <p className="text-[9px] text-slate-500 font-bold uppercase mt-1 tracking-widest italic">Operations Dashboard</p>
-                        </div>
+                        <div><h1 className="brand text-sm font-black italic text-red-500 uppercase">SafeShip Manager</h1><p className="text-[8px] text-slate-500 font-bold uppercase tracking-widest">Digital Operations</p></div>
                         <div className="text-right">
-                            <p className="text-[10px] font-black uppercase text-white">{currentTime.toLocaleDateString('el-GR')}</p>
-                            <p className="text-xl font-bold text-red-500 leading-none mt-1">{currentTime.toLocaleTimeString('el-GR', {hour:'2-digit', minute:'2-digit'})}</p>
+                            <p className="text-[10px] font-black uppercase">{now.toLocaleDateString('el-GR')}</p>
+                            <p className="text-xl font-bold text-red-500 leading-none mt-1">{now.toLocaleTimeString('el-GR', {hour:'2-digit', minute:'2-digit'})}</p>
                         </div>
                     </header>
 
-                    {/* Attendance Panel */}
                     <div className="glass p-6 rounded-[35px] border-l-4 border-red-600 flex justify-between items-center mb-8">
                         <div className="flex gap-6">
-                            <div><p className="text-[8px] text-slate-500 uppercase font-black">Check-In</p><p className="text-xl font-black">{attendance.in}</p></div>
-                            <div><p className="text-[8px] text-slate-500 uppercase font-black">Check-Out</p><p className="text-xl font-black">{attendance.out}</p></div>
+                            <div><p className="text-[8px] text-slate-500 font-black uppercase">In</p><p className="text-xl font-black">{attendance.in}</p></div>
+                            <div><p className="text-[8px] text-slate-500 font-black uppercase">Out</p><p className="text-xl font-black">{attendance.out}</p></div>
                         </div>
                         <div className="flex flex-col gap-2">
-                            <button onClick={()=>handleAttendance('in')} className="bg-emerald-600 px-5 py-2.5 rounded-2xl text-[9px] font-black uppercase safe-active shadow-lg shadow-emerald-900/20">In</button>
-                            <button onClick={()=>handleAttendance('out')} className="bg-red-700 px-5 py-2.5 rounded-2xl text-[9px] font-black uppercase safe-active shadow-lg shadow-red-900/20">Out</button>
+                            <button onClick={() => {const t=new Date().toLocaleTimeString('el-GR',{hour:'2-digit',minute:'2-digit'}); setAttendance({...attendance, in:t}); localStorage.setItem('ntg_att', JSON.stringify({...attendance, in:t}))}} className="bg-emerald-600 px-5 py-2.5 rounded-2xl text-[9px] font-black uppercase safe-btn">In</button>
+                            <button onClick={() => {const t=new Date().toLocaleTimeString('el-GR',{hour:'2-digit',minute:'2-digit'}); setAttendance({...attendance, out:t}); localStorage.setItem('ntg_att', JSON.stringify({...attendance, out:t}))}} className="bg-red-700 px-5 py-2.5 rounded-2xl text-[9px] font-black uppercase safe-btn">Out</button>
                         </div>
                     </div>
 
-                    <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] mb-4 ml-2">Active Fleet Supervision</h3>
+                    <button onClick={() => setView('new')} className="w-full bg-red-600 p-6 rounded-[35px] font-black text-xs uppercase tracking-widest shadow-2xl mb-10 safe-btn">+ New Ship Inspection</button>
+
                     <div className="space-y-4">
-                        {projects.length === 0 ? <p className="text-center py-10 opacity-20 italic">No ships assigned.</p> : 
+                        <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2 italic">Active Fleet</h3>
+                        {projects.length === 0 ? <p className="text-center py-10 opacity-20 italic">No vessels found.</p> : 
                         projects.map(p => (
-                            <div key={p.id} onClick={()=>{setActiveProject(p); setView('daily_report')}} className="glass p-6 rounded-[35px] flex justify-between items-center border border-white/5 safe-active">
-                                <div>
-                                    <h4 className="font-bold text-sm uppercase text-white">{p.name}</h4>
-                                    <p className="text-[9px] text-slate-500 font-bold uppercase mt-1">{p.scope?.length || 0} PD Categories Enabled</p>
-                                </div>
-                                <div className="bg-slate-800 w-10 h-10 rounded-full flex items-center justify-center text-slate-500"><i className="fa-solid fa-chevron-right text-xs"></i></div>
+                            <div key={p.id} onClick={() => { setActiveId(p.id); setView('daily'); }} className="glass p-6 rounded-[35px] flex justify-between items-center safe-btn border border-white/5">
+                                <div><h4 className="font-bold text-sm uppercase">{p.name}</h4><p className="text-[9px] text-slate-500 font-bold uppercase mt-1">{p.scope?.length || 0} Categories Active</p></div>
+                                <i className="fa-solid fa-chevron-right text-slate-800"></i>
                             </div>
                         ))}
                     </div>
 
-                    <footer className="fixed bottom-0 left-0 right-0 p-6 glass border-t border-slate-800 flex justify-around items-center">
-                        <button onClick={()=>setView('dashboard')} className="text-red-500 flex flex-col items-center gap-1"><i className="fa-solid fa-chart-pie"></i><span className="text-[8px] font-bold uppercase">Dashboard</span></button>
-                        <button onClick={()=>setView('new_ship')} className="bg-red-600 w-14 h-14 rounded-full -mt-12 border-4 border-slate-950 shadow-2xl flex items-center justify-center text-xl safe-active"><i className="fa-solid fa-plus"></i></button>
-                        <button onClick={()=>setView('tasks')} className="text-slate-600 flex flex-col items-center gap-1"><i className="fa-solid fa-list-check"></i><span className="text-[8px] font-bold uppercase">Open Tasks</span></button>
-                    </footer>
+                    <div className="fixed bottom-8 left-5 right-5 flex gap-4">
+                        <button onClick={() => setView('tasks')} className="flex-1 bg-slate-800 p-5 rounded-[30px] brand text-[10px] uppercase text-red-500 font-bold italic safe-btn border border-white/5">Open Tasks</button>
+                        <a href="index.html" className="bg-slate-900 w-16 h-16 rounded-[30px] flex items-center justify-center border border-white/5 safe-btn"><i className="fa-solid fa-house-user"></i></a>
+                    </div>
                 </div>
             );
 
-            // --- VIEW: NEW SHIP ENTRY ---
-            if (view === 'new_ship') return (
+            if (view === 'new') return (
                 <div className="max-w-xl mx-auto p-6 animate-fadeIn">
-                    <button onClick={()=>setView('dashboard')} className="text-slate-500 text-[10px] font-black uppercase mb-10 tracking-widest">← Back to Dashboard</button>
-                    <h2 className="brand text-xl uppercase italic mb-8 tracking-tighter">Register New Vessel</h2>
-                    <form onSubmit={createProject} className="space-y-6">
-                        <div>
-                            <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-2 mb-2 block">Vessel Name / IMO Number</label>
-                            <input name="shipName" required className="w-full p-6 rounded-[30px] font-bold text-2xl uppercase tracking-tighter" placeholder="MT FELIX..." />
-                        </div>
-                        <button className="w-full bg-red-600 p-6 rounded-[30px] font-black uppercase text-xs tracking-widest shadow-2xl safe-active">Initialize Project Profile</button>
+                    <button onClick={() => setView('dashboard')} className="text-slate-500 text-[10px] font-black uppercase mb-10 tracking-widest">← Back</button>
+                    <h2 className="brand text-xl uppercase italic mb-8">Register Vessel</h2>
+                    <form onSubmit={handleCreate} className="space-y-6">
+                        <input name="shipName" required className="w-full p-6 rounded-[30px] font-bold text-2xl uppercase tracking-tighter" placeholder="SHIP NAME / IMO" autoFocus />
+                        <button type="submit" className="w-full bg-red-600 p-6 rounded-[30px] font-black uppercase text-xs tracking-widest shadow-2xl safe-btn">Initialize Project</button>
                     </form>
                 </div>
             );
 
-            // --- VIEW: SCOPE SETUP (The 7 categories) ---
             if (view === 'scope') return (
                 <div className="max-w-xl mx-auto p-6 animate-fadeIn pb-32">
-                    <h2 className="brand text-sm text-red-500 uppercase italic mb-8">Define Work Scope: {activeProject.name}</h2>
+                    <h2 className="brand text-sm text-red-500 uppercase italic mb-8">Define Scope: {activeP.name}</h2>
                     <div className="space-y-3">
-                        {PD_CATEGORIES.map(cat => (
-                            <div key={cat} onClick={()=>toggleScope(cat)} className={`glass p-5 rounded-[30px] flex justify-between items-center border-2 transition-all safe-active ${activeProject.scope.includes(cat) ? 'border-red-600 bg-red-600/10' : 'border-transparent opacity-40'}`}>
-                                <span className="text-[11px] font-bold uppercase tracking-tight">{cat}</span>
-                                {activeProject.scope.includes(cat) && <i className="fa-solid fa-circle-check text-red-600 text-lg"></i>}
+                        {PD_CATS.map(cat => (
+                            <div key={cat} onClick={() => toggleScope(cat)} className={`glass p-5 rounded-[30px] flex justify-between items-center border-2 transition-all safe-btn ${activeP.scope.includes(cat) ? 'border-red-600 bg-red-600/10' : 'border-transparent opacity-40'}`}>
+                                <span className="text-[11px] font-bold uppercase">{cat}</span>
+                                {activeP.scope.includes(cat) && <i className="fa-solid fa-circle-check text-red-600 text-lg"></i>}
                             </div>
                         ))}
                     </div>
-                    <button onClick={()=>setView('daily_report')} className="fixed bottom-10 left-6 right-6 bg-emerald-600 p-6 rounded-[35px] font-black uppercase text-xs tracking-widest shadow-2xl safe-active text-center">Open Daily Report Hub</button>
+                    <button onClick={() => setView('daily')} className="fixed bottom-10 left-6 right-6 bg-emerald-600 p-6 rounded-[35px] font-black uppercase text-xs tracking-widest safe-btn">Confirm Scope & Open Log</button>
                 </div>
             );
 
-            // --- VIEW: DAILY REPORT (Checklist) ---
-            if (view === 'daily_report') return (
+            if (view === 'daily') return (
                 <div className="max-w-xl mx-auto p-5 pb-32 animate-fadeIn">
                     <div className="flex justify-between items-center mb-6">
-                        <button onClick={()=>setView('dashboard')} className="text-slate-500 text-[10px] font-black uppercase tracking-widest">← Dashboard</button>
-                        <button onClick={()=>setView('scope')} className="text-blue-500 text-[10px] font-black uppercase tracking-widest font-bold border-b border-blue-500">Edit Scope</button>
+                        <button onClick={() => setView('dashboard')} className="text-slate-500 text-[10px] font-black uppercase tracking-widest">← Fleet</button>
+                        <button onClick={() => setView('scope')} className="text-blue-500 text-[10px] font-black uppercase font-bold border-b border-blue-500">Edit Scope</button>
                     </div>
-                    <div className="glass p-8 rounded-[40px] border-l-4 border-l-red-600 mb-8">
-                        <h2 className="brand text-2xl font-black uppercase tracking-tighter text-white">{activeProject.name}</h2>
-                        <p className="text-[9px] text-red-500 font-bold uppercase tracking-[0.3em] mt-1 italic">Inspection Walkthrough Log</p>
+                    <div className="glass p-8 rounded-[40px] border-l-4 border-l-red-600 mb-8 text-center">
+                        <h2 className="brand text-2xl font-black uppercase text-white">{activeP.name}</h2>
+                        <p className="text-[10px] text-red-500 font-bold uppercase mt-1 italic tracking-widest">Inspection Log</p>
                     </div>
 
                     <div className="space-y-10">
-                        {SHIP_LOCATIONS.map(loc => (
-                            <div key={loc} className="glass p-6 rounded-[40px] border border-white/5 shadow-inner">
-                                <div className="flex justify-between items-start mb-6">
-                                    <h4 className="text-[11px] font-black text-white uppercase tracking-widest">{loc}</h4>
-                                    <span className="text-[8px] font-bold text-slate-600 uppercase">Timestamped Entry</span>
+                        {LOCATIONS.map(loc => {
+                            const check = activeP.checks[loc] || { status: '', note: '' };
+                            return (
+                                <div key={loc} className="glass p-6 rounded-[40px] border border-white/5">
+                                    <h4 className="text-[11px] font-black uppercase text-slate-400 mb-4">{loc}</h4>
+                                    <div className="grid grid-cols-3 gap-2 mb-4">
+                                        <button onClick={() => setStatus(loc, 'ok')} className={`p-4 rounded-2xl text-[10px] font-black uppercase border border-white/5 safe-btn ${check.status === 'ok' ? 'status-ok' : 'bg-slate-800'}`}>OK</button>
+                                        <button onClick={() => setStatus(loc, 'wait')} className={`p-4 rounded-2xl text-[10px] font-black uppercase border border-white/5 safe-btn ${check.status === 'wait' ? 'status-wait' : 'bg-slate-800'}`}>Wait</button>
+                                        <button onClick={() => setStatus(loc, 'block')} className={`p-4 rounded-2xl text-[10px] font-black uppercase border border-white/5 safe-btn ${check.status === 'block' ? 'status-block' : 'bg-slate-800'}`}>Block</button>
+                                    </div>
+                                    <textarea 
+                                        className="w-full p-5 rounded-3xl text-[12px] h-28 mb-4" 
+                                        placeholder="Add observation..."
+                                        value={check.note}
+                                        onChange={(e) => setNote(loc, e.target.value)}
+                                    />
+                                    <div className="flex gap-2">
+                                        <button className="flex-1 bg-slate-900 border border-slate-800 p-4 rounded-2xl text-[9px] font-black uppercase safe-btn"><i className="fa-solid fa-camera mr-2 text-red-500"></i> Photo</button>
+                                        <button className="flex-1 bg-slate-900 border border-slate-800 p-4 rounded-2xl text-[9px] font-black uppercase safe-btn"><i className="fa-solid fa-microphone mr-2 text-blue-500"></i> Voice</button>
+                                    </div>
                                 </div>
-                                
-                                <div className="grid grid-cols-3 gap-3 mb-6">
-                                    <button className="bg-slate-800 p-4 rounded-2xl text-[9px] font-black uppercase btn-status safe-active active:active-ok">OK</button>
-                                    <button className="bg-slate-800 p-4 rounded-2xl text-[9px] font-black uppercase btn-status safe-active active:active-wait">WAIT</button>
-                                    <button className="bg-slate-800 p-4 rounded-2xl text-[9px] font-black uppercase btn-status safe-active active:active-block">BLOCK</button>
-                                </div>
-
-                                <textarea className="w-full p-5 rounded-3xl text-[12px] h-32 mb-4 leading-relaxed" placeholder="Καταγράψτε παρατηρήσεις ή ελλείψεις..."></textarea>
-                                
-                                <div className="flex gap-3">
-                                    <button className="flex-1 bg-slate-900 border border-slate-800 p-4 rounded-2xl text-[9px] font-black uppercase flex items-center justify-center gap-2 safe-active">
-                                        <i className="fa-solid fa-camera text-red-500 text-lg"></i> Photo Log
-                                    </button>
-                                    <button className="flex-1 bg-slate-900 border border-slate-800 p-4 rounded-2xl text-[9px] font-black uppercase flex items-center justify-center gap-2 safe-active">
-                                        <i className="fa-solid fa-microphone text-blue-500 text-lg"></i> Voice Note
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
-
-                    <button className="fixed bottom-10 left-6 right-6 bg-red-600 p-6 rounded-[35px] font-black uppercase text-xs tracking-widest shadow-2xl safe-active">Finalize & Generate PDF Report</button>
+                    <button className="fixed bottom-10 left-6 right-6 bg-red-600 p-6 rounded-[35px] font-black uppercase text-xs tracking-widest safe-btn shadow-2xl">Generate Daily Report</button>
                 </div>
             );
 
-            // --- VIEW: TASKS ---
             if (view === 'tasks') return (
-                <div className="max-w-xl mx-auto p-6 animate-fadeIn">
-                    <button onClick={()=>setView('dashboard')} className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-10">← Back to Status</button>
-                    <h2 className="brand text-xl uppercase italic mb-8 tracking-tighter">Hazard Registry / Tasks</h2>
-                    <div className="glass p-20 rounded-[50px] text-center opacity-20 border-2 border-dashed border-slate-800">
-                        <i className="fa-solid fa-shield-check text-5xl mb-6 text-emerald-500"></i>
-                        <p className="text-[10px] font-black uppercase tracking-widest leading-loose">No critical hazards found.<br/>SafeShip Operations are nominal.</p>
+                <div className="max-w-xl mx-auto p-6 animate-fadeIn pb-32">
+                    <button onClick={() => setView('dashboard')} className="text-slate-500 text-[10px] font-black uppercase mb-10 tracking-widest">← Home</button>
+                    <h2 className="brand text-xl uppercase italic mb-8">Fleet Tasks</h2>
+                    <div className="space-y-4">
+                        {projects.some(p => Object.values(p.checks).some(c => c.status === 'block' || c.status === 'wait')) ? 
+                            projects.map(p => Object.entries(p.checks).map(([loc, data]) => (data.status === 'block' || data.status === 'wait') && (
+                                <div key={p.id+loc} className="glass p-6 rounded-[30px] border-l-4 border-amber-500 flex justify-between items-center">
+                                    <div><p className="text-[10px] font-black text-amber-500 uppercase">{p.name}</p><h4 className="font-bold text-sm uppercase">{loc}</h4><p className="text-[11px] text-slate-400 mt-1 italic">{data.note || 'No notes'}</p></div>
+                                    <span className={`px-3 py-1 rounded-full text-[8px] font-black uppercase ${data.status === 'block' ? 'bg-red-600' : 'bg-amber-600'}`}>{data.status}</span>
+                                </div>
+                            ))) : <div className="glass p-20 rounded-[50px] text-center opacity-30 border-2 border-dashed border-slate-800 italic uppercase font-black text-xs">Fleet Secure. No Tasks.</div>
+                        }
                     </div>
-                    <footer className="fixed bottom-10 left-6 right-6 flex justify-center">
-                        <button onClick={()=>setView('dashboard')} className="bg-slate-800 px-10 py-5 rounded-full font-black text-[9px] uppercase tracking-widest safe-active border border-white/10 italic">Return to Command Center</button>
-                    </footer>
                 </div>
             );
         }
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<SafeShipApp />);
-    </script>
-</body></html>
+    </script></body></html>

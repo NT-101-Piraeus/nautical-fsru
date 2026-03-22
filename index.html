@@ -1,9 +1,7 @@
-<!DOCTYPE html>
-<html lang="el">
-<head>
+<!DOCTYPE html><html lang="el"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>X-INTEL HUB | Lainas Group</title>
+    <title>X-INTEL HUB | Newsfeed Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -11,10 +9,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
-    </style>
-</head>
-<body>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .news-card { transition: all 0.2s ease; }
+        .news-card:active { transform: scale(0.98); }
+    </style></head><body>
     <div id="root"></div>
 
     <script type="text/babel">
@@ -25,14 +23,13 @@
             const [passcode, setPasscode] = useState('');
             const [activeApp, setActiveApp] = useState('home');
 
-            const handleLogin = (e) => {
-                e.preventDefault();
-                if (passcode === 'NT2026') {
-                    setIsLoggedIn(true);
-                } else {
-                    alert("Λάθος Κωδικός!");
-                }
-            };
+            // --- MOCK DATA ΓΙΑ ΤΟ NEWSFEED ---
+            const [news, setNews] = useState([
+                { id: 1, type: 'INTEL', title: '🚢 NAFTOCEMENT IV', info: 'Εντοπίστηκε είσοδος στο Πέραμα.', time: '10λ πριν', color: 'border-blue-500', icon: 'fa-ship' },
+                { id: 2, type: 'LEGAL', title: '⚖️ Υπόθεση Τερμέ', info: 'Νέο έγγραφο από δικηγόρο.', time: '2ω πριν', color: 'border-red-600', icon: 'fa-gavel' },
+                { id: 3, type: 'YARD', title: '🏭 Ναυπηγεία Τουρκίας', info: 'Αυξημένη κίνηση σε Bulk Carriers.', time: '5ω πριν', color: 'border-orange-500', icon: 'fa-industry' },
+                { id: 4, type: 'MARINE', title: '🛡️ Rigel III', info: 'Λήξη Gas Free σε 3 ώρες.', time: 'Τώρα', color: 'border-emerald-500', icon: 'fa-clock' }
+            ]);
 
             const apps = [
                 { id: 'safety', name: 'Τεχνικός Ασφαλείας', icon: 'fa-user-shield', color: 'bg-emerald-600', group: 'MARINE' },
@@ -42,21 +39,21 @@
                 { id: 'airbnb', name: 'Airbnb Manager', icon: 'fa-bed', color: 'bg-pink-500', group: 'BUSINESS' }
             ];
 
+            const handleLogin = (e) => {
+                e.preventDefault();
+                if (passcode === 'NT2026') setIsLoggedIn(true);
+                else alert("Λάθος Κωδικός!");
+            };
+
             if (!isLoggedIn) {
                 return (
                     <div className="h-screen flex items-center justify-center bg-slate-900 p-6">
                         <div className="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-sm text-center">
                             <h1 className="text-2xl font-black text-slate-800 mb-1">X-INTEL HUB</h1>
-                            <p className="text-slate-400 mb-6 text-[10px] font-bold uppercase tracking-widest">Lainas Group Command</p>
+                            <p className="text-slate-400 mb-6 text-[10px] font-bold uppercase tracking-widest leading-none">Lainas Group Command</p>
                             <form onSubmit={handleLogin}>
-                                <input 
-                                    type="password" 
-                                    className="w-full border-2 border-slate-100 p-4 rounded-2xl mb-4 text-center text-xl outline-none focus:border-blue-500"
-                                    placeholder="••••"
-                                    value={passcode}
-                                    onChange={(e) => setPasscode(e.target.value)}
-                                />
-                                <button className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold shadow-lg active:scale-95 transition-all">ΕΙΣΟΔΟΣ</button>
+                                <input type="password" border className="w-full border-2 border-slate-100 p-4 rounded-2xl mb-4 text-center text-xl outline-none focus:border-blue-500" placeholder="••••" value={passcode} onChange={(e) => setPasscode(e.target.value)} />
+                                <button className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold shadow-lg">ΕΙΣΟΔΟΣ</button>
                             </form>
                         </div>
                     </div>
@@ -65,30 +62,46 @@
 
             if (activeApp === 'home') {
                 return (
-                    <div className="p-6 max-w-lg mx-auto">
-                        <header className="mb-8 flex justify-between items-center">
+                    <div className="p-4 max-w-lg mx-auto pb-20">
+                        <header className="mb-6 flex justify-between items-center">
                             <div>
-                                <h1 className="text-2xl font-black text-slate-900 leading-none uppercase">X-INTEL</h1>
-                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em]">Lainas Group Hub</p>
+                                <h1 className="text-xl font-extrabold text-slate-900 leading-none">HQ DASHBOARD</h1>
+                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Lainas Group Strategy</p>
                             </div>
-                            <div className="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center">
-                                <i className="fa-solid fa-user text-slate-500"></i>
-                            </div>
+                            <div className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-[9px] font-bold animate-pulse">LIVE OPS</div>
                         </header>
 
+                        {/* --- NEWSFEED SECTION --- */}
+                        <section className="mb-8">
+                            <h3 className="text-[10px] font-black text-slate-400 mb-3 tracking-[0.2em] uppercase">Live Intelligence Feed</h3>
+                            <div className="space-y-3">
+                                {news.map(item => (
+                                    <div key={item.id} className={`bg-white p-4 rounded-2xl shadow-sm border-l-4 ${item.color} news-card flex items-center gap-4`}>
+                                        <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-600">
+                                            <i className={`fa-solid ${item.icon}`}></i>
+                                        </div>
+                                        <div className="flex-1">
+                                            <div className="flex justify-between items-center">
+                                                <h4 className="font-bold text-xs text-slate-800">{item.title}</h4>
+                                                <span className="text-[9px] text-slate-400 font-bold uppercase">{item.time}</span>
+                                            </div>
+                                            <p className="text-[11px] text-slate-500 mt-0.5">{item.info}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </section>
+
+                        {/* --- APPS SECTION --- */}
                         <div className="space-y-8">
                             {['MARINE', 'LEGAL', 'INTEL', 'BUSINESS'].map(group => (
                                 <div key={group}>
                                     <h3 className="text-[10px] font-black text-slate-400 mb-3 border-b border-slate-200 pb-1 tracking-widest uppercase">{group}</h3>
                                     <div className="grid grid-cols-2 gap-4">
                                         {apps.filter(a => a.group === group).map(app => (
-                                            <button 
-                                                key={app.id}
-                                                onClick={() => setActiveApp(app.id)}
-                                                className={`${app.color} p-5 rounded-3xl text-white shadow-xl active:scale-90 transition-all flex flex-col items-center justify-center h-32`}
-                                            >
-                                                <i className={`fa-solid ${app.icon} text-3xl mb-3`}></i>
-                                                <span className="text-[10px] font-black uppercase text-center leading-tight">{app.name}</span>
+                                            <button key={app.id} onClick={() => setActiveApp(app.id)} className={`${app.color} p-5 rounded-3xl text-white shadow-lg active:scale-90 transition-all flex flex-col items-center justify-center h-28`}>
+                                                <i className={`fa-solid ${app.icon} text-2xl mb-2`}></i>
+                                                <span className="text-[9px] font-black uppercase text-center leading-tight">{app.name}</span>
                                             </button>
                                         ))}
                                     </div>
@@ -101,11 +114,10 @@
 
             return (
                 <div className="min-h-screen bg-white flex flex-col">
-                    <header className="bg-slate-900 p-5 text-white flex justify-between items-center sticky top-0 z-50">
+                    <header className="bg-slate-900 p-5 text-white flex justify-between items-center sticky top-0 z-50 shadow-xl">
                         <span className="font-black text-xs uppercase tracking-widest">{apps.find(a => a.id === activeApp).name}</span>
-                        <button onClick={() => setActiveApp('home')} className="text-[10px] font-bold bg-white/10 px-4 py-2 rounded-full uppercase">Κλείσιμο</button>
+                        <button onClick={() => setActiveApp('home')} className="text-[10px] font-bold bg-white/10 px-4 py-2 rounded-full uppercase">Πίσω στο Menu</button>
                     </header>
-                    
                     <div className="p-6 flex-1">
                         {activeApp === 'legal' && <LegalModule />}
                         {activeApp === 'intel' && <IntelModule />}
@@ -125,11 +137,7 @@
                 <div className="space-y-4">
                     <div className="p-5 bg-red-50 border-l-4 border-red-800 rounded-r-2xl shadow-sm">
                         <h4 className="font-black text-red-900 text-sm uppercase">Υπόθεση Τερμέ</h4>
-                        <p className="text-xs text-red-700 mt-1 italic">"Αναμονή για κατάθεση υπομνήματος."</p>
-                    </div>
-                    <div className="p-5 bg-slate-50 border-l-4 border-slate-800 rounded-r-2xl shadow-sm">
-                        <h4 className="font-black text-slate-800 text-sm uppercase">Σαμσούντα</h4>
-                        <p className="text-xs text-slate-500 mt-1">Status: Active Case</p>
+                        <p className="text-xs text-red-700 mt-1">Status: Αναμονή υπομνήματος.</p>
                     </div>
                 </div>
             );
@@ -141,11 +149,6 @@
                     <div className="p-5 bg-blue-50 border border-blue-100 rounded-3xl shadow-sm">
                         <h4 className="font-black text-blue-900 text-sm uppercase">🚢 NAFTOCEMENT IV</h4>
                         <p className="text-[11px] text-blue-700 mt-1">Εντοπίστηκε: Πέραμα (Ζώνη)</p>
-                        <span className="text-[9px] font-black bg-blue-600 text-white px-2 py-1 rounded-full mt-3 inline-block uppercase">Live Track</span>
-                    </div>
-                    <div className="p-5 bg-orange-50 border border-orange-100 rounded-3xl shadow-sm">
-                        <h4 className="font-black text-orange-900 text-sm uppercase">🏭 Ναυπηγεία Τουρκίας</h4>
-                        <p className="text-[11px] text-orange-700 mt-1">Αναφορά: Αυξημένη κίνηση Bulk Carriers.</p>
                     </div>
                 </div>
             );
@@ -154,6 +157,4 @@
         const container = document.getElementById('root');
         const root = ReactDOM.createRoot(container);
         root.render(<MainHub />);
-    </script>
-</body>
-</html>
+    </script></body></html>

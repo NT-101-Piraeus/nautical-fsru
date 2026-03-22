@@ -1,114 +1,63 @@
 <!DOCTYPE html><html lang="el"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NTG | SAFETY HUB</title>
+    <title>NTG | COMMAND CENTER</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Inter:wght@400;700;900&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #020617; color: white; margin: 0; }
-        .brand { font-family: 'Orbitron', sans-serif; color: #ef4444; } /* Κόκκινο για Safety */
-        .glass-card { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.05); }
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@400;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #020617; color: white; }
+        .brand { font-family: 'Orbitron', sans-serif; }
+        .card { background: rgba(30, 41, 59, 0.5); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.05); transition: all 0.3s ease; }
+        .card:active { transform: scale(0.95); background: rgba(59, 130, 246, 0.2); }
     </style></head><body>
-    <div id="root"></div>
 
-    <script type="text/babel">
-        const { useState, useEffect } = React;
+    <div class="max-w-xl mx-auto p-6 py-12">
+        <header className="text-center mb-12">
+            <h1 class="brand text-3xl text-blue-500 font-black tracking-tighter uppercase italic text-center">NTG GROUP</h1>
+            <p class="text-[10px] text-slate-500 font-bold uppercase tracking-[0.5em] mt-2 text-center">Digital Ecosystem 2026</p>
+        </header>
 
-        function SafetyApp() {
-            const [ship, setShip] = useState(() => localStorage.getItem('safety_ship') || '');
-            const [diary, setDiary] = useState(() => localStorage.getItem('safety_diary') || '');
-            const [checks, setChecks] = useState(() => {
-                const saved = localStorage.getItem('safety_checks');
-                return saved ? JSON.parse(saved) : {
-                    gasFree: false,
-                    hotWorks: false,
-                    fireWatch: false,
-                    ventilation: false,
-                    ppe: false,
-                    scaffolding: false
-                };
-            });
-
-            // Persistence
-            useEffect(() => {
-                localStorage.setItem('safety_ship', ship);
-                localStorage.setItem('safety_diary', diary);
-                localStorage.setItem('safety_checks', JSON.stringify(checks));
-            }, [ship, diary, checks]);
-
-            const toggleCheck = (id) => setChecks({...checks, [id]: !checks[id]});
-
-            return (
-                <div className="max-w-xl mx-auto p-4 pb-32 animate-fadeIn">
-                    <header className="flex justify-between items-center py-6 border-b border-slate-800 mb-6">
-                        <div>
-                            <h1 className="brand text-sm tracking-widest uppercase">NTG SAFETY</h1>
-                            <p className="text-[8px] text-slate-500 font-bold uppercase tracking-[0.3em]">Maritime Security Division</p>
-                        </div>
-                        <div className="bg-red-500/10 text-red-500 px-3 py-1 rounded-full text-[10px] font-black animate-pulse border border-red-500/20">LIVE OPS</div>
-                    </header>
-
-                    {/* Ship Selection */}
-                    <div className="glass-card p-6 rounded-[32px] mb-6 shadow-2xl">
-                        <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest block mb-2">Vessel Under Supervision</label>
-                        <input className="w-full bg-transparent border-b border-slate-700 text-xl font-bold outline-none focus:border-red-500 transition-all uppercase" placeholder="MT FELIX / RIGEL III..." value={ship} onChange={(e)=>setShip(e.target.value)} />
-                    </div>
-
-                    {/* PD 70/90 Checklists */}
-                    <div className="grid grid-cols-2 gap-3 mb-6">
-                        <CheckItem active={checks.gasFree} label="Gas Free" icon="fa-wind" onClick={()=>toggleCheck('gasFree')} />
-                        <CheckItem active={checks.hotWorks} label="Hot Works" icon="fa-fire" onClick={()=>toggleCheck('hotWorks')} />
-                        <CheckItem active={checks.fireWatch} label="Fire Watch" icon="fa-extinguisher" onClick={()=>toggleCheck('fireWatch')} />
-                        <CheckItem active={checks.ppe} label="PPE Check" icon="fa-hard-hat" onClick={()=>toggleCheck('ppe')} />
-                    </div>
-
-                    {/* Daily Safety Diary */}
-                    <div className="glass-card p-6 rounded-[32px] mb-6">
-                        <div className="flex justify-between items-center mb-4">
-                            <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Ημερολόγιο Μέτρων Ασφαλείας</label>
-                            <span className="text-[8px] text-slate-400 font-bold uppercase">{new Date().toLocaleDateString('el-GR')}</span>
-                        </div>
-                        <textarea 
-                            className="w-full bg-slate-900/50 border border-slate-700 rounded-2xl p-4 text-sm h-40 outline-none focus:ring-1 ring-red-500 transition-all"
-                            placeholder="Καταγράψτε παρατηρήσεις, ελλείψεις ή συμβάντα..."
-                            value={diary}
-                            onChange={(e)=>setDiary(e.target.value)}
-                        />
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="grid grid-cols-1 gap-3">
-                        <button className="w-full bg-slate-800 p-5 rounded-2xl font-black text-[10px] uppercase tracking-widest flex justify-between items-center active:scale-95 transition-all" onClick={() => document.getElementById('safetyCam').click()}>
-                            <span>Capture Hazard Evidence</span>
-                            <i className="fa-solid fa-camera text-red-500"></i>
-                        </button>
-                        <input type="file" id="safetyCam" accept="image/*" capture="camera" className="hidden" />
-                        
-                        <button className="w-full bg-red-600 p-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-red-900/20 active:scale-95 transition-all" onClick={() => alert("Daily Safety Log Saved Locally!")}>
-                            Submit Daily Report
-                        </button>
-                    </div>
-
-                    <footer className="fixed bottom-0 left-0 right-0 p-6 bg-slate-950/90 backdrop-blur-xl border-t border-slate-800 flex justify-center items-center gap-4">
-                        <div className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Compliance: Π.Δ. 70/90 • Nautical Technology Group</div>
-                    </footer>
+        <div class="grid grid-cols-1 gap-4 mt-12">
+            <a href="intel.html" class="card p-6 rounded-[30px] flex items-center gap-5">
+                <i class="fa-solid fa-tower-broadcast text-2xl text-blue-400"></i>
+                <div>
+                    <h2 class="brand text-sm uppercase">Intel Division</h2>
+                    <p class="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Hunter Agent & AIS</p>
                 </div>
-            );
-        }
+            </a>
 
-        function CheckItem({ active, label, icon, onClick }) {
-            return (
-                <div onClick={onClick} className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col items-center gap-2 ${active ? 'bg-red-500/20 border-red-500 shadow-lg shadow-red-900/10' : 'bg-slate-900 border-slate-800'}`}>
-                    <i className={`fa-solid ${icon} ${active ? 'text-red-500' : 'text-slate-600'} text-lg`}></i>
-                    <span className={`text-[9px] font-black uppercase ${active ? 'text-white' : 'text-slate-500'}`}>{label}</span>
+            <a href="safety.html" class="card p-6 rounded-[30px] flex items-center gap-5 border-l-4 border-l-red-600">
+                <i class="fa-solid fa-user-shield text-2xl text-red-500"></i>
+                <div>
+                    <h2 class="brand text-sm uppercase">Safety Officer</h2>
+                    <p class="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Π.Δ. 70/90 Compliance</p>
                 </div>
-            );
-        }
+            </a>
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<SafetyApp />);
-    </script></body></html>
+            <a href="tech.html" class="card p-6 rounded-[30px] flex items-center gap-5 border-l-4 border-l-emerald-600">
+                <i class="fa-solid fa-ruler-combined text-2xl text-emerald-500"></i>
+                <div>
+                    <h2 class="brand text-sm uppercase">Tech Gauging</h2>
+                    <p class="text-[9px] text-slate-500 font-bold uppercase tracking-widest">UTM & Load Test</p>
+                </div>
+            </a>
+
+            <a href="tools.html" class="card p-6 rounded-[30px] flex items-center gap-5">
+                <i class="fa-solid fa-toolbox text-2xl text-amber-500"></i>
+                <div>
+                    <h2 class="brand text-sm uppercase">Field Tools</h2>
+                    <p class="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Calculators & Converters</p>
+                </div>
+            </a>
+
+            <a href="luxury.html" class="card p-6 rounded-[30px] flex items-center gap-5 border-l-4 border-l-yellow-500">
+                <i class="fa-solid fa-crown text-2xl text-yellow-500"></i>
+                <div>
+                    <h2 class="brand text-sm uppercase">Luxury Hub</h2>
+                    <p class="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Mykonos Management</p>
+                </div>
+            </a>
+        </div>
+    </div>
+</body></html>

@@ -8,10 +8,9 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Inter:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Inter:wght@400;700;900&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: white; margin: 0; }
-        .brand { font-family: 'Orbitron', sans-serif; letter-spacing: 1px; color: #3b82f6; }
-        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        .brand { font-family: 'Orbitron', sans-serif; color: #3b82f6; }
     </style></head><body>
     <div id="root"></div>
 
@@ -19,80 +18,59 @@
         const { useState, useEffect } = React;
 
         function UTMApp() {
-            const [shipName, setShipName] = useState(() => localStorage.getItem('utm_ship') || '');
+            const [ship, setShip] = useState(() => localStorage.getItem('current_ship') || '');
             const [rows, setRows] = useState(() => {
-                const saved = localStorage.getItem('utm_data');
+                const saved = localStorage.getItem('utm_rows');
                 return saved ? JSON.parse(saved) : [{ id: 1, pt: 'A1', orig: 10.0, curr: '' }];
             });
 
-            // Αυτόματη αποθήκευση στο κινητό (Offline)
             useEffect(() => {
-                localStorage.setItem('utm_data', JSON.stringify(rows));
-                localStorage.setItem('utm_ship', shipName);
-            }, [rows, shipName]);
+                localStorage.setItem('utm_rows', JSON.stringify(rows));
+                localStorage.setItem('current_ship', ship);
+            }, [rows, ship]);
 
             const addRow = () => {
                 const newId = rows.length + 1;
                 setRows([...rows, { id: newId, pt: `A${newId}`, orig: 10.0, curr: '' }]);
             };
 
-            const updateRow = (id, field, val) => {
+            const update = (id, field, val) => {
                 setRows(rows.map(r => r.id === id ? { ...r, [field]: val } : r));
-            };
-
-            const resetData = () => {
-                if(confirm("Διαγραφή όλων των μετρήσεων;")) {
-                    setRows([{ id: 1, pt: 'A1', orig: 10.0, curr: '' }]);
-                    setShipName('');
-                }
             };
 
             return (
                 <div className="max-w-xl mx-auto p-4 pb-20">
-                    <header className="flex justify-between items-center mb-8 py-4 border-b border-slate-800">
-                        <h1 className="brand text-sm uppercase">NTG UTM Division</h1>
-                        <button onClick={resetData} className="text-[10px] bg-red-900/30 text-red-400 px-3 py-1 rounded-full border border-red-500/20">RESET</button>
+                    <header className="flex justify-between items-center py-6 border-b border-slate-800 mb-6">
+                        <h1 className="brand text-sm tracking-widest uppercase">NTG UTM TOOL</h1>
+                        <button onClick={() => {if(confirm("Διαγραφή όλων;")) setRows([{id:1, pt:'A1', orig:10, curr:''}])}} className="text-[10px] text-red-500 font-bold">RESET</button>
                     </header>
 
-                    <div className="mb-6">
-                        <label className="text-[10px] font-bold text-slate-500 uppercase block mb-2 tracking-widest">Όνομα Πλοίου</label>
-                        <input 
-                            className="w-full bg-slate-900 border border-slate-700 p-4 rounded-2xl text-lg font-bold outline-none focus:border-blue-500"
-                            placeholder="π.χ. MT FELIX"
-                            value={shipName}
-                            onChange={(e) => setShipName(e.target.value.toUpperCase())}
-                        />
+                    <div className="bg-slate-900 p-6 rounded-3xl mb-6 shadow-xl border border-slate-800">
+                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2">Project / Ship Name</label>
+                        <input className="w-full bg-transparent border-b-2 border-slate-700 text-xl font-bold outline-none focus:border-blue-500 transition-all uppercase" placeholder="e.g. MT FELIX" value={ship} onChange={(e)=>setShip(e.target.value)} />
                     </div>
 
                     <div className="bg-slate-900 rounded-3xl border border-slate-800 overflow-hidden shadow-2xl">
                         <table className="w-full text-left">
-                            <thead className="bg-slate-800 text-[10px] font-black uppercase text-slate-500">
+                            <thead className="bg-slate-800 text-[9px] font-black uppercase text-slate-500 tracking-widest">
                                 <tr>
                                     <th className="p-4">Point</th>
                                     <th className="p-4 text-center">Orig.</th>
-                                    <th className="p-4 text-center">Reading</th>
+                                    <th className="p-4 text-center">Read</th>
                                     <th className="p-4 text-right">Dim%</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-800">
-                                {rows.map((row) => {
-                                    const diminution = row.curr ? (((row.orig - row.curr) / row.orig) * 100).toFixed(1) : 0;
+                                {rows.map((r) => {
+                                    const dim = r.curr ? (((r.orig - r.curr) / r.orig) * 100).toFixed(1) : 0;
                                     return (
-                                        <tr key={row.id}>
-                                            <td className="p-4 font-bold text-blue-400">{row.pt}</td>
-                                            <td className="p-4 text-center text-slate-500">{row.orig}</td>
+                                        <tr key={r.id}>
+                                            <td className="p-4 font-bold text-blue-400">{r.pt}</td>
+                                            <td className="p-4 text-center text-slate-500 font-mono">{r.orig}</td>
                                             <td className="p-4 text-center">
-                                                <input 
-                                                    type="number" 
-                                                    step="0.1"
-                                                    className="bg-slate-800 border border-slate-700 w-16 p-2 rounded-lg text-center font-black text-emerald-400 outline-none"
-                                                    value={row.curr}
-                                                    onChange={(e) => updateRow(row.id, 'curr', e.target.value)}
-                                                />
+                                                <input type="number" step="0.1" className="bg-slate-800 border border-slate-700 w-16 p-2 rounded-lg text-center font-black text-emerald-400 outline-none focus:ring-1 ring-blue-500" value={r.curr} onChange={(e)=>update(r.id, 'curr', e.target.value)} />
                                             </td>
-                                            <td className={`p-4 text-right font-black ${diminution > 20 ? 'text-red-500' : 'text-emerald-500'}`}>
-                                                {diminution}%
-                                            </td>
+                                            <td className={`p-4 text-right font-black ${dim > 20 ? 'text-red-500' : 'text-emerald-500'}`}>{dim}%</td>
                                         </tr>
                                     );
                                 })}
@@ -100,16 +78,9 @@
                         </table>
                     </div>
 
-                    <button 
-                        onClick={addRow}
-                        className="w-full mt-6 bg-slate-800 border border-slate-700 p-5 rounded-2xl font-black text-xs uppercase tracking-widest active:scale-95 transition-all"
-                    >
-                        <i className="fa-solid fa-plus mr-2 text-blue-500"></i> Προσθήκη Σημείου
+                    <button onClick={addRow} className="w-full mt-6 bg-blue-600 p-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-lg active:scale-95 transition-all">
+                        <i className="fa-solid fa-plus mr-2"></i> Add Measurement
                     </button>
-
-                    <footer className="fixed bottom-0 left-0 right-0 p-4 bg-slate-950/80 backdrop-blur-md border-t border-slate-800 text-center">
-                        <p className="text-[10px] text-slate-600 font-bold uppercase tracking-[0.3em]">Nautical Technology Group • Ready for Inspection</p>
-                    </footer>
                 </div>
             );
         }

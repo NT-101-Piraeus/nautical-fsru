@@ -1,1 +1,33 @@
-<a href="index.html" class="text-slate-500"><i class="fa-solid fa-house-user"></i></a>
+<!DOCTYPE html><html lang="el"><head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NTG | INTEL</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap');
+        body { background: #020617; color: white; font-family: sans-serif; }
+        .brand { font-family: 'Orbitron', sans-serif; }
+    </style></head><body>
+    <div id="root"></div>
+    <script type="text/babel">
+        function Intel() {
+            return (
+                <div className="p-6 max-w-xl mx-auto">
+                    <header className="flex justify-between items-center mb-8 border-b border-blue-900/30 py-4">
+                        <h1 className="brand text-blue-500 text-sm uppercase italic">Intel Division</h1>
+                        <a href="index.html" className="text-slate-500 text-xl"><i className="fa-solid fa-house-user"></i></a>
+                    </header>
+                    <div className="bg-slate-900/50 p-8 rounded-[40px] border border-blue-500/20 text-center">
+                        <i className="fa-solid fa-satellite-dish text-blue-500 text-4xl mb-4 animate-pulse"></i>
+                        <h2 className="brand text-xs uppercase mb-2">Deep Hunter Online</h2>
+                        <p className="text-[10px] text-slate-500 uppercase tracking-widest leading-relaxed">Awaiting 07:00 Briefing for Naftocement IV & Terme Board...</p>
+                    </div>
+                </div>
+            );
+        }
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<Intel />);
+    </script></body></html>

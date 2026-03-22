@@ -1,68 +1,73 @@
 <!DOCTYPE html><html lang="el"><head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SafeShip Pro | V43 Tactical</title>
+    <title>SafeShip Pro | V45 Professional</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@400;600;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@300;400;600;800&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #020617; color: white; margin: 0; touch-action: manipulation; }
         .brand { font-family: 'Orbitron', sans-serif; }
         .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.05); }
-        .active-ok { background: #10b981 !important; opacity: 1; }
-        .active-wait { background: #f59e0b !important; opacity: 1; }
-        .active-block { background: #ef4444 !important; opacity: 1; }
+        .active-ok { background: #10b981 !important; }
+        .active-wait { background: #f59e0b !important; }
+        .active-block { background: #ef4444 !important; }
         .specialty-active { background: #3b82f6 !important; border-color: #60a5fa !important; }
         input, textarea { background: #0f172a !important; border: 1px solid #1e293b !important; color: white !important; outline: none; }
+        .suggestion-chip { background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); color: #60a5fa; font-size: 10px; padding: 4px 10px; border-radius: 8px; cursor: pointer; }
     </style></head><body>
     <div id="root"></div>
     <script type="text/babel">
         const { useState, useEffect } = React;
-        const SHIP_LOCS = ["Deck", "Engine Room", "Pump Room", "Chimney", "Garage", "Cargo Tanks", "Accommodation"];
-        const TRADES = ["Ηλεκτρολόγοι", "Μηχανικοί", "Ελασματουργοί", "Σωληνουργοί", "Καθαριστές", "ΣΚΑΛΩΣΙΕΣ"];
+        const _supabase = supabase.createClient("https://omdarjncczohpffunfy.supabase.co", "sb_publishable_V-nfUDy5MxEG4SlXkisFBg_GBlD_4Y9");
+
+        const TRADES = ["Ηλεκτρολόγοι", "Μηχανικοί", "Ελασματουργοί", "Σωληνουργοί", "ΣΚΑΛΩΣΙΕΣ", "Βαφείς"];
+        
+        // NEW SMART SUGGESTIONS V45
+        const SMART_KNOWLEDGE = {
+            "ΑΝΟΙΓΜΑΤΑ": ["Τοποθέτηση κουπαστής", "Προστατευτικό κάλυμμα", "Σήμανση κινδύνου", "Φωτισμός σημείου"],
+            "ΥΨΟΣ": ["Χρήση ζώνης ασφαλείας", "Πιστοποιημένη σκαλωσιά", "Δίχτυ προστασίας", "Επιτήρηση από κάτω"]
+        };
+
+        const SHIP_LOCS = ["Deck", "Engine Room", "Garage", "Chimney", "Pump Room", "Accommodation"];
+        
         const INITIAL_SHIPS = [
-            { id: 1, name: "FELIX", port: "Δραπετσώνα", time: "07:00", type: "Tanker" },
-            { id: 2, name: "BADJI MOKHTAR III", port: "ΕΛΕΥΣΙΝΑ", time: "11:00", type: "Ferry" },
-            { id: 3, name: "ΑΡΙΑΔΝΗ", port: "ΕΛΕΥΣΙΝΑ", time: "13:00", type: "Ferry" },
-            { id: 4, name: "RIGEL III", port: "Πέραμα", time: "15:00", type: "Ferry" }
+            { id: 1, imo: "9234567", name: "FELIX", port: "Δραπετσώνα", type: "Tanker" },
+            { id: 2, imo: "9123456", name: "BADJI MOKHTAR III", port: "ΕΛΕΥΣΙΝΑ", type: "Ferry" },
+            { id: 3, imo: "9012345", name: "ΑΡΙΑΔΝΗ", port: "ΕΛΕΥΣΙΝΑ", type: "Ferry" },
+            { id: 4, imo: "9345678", name: "RIGEL III", port: "Πέραμα", type: "Ferry" }
         ];
 
         function App() {
-            const [isAuth] = useState(() => sessionStorage.getItem('ntg_auth') === 'true');
-            const [view, setView] = useState(() => new URLSearchParams(window.location.search).get('view') || 'DASHBOARD');
+            const [view, setView] = useState('DASHBOARD');
             const [activeId, setActiveId] = useState(null);
-            const [projects, setProjects] = useState(() => {
-                try {
-                    const saved = JSON.parse(localStorage.getItem('ntg_v43_data'));
-                    return (saved && saved.ships) ? saved.ships : INITIAL_SHIPS.map(s => ({ ...s, data: {}, signedToday: false }));
-                } catch(e) { return INITIAL_SHIPS.map(s => ({ ...s, data: {}, signedToday: false })); }
-            });
+            const [projects, setProjects] = useState(() => JSON.parse(localStorage.getItem('ntg_v45_data')) || INITIAL_SHIPS.map(s => ({ ...s, data: {}, signedToday: false, expenses: {gas:0, tolls:0, tools:0} })));
 
-            useEffect(() => { localStorage.setItem('ntg_v43_data', JSON.stringify({ ships: projects })); }, [projects]);
+            useEffect(() => { localStorage.setItem('ntg_v45_data', JSON.stringify({ ships: projects })); }, [projects]);
 
-            if (!isAuth) return <div className="h-screen bg-slate-950 flex flex-col items-center justify-center p-10 text-center"><h2 className="brand text-red-500 mb-8 uppercase">Session Expired</h2><a href="index.html" className="bg-blue-600 px-10 py-5 rounded-3xl font-black uppercase text-xs">Return to Login</a></div>;
+            const updateObs = (shipId, loc, obsId, field, val) => {
+                setProjects(projects.map(p => p.id === shipId ? { ...p, data: { ...p.data, [loc]: { observations: p.data[loc].observations.map(o => o.id === obsId ? { ...o, [field]: val } : o) } } } : p));
+            };
 
             const ship = projects.find(s => s.id === activeId);
-            const allTasks = projects.flatMap(p => Object.entries(p.data || {}).flatMap(([loc, d]) => (d.observations || []).filter(o => o.isTask).map(o => ({ ship: p.name, loc, ...o }))));
 
             if (view === 'DASHBOARD') return (
                 <div className="max-w-xl mx-auto p-5 pb-32 animate-fadeIn">
                     <header className="py-8 flex justify-between items-center border-b border-white/5 mb-8">
-                        <h1 className="brand text-sm font-black text-red-500 uppercase tracking-tighter">SafeShip Pro</h1>
+                        <div><h1 className="brand text-sm font-black text-red-500 uppercase italic">SafeShip Tactical</h1><p className="text-[10px] text-slate-500 font-bold uppercase">V45 Professional</p></div>
                         <a href="index.html" className="bg-slate-800 w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-lg"><i className="fa-solid fa-house"></i></a>
                     </header>
                     <div className="space-y-6">
                         {projects.map(s => (
-                            <div key={s.id} className={`glass p-8 rounded-[45px] flex justify-between items-center transition-all ${s.signedToday ? 'border-l-8 border-emerald-500 bg-emerald-500/5' : 'border border-white/5 shadow-xl'}`}>
-                                <div onClick={()=>{setActiveId(s.id); setView('INSPECTION')}} className="flex-1 cursor-pointer">
+                            <div key={s.id} onClick={()=>{setActiveId(s.id); setView('INSPECTION')}} className={`glass p-8 rounded-[50px] flex justify-between items-center transition-all ${s.signedToday ? 'border-l-8 border-emerald-500 bg-emerald-500/5' : 'border border-white/5 shadow-xl'}`}>
+                                <div>
                                     <h4 className="font-black text-xl uppercase tracking-tighter">{s.name}</h4>
-                                    <p className="text-sm font-bold text-slate-400 mt-2 uppercase italic tracking-widest">{s.port} • {s.time}</p>
+                                    <p className="text-[10px] text-slate-500 uppercase font-black mt-1 tracking-widest">IMO: {s.imo} • {s.port}</p>
                                 </div>
-                                <button onClick={()=>setProjects(projects.map(p=>p.id===s.id?{...p, signedToday:!p.signedToday}:p))} className={`px-6 py-4 rounded-3xl text-[11px] font-black uppercase transition-all shadow-lg ${s.signedToday ? 'bg-emerald-600 text-white shadow-xl' : 'bg-slate-800 text-slate-500'}`}>
-                                    {s.signedToday ? 'ΥΠΕΓΡΑΨΑ ✓' : 'SIGN'}
-                                </button>
+                                <i className="fa-solid fa-chevron-right text-slate-800"></i>
                             </div>
                         ))}
                     </div>
@@ -71,43 +76,56 @@
 
             if (view === 'INSPECTION' && ship) return (
                 <div className="max-w-xl mx-auto p-5 pb-32 animate-fadeIn">
-                    <button onClick={()=>setView('DASHBOARD')} className="bg-slate-800 px-6 py-3 rounded-2xl text-[11px] font-black uppercase mb-8 shadow-xl">← Fleet</button>
-                    <div className="glass p-10 rounded-[50px] border-l-8 border-red-600 text-center mb-12 shadow-2xl"><h2 className="brand text-3xl font-black uppercase tracking-tighter">{ship.name}</h2></div>
+                    <div className="flex justify-between items-center mb-8">
+                        <button onClick={()=>setView('DASHBOARD')} className="bg-slate-800 px-6 py-3 rounded-2xl text-[11px] font-black uppercase">← Fleet</button>
+                        <button className="bg-blue-600 px-6 py-3 rounded-2xl text-[11px] font-black uppercase shadow-xl">Generate PDF</button>
+                    </div>
+
+                    <div className="glass p-10 rounded-[60px] border-l-8 border-red-600 text-center mb-10 shadow-2xl">
+                        <h2 className="brand text-3xl font-black uppercase tracking-tighter">{ship.name}</h2>
+                        <p className="text-[11px] font-bold text-slate-500 mt-2 uppercase tracking-widest italic">Maritime Safety Audit Suite</p>
+                    </div>
+
+                    {/* EXPENSES LOGGING (V45 NEW) */}
+                    <div className="glass p-6 rounded-[40px] border border-white/5 mb-12">
+                        <h3 className="brand text-[10px] text-amber-500 uppercase italic mb-6">Field Expenses Registry</h3>
+                        <div className="grid grid-cols-3 gap-3">
+                            <input type="number" placeholder="GAS €" className="p-3 rounded-xl text-center font-bold text-xs" />
+                            <input type="number" placeholder="TOLLS €" className="p-3 rounded-xl text-center font-bold text-xs" />
+                            <input type="number" placeholder="OTHER €" className="p-3 rounded-xl text-center font-bold text-xs" />
+                        </div>
+                    </div>
+
                     <div className="space-y-16">
-                        {(ship.type === "Tanker" ? ["Deck", "Engine Room", "Pump Room", "Chimney", "Cargo Tanks", "Accommodation"] : ["Deck", "Engine Room", "Garage", "Chimney", "Accommodation"]).map(loc => {
+                        {SHIP_LOCS.map(loc => {
                             const d = (ship.data && ship.data[loc]) || { observations: [] };
                             return (
                                 <div key={loc} className="space-y-6">
                                     <div className="flex justify-between items-center px-4"><h4 className="text-xl font-black uppercase text-red-500 tracking-tighter">{loc}</h4><button onClick={()=>{
-                                        const newObs = { id: Date.now(), text: '', isTask: false, status: 'ok', trades: [], manual: '' };
+                                        const newObs = { id: Date.now(), text: '', status: 'ok', trades: [] };
                                         setProjects(projects.map(p=>p.id===ship.id?{...p, data:{...p.data,[loc]:{observations:[...(p.data[loc]?.observations||[]), newObs]}}}:p));
-                                    }} className="bg-slate-800 px-5 py-2.5 rounded-2xl text-[11px] font-black border border-white/10 shadow-2xl">+ NEW LOG</button></div>
+                                    }} className="bg-slate-800 px-4 py-2 rounded-xl text-[11px] font-black border border-white/10 shadow-lg">+ NEW ENTRY</button></div>
                                     {d.observations.map(o => (
-                                        <div key={o.id} className="glass p-8 rounded-[45px] border border-white/5 space-y-8 shadow-2xl relative">
-                                            <div className="flex flex-wrap gap-2">{TRADES.map(t => (
-                                                <button key={t} onClick={()=>{
-                                                    const newT = o.trades.includes(t) ? o.trades.filter(x=>x!==t) : [...o.trades, t];
-                                                    setProjects(projects.map(p=>p.id===ship.id?{...p, data:{...p.data,[loc]:{observations:p.data[loc].observations.map(x=>x.id===o.id?{...x, trades:newT}:x)}}}:p));
-                                                }} className={`px-4 py-2.5 rounded-2xl text-[10px] font-black border border-white/5 ${o.trades.includes(t) ? 'specialty-active shadow-lg' : 'bg-slate-950 text-slate-600'}`}>{t}</button>
-                                            ))}</div>
-                                            <input className="w-full p-4 rounded-2xl text-[11px] font-bold uppercase" placeholder="Άλλη Εργασία / Συνεργείο" value={o.manual || ''} onChange={(e)=>setProjects(projects.map(p=>p.id===ship.id?{...p, data:{...p.data,[loc]:{observations:p.data[loc].observations.map(x=>x.id===o.id?{...x, manual:e.target.value}:x)}}}:p))} />
+                                        <div key={o.id} className="glass p-8 rounded-[45px] border border-white/5 space-y-6 shadow-2xl relative">
                                             <div className="grid grid-cols-4 gap-2">{['ok','wait','block','na'].map(st => (
                                                 <button key={st} onClick={()=>{
-                                                    setProjects(projects.map(p=>p.id===ship.id?{...p, data:{...p.data,[loc]:{observations:p.data[loc].observations.map(x=>x.id===o.id?{...x, status:st}:x)}}}:p));
-                                                }} className={`p-4 rounded-3xl text-[10px] font-black uppercase transition-all shadow-inner ${o.status===st?`active-${st} shadow-xl`:'bg-slate-800 opacity-30'}`}>{st}</button>
+                                                    setProjects(projects.map(p=>p.id===ship.id?{...p, data:{...p.data,[loc]:{observations:p.data[loc].observations.map(x=>x.id===o.id?{...x, status:st, isTask:(st==='block'||st==='wait')}:x)}}}:p));
+                                                }} className={`p-4 rounded-3xl text-[10px] font-black uppercase transition-all ${o.status===st?`active-${st}`:'bg-slate-800 opacity-30'}`}>{st}</button>
                                             ))}</div>
-                                            <textarea className="p-5 rounded-3xl text-base h-28" placeholder="Findings..." value={o.text} onChange={(e)=>{
-                                                setProjects(projects.map(p=>p.id===ship.id?{...p, data:{...p.data,[loc]:{observations:p.data[loc].observations.map(x=>x.id===o.id?{...x, text:e.target.value}:x)}}}:p));
-                                            }} />
+                                            <textarea className="p-6 rounded-[40px] text-lg h-32" placeholder="Describe hazards..." value={o.text} onChange={(e)=>updateObs(ship.id,loc,o.id,'text',e.target.value)} />
+                                            
+                                            {/* SMART AI LOGIC V45 */}
+                                            <div className="flex flex-wrap gap-2">
+                                                {Object.entries(SMART_KNOWLEDGE).map(([key, list]) => 
+                                                    o.text.toUpperCase().includes(key) && list.map(sug => (
+                                                        <span key={sug} onClick={()=>updateObs(ship.id,loc,o.id,'text', o.text + '\n- ' + sug)} className="suggestion-chip">💡 {sug}</span>
+                                                    ))
+                                                )}
+                                            </div>
+
                                             <div className="flex gap-4">
-                                                <button onClick={()=>document.getElementById('c').click()} className="flex-1 bg-slate-900 p-4 rounded-2xl border border-white/5 text-[11px] font-black uppercase flex items-center justify-center gap-3"><i className="fa-solid fa-camera text-red-500 text-xl"></i> PHOTO</button>
-                                                <input type="file" id="c" capture="camera" className="hidden" />
-                                                <button onClick={()=>{
-                                                    setProjects(projects.map(p=>p.id===ship.id?{...p, data:{...p.data,[loc]:{observations:p.data[loc].observations.map(x=>x.id===o.id?{...x, isTask:!x.isTask}:x)}}}:p));
-                                                }} className={`flex-1 p-4 rounded-2xl text-[11px] font-black uppercase transition-all shadow-xl ${o.isTask ? 'bg-red-600 text-white shadow-red-900/40' : 'bg-slate-800 opacity-40'}`}>IN TASKS</button>
-                                                <button onClick={()=>{
-                                                    setProjects(projects.map(p=>p.id===ship.id?{...p, data:{...p.data,[loc]:{observations:p.data[loc].observations.filter(x=>x.id!==o.id)}}}:p));
-                                                }} className="bg-slate-800 w-12 h-12 rounded-xl text-slate-700 flex items-center justify-center"><i className="fa-solid fa-trash"></i></button>
+                                                <button className="flex-1 bg-slate-900 p-5 rounded-3xl border border-white/10 text-[12px] font-black uppercase flex items-center justify-center gap-3"><i className="fa-solid fa-camera text-red-500 text-2xl"></i> PHOTO</button>
+                                                <button onClick={()=>{setProjects(projects.map(p=>p.id===ship.id?{...p, data:{...p.data,[loc]:{observations:p.data[loc].observations.filter(x=>x.id!==o.id)}}}:p))}} className="bg-slate-800 w-16 h-16 rounded-3xl text-slate-700 flex items-center justify-center"><i className="fa-solid fa-trash"></i></button>
                                             </div>
                                         </div>
                                     ))}
@@ -115,21 +133,6 @@
                             );
                         })}
                     </div>
-                </div>
-            );
-
-            if (view === 'TASKS') return (
-                <div className="max-w-xl mx-auto p-5 pb-32 animate-fadeIn">
-                    <button onClick={()=>setView('DASHBOARD')} className="bg-slate-800 px-5 py-3 rounded-2xl text-[11px] font-black uppercase mb-10 shadow-xl">← Dashboard</button>
-                    <h2 className="brand text-2xl uppercase italic mb-8 text-red-500">Hazard Registry</h2>
-                    {allTasks.length === 0 ? <div className="glass p-20 rounded-[50px] text-center opacity-30 italic uppercase font-black text-sm">Fleet Clear</div> : 
-                        allTasks.map((t, i) => (
-                            <div key={i} className="glass p-8 rounded-[40px] border-l-8 border-amber-500 mb-6 shadow-xl">
-                                <p className="text-[10px] font-black text-amber-500 uppercase tracking-[0.3em]">{t.ship} • {t.loc}</p>
-                                <p className="text-lg text-slate-200 mt-3 font-medium leading-relaxed italic">"{t.text}"</p>
-                            </div>
-                        ))
-                    }
                 </div>
             );
         }

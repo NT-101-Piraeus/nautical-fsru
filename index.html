@@ -1,6 +1,5 @@
 <!DOCTYPE html><html lang="el"><head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NTG | HUB</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -8,46 +7,35 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Inter:wght@400;700&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #020617; color: white; margin: 0; }
-        .brand { font-family: 'Orbitron', sans-serif; }
-        .glass { background: rgba(30, 41, 59, 0.6); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); }
+        .brand { font-family: 'Orbitron', sans-serif; color: #3b82f6; }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.05); }
     </style></head><body>
-
     <div id="root"></div>
-
     <script type="text/babel">
         const { useState } = React;
-
-        function App() {
-            // Χρησιμοποιούμε localStorage για να μη ζητάει συνέχεια κωδικό
-            const [isAuth, setIsAuth] = useState(() => localStorage.getItem('ntg_active') === 'true');
+        function Launchpad() {
             const [pass, setPass] = useState('');
+            // Χρήση sessionStorage για να ζητάει κωδικό σε ΚΑΘΕ refresh
+            const [isAuth, setIsAuth] = useState(() => sessionStorage.getItem('ntg_session') === 'true');
 
-            const login = (e) => {
+            const handleLogin = (e) => {
                 e.preventDefault();
-                if (pass === 'NT2026') {
-                    localStorage.setItem('ntg_active', 'true');
+                if(pass === 'NT2026') {
+                    sessionStorage.setItem('ntg_session', 'true');
                     setIsAuth(true);
-                } else {
-                    alert('Λάθος Κωδικός');
-                }
+                } else { alert('Access Denied'); }
             };
 
             if (!isAuth) {
                 return (
                     <div className="h-screen flex items-center justify-center p-6 bg-slate-950">
-                        <div className="glass p-10 rounded-[40px] w-full max-w-sm text-center shadow-2xl">
-                            <h1 className="brand text-blue-500 text-2xl font-black mb-2 uppercase">NTG HUB</h1>
-                            <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-8">Security Gateway</p>
-                            <form onSubmit={login}>
-                                <input 
-                                    type="password" 
-                                    className="w-full bg-slate-900 border border-slate-800 p-5 rounded-3xl mb-4 text-center text-2xl text-white outline-none focus:border-blue-500" 
-                                    placeholder="••••" 
-                                    onChange={(e) => setPass(e.target.value)}
-                                />
-                                <button className="w-full bg-blue-600 text-white py-5 rounded-3xl font-black brand text-xs uppercase shadow-xl active:scale-95 transition-all">Connect</button>
+                        <div className="glass p-10 rounded-[40px] w-full max-w-sm text-center shadow-2xl border border-blue-500/10">
+                            <h1 className="brand text-blue-500 text-2xl font-black mb-8 uppercase italic">NTG HUB</h1>
+                            <form onSubmit={handleLogin}>
+                                <input type="password" value={pass} onChange={(e)=>setPass(e.target.value)} className="w-full bg-slate-900 border border-slate-800 p-5 rounded-3xl mb-4 text-center text-2xl text-white outline-none" placeholder="••••" />
+                                <button className="w-full bg-blue-600 text-white py-5 rounded-3xl font-black brand text-xs uppercase shadow-xl">Connect</button>
                             </form>
                         </div>
                     </div>
@@ -55,56 +43,21 @@
             }
 
             return (
-                <div className="max-w-xl mx-auto p-6 py-12">
-                    <header className="text-center mb-16">
-                        <h1 className="brand text-3xl text-blue-500 font-black tracking-tighter uppercase italic">NTG COMMAND</h1>
-                        <p className="text-[10px] text-slate-500 font-bold uppercase mt-2 tracking-[0.3em]">Fleet Management Unit</p>
-                    </header>
-
+                <div className="max-w-xl mx-auto p-6 py-12 animate-fadeIn">
+                    <header className="text-center mb-16"><h1 className="brand text-3xl text-blue-500 font-black tracking-tighter uppercase italic">NTG COMMAND</h1></header>
                     <div className="grid grid-cols-1 gap-4">
-                        {/* Σύνδεση με τα αρχεία σου */}
                         <a href="intel.html" className="glass p-6 rounded-[35px] flex items-center gap-5 active:scale-95 transition-all">
-                            <div className="w-12 h-12 rounded-2xl bg-blue-900/50 flex items-center justify-center text-blue-400">
-                                <i className="fa-solid fa-tower-broadcast text-xl"></i>
-                            </div>
-                            <div>
-                                <h2 className="brand text-sm text-white uppercase leading-none">Intel Division</h2>
-                                <p className="text-[9px] text-slate-500 font-bold uppercase mt-1">Hunter Agent & AIS</p>
-                            </div>
+                            <i className="fa-solid fa-tower-broadcast text-xl text-blue-400"></i>
+                            <div><h2 className="brand text-sm text-white uppercase leading-none">Intel Division</h2><p className="text-[9px] text-slate-500 font-bold uppercase mt-1">Agent & AIS</p></div>
                         </a>
-
                         <a href="safety_ships.html" className="glass p-6 rounded-[35px] flex items-center gap-5 active:scale-95 transition-all border-l-4 border-l-red-600">
-                            <div className="w-12 h-12 rounded-2xl bg-red-900/50 flex items-center justify-center text-red-500">
-                                <i className="fa-solid fa-user-shield text-xl"></i>
-                            </div>
-                            <div>
-                                <h2 className="brand text-sm text-white uppercase leading-none">Safety Officer</h2>
-                                <p className="text-[9px] text-slate-500 font-bold uppercase mt-1">Ship Compliance</p>
-                            </div>
+                            <i className="fa-solid fa-user-shield text-xl text-red-500"></i>
+                            <div><h2 className="brand text-sm text-white uppercase leading-none">Safety Officer</h2><p className="text-[9px] text-slate-500 font-bold uppercase mt-1">Compliance Engine</p></div>
                         </a>
-
-                        <div className="glass p-6 rounded-[35px] flex items-center gap-5 opacity-30 grayscale">
-                            <div className="w-12 h-12 rounded-2xl bg-slate-800 flex items-center justify-center">
-                                <i className="fa-solid fa-ruler-combined text-xl text-slate-500"></i>
-                            </div>
-                            <div>
-                                <h2 className="brand text-sm text-white uppercase leading-none">Tech Gauging</h2>
-                                <p className="text-[9px] text-slate-500 font-bold uppercase mt-1">Coming Soon</p>
-                            </div>
-                        </div>
                     </div>
-
-                    <button 
-                        onClick={() => { localStorage.removeItem('ntg_active'); setIsAuth(false); }}
-                        className="w-full mt-12 text-slate-700 text-[10px] font-black uppercase tracking-widest"
-                    >
-                        Terminate Session
-                    </button>
                 </div>
             );
         }
-
         const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
-    </script>
-</body></html>
+        root.render(<Launchpad />);
+    </script></body></html>

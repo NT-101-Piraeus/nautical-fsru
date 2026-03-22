@@ -8,31 +8,49 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@400;700;900&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #020617; color: white; margin: 0; }
         .brand { font-family: 'Orbitron', sans-serif; }
-        .glass { background: rgba(30, 41, 59, 0.6); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.05); }
+        .glass { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.05); }
         .card { transition: all 0.3s ease; border: 1px solid rgba(255,255,255,0.03); }
         .card:active { transform: scale(0.95); background: rgba(59, 130, 246, 0.1); }
     </style></head><body>
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState } = React;
+        const { useState, useEffect } = React;
 
         function Launchpad() {
             const [pass, setPass] = useState('');
-            const [isAuth, setIsAuth] = useState(false);
+            // Ελέγχει αν υπάρχει ήδη έγκυρο session
+            const [isAuth, setIsAuth] = useState(() => {
+                return sessionStorage.getItem('ntg_auth') === 'true';
+            });
+
+            const handleLogin = (e) => {
+                e.preventDefault();
+                if(pass === 'NT2026') {
+                    setIsAuth(true);
+                    sessionStorage.setItem('ntg_auth', 'true');
+                } else {
+                    alert('Access Denied');
+                }
+            };
+
+            const handleLogout = () => {
+                setIsAuth(false);
+                sessionStorage.removeItem('ntg_auth');
+            };
 
             if (!isAuth) {
                 return (
-                    <div className="h-screen flex items-center justify-center p-6 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-blue-900/20 via-slate-950 to-black">
+                    <div className="h-screen flex items-center justify-center p-6 bg-slate-950">
                         <div className="glass p-10 rounded-[40px] w-full max-w-sm text-center shadow-2xl">
-                            <h1 className="brand text-blue-500 text-2xl font-black mb-2 italic uppercase">NTG GROUP</h1>
-                            <p className="text-[9px] text-slate-500 uppercase tracking-[0.4em] mb-8 font-bold">Secure Ecosystem Link</p>
-                            <form onSubmit={(e) => { e.preventDefault(); if(pass === 'NT2026') setIsAuth(true); else alert('Access Denied'); }}>
+                            <h1 className="brand text-blue-500 text-2xl font-black mb-2 italic uppercase leading-none">NTG GROUP</h1>
+                            <p className="text-[9px] text-slate-500 uppercase tracking-[0.4em] mb-8 font-bold">Secure Link Initialized</p>
+                            <form onSubmit={handleLogin}>
                                 <input type="password" value={pass} onChange={(e)=>setPass(e.target.value)} className="w-full bg-slate-900 border border-slate-800 p-5 rounded-3xl mb-4 text-center text-2xl text-white outline-none focus:border-blue-500" placeholder="••••" />
-                                <button className="w-full bg-blue-600 text-white py-5 rounded-3xl font-black brand text-xs tracking-widest uppercase shadow-lg shadow-blue-900/20 active:scale-95 transition-all">Establish Connection</button>
+                                <button className="w-full bg-blue-600 text-white py-5 rounded-3xl font-black brand text-xs tracking-widest uppercase">Connect</button>
                             </form>
                         </div>
                     </div>
@@ -57,7 +75,7 @@
                         <AppButton href="luxury.html" icon="fa-crown" label="Luxury Hub" sub="Mykonos Management" color="text-yellow-500" border="border-l-4 border-l-yellow-500" />
                     </div>
                     
-                    <button onClick={() => setIsAuth(false)} className="w-full mt-12 text-slate-700 text-[10px] font-black uppercase tracking-widest">Logout</button>
+                    <button onClick={handleLogout} className="w-full mt-12 text-slate-700 text-[10px] font-black uppercase tracking-widest">Terminate Session</button>
                 </div>
             );
         }
@@ -69,8 +87,8 @@
                         <i className={`fa-solid ${icon} text-xl`}></i>
                     </div>
                     <div>
-                        <h2 className="brand text-sm text-white uppercase">{label}</h2>
-                        <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">{sub}</p>
+                        <h2 className="brand text-sm text-white uppercase leading-none">{label}</h2>
+                        <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-1">{sub}</p>
                     </div>
                     <i className="fa-solid fa-chevron-right ml-auto text-slate-800 text-xs"></i>
                 </a>

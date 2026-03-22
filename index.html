@@ -1,10 +1,11 @@
 <!DOCTYPE html><html lang="el"><head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NTG HUB | V40</title>
+    <title>NTG COMMAND | V41</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@400;700;900&display=swap');
@@ -15,26 +16,38 @@
     <div id="root"></div>
     <script type="text/babel">
         const { useState, useEffect } = React;
+        const _supabase = supabase.createClient("https://omdarjncczohpffunfy.supabase.co", "sb_publishable_V-nfUDy5MxEG4SlXkisFBg_GBlD_4Y9");
+
         function Hub() {
             const [isAuth, setIsAuth] = useState(() => sessionStorage.getItem('ntg_auth') === 'true');
+            const [view, setView] = useState('DASHBOARD');
             const [taskCount, setTaskCount] = useState(0);
+            const [logs, setLogs] = useState([]);
 
             useEffect(() => {
-                try {
-                    const data = JSON.parse(localStorage.getItem('ntg_v40_data'));
-                    if (data && data.ships) {
-                        const count = data.ships.flatMap(s => Object.values(s.data || {}))
-                                          .flatMap(d => d.observations || [])
-                                          .filter(o => o.isTask).length;
-                        setTaskCount(count);
-                    }
-                } catch(e) { console.error("Sync error"); }
+                if (isAuth) {
+                    try {
+                        const data = JSON.parse(localStorage.getItem('ntg_v41_data'));
+                        if (data && data.ships) {
+                            const count = data.ships.flatMap(s => Object.values(s.data || {}))
+                                              .flatMap(d => d.observations || [])
+                                              .filter(o => o.isTask).length;
+                            setTaskCount(count);
+                        }
+                        fetchArchive();
+                    } catch(e) { console.error("Data error"); }
+                }
             }, [isAuth]);
+
+            async function fetchArchive() {
+                const { data } = await _supabase.from('ntg_logbook').select('*').order('created_at', { ascending: false });
+                if (data) setLogs(data);
+            }
 
             if (!isAuth) return (
                 <div className="h-screen flex items-center justify-center p-6 bg-[#020617]">
-                    <form onSubmit={(e)=>{e.preventDefault(); if(e.target.p.value==='NT2026'){sessionStorage.setItem('ntg_auth','true');setIsAuth(true)}}} className="glass p-10 rounded-[40px] w-full max-w-sm text-center border border-blue-500/20">
-                        <h1 className="brand text-blue-500 text-2xl mb-8 uppercase italic">NTG COMMAND</h1>
+                    <form onSubmit={(e)=>{e.preventDefault(); if(e.target.p.value==='NT2026'){sessionStorage.setItem('ntg_auth','true');setIsAuth(true)}}} className="glass p-10 rounded-[40px] w-full max-w-sm text-center border border-blue-500/20 shadow-2xl">
+                        <h1 className="brand text-blue-500 text-2xl mb-8 uppercase italic leading-none">NTG COMMAND</h1>
                         <input name="p" type="password" autoFocus className="w-full bg-slate-900 border border-slate-800 p-5 rounded-3xl mb-4 text-center text-white outline-none text-2xl" placeholder="••••" />
                         <button className="w-full bg-blue-600 py-5 rounded-3xl font-black text-xs uppercase shadow-xl">Identify</button>
                     </form>
@@ -45,20 +58,55 @@
                 <div className="max-w-xl mx-auto p-5 py-10 animate-fadeIn">
                     <header className="flex justify-between items-center mb-12">
                         <h1 className="brand text-blue-500 text-2xl font-black italic uppercase">NTG HUB</h1>
-                        <button onClick={()=>{localStorage.clear(); window.location.reload();}} className="text-[8px] opacity-20 border p-1 rounded">RESET V40</button>
+                        <div className="flex gap-2">
+                            <button onClick={() => setView('DASHBOARD')} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase ${view === 'DASHBOARD' ? 'bg-blue-600' : 'bg-slate-800'}`}>Today</button>
+                            <button onClick={() => setView('ARCHIVE')} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase ${view === 'ARCHIVE' ? 'bg-blue-600' : 'bg-slate-800'}`}>Archive</button>
+                        </div>
                     </header>
 
-                    <a href="safety_ships.html?view=TASKS" className="block mb-10 active:scale-95 transition-all">
-                        <div className="glass p-6 rounded-[35px] border-l-4 border-red-600 flex justify-between items-center bg-red-600/5">
-                            <div><h3 className="brand text-[10px] text-red-500 uppercase italic">Hazardous Findings</h3><p className="text-3xl font-black mt-1">{taskCount} <span className="text-xs text-slate-500">TASKS</span></p></div>
-                            <i className="fa-solid fa-triangle-exclamation text-red-500 text-2xl animate-pulse"></i>
-                        </div>
-                    </a>
+                    {view === 'DASHBOARD' ? (
+                        <div className="space-y-6">
+                            <a href="safety_ships.html?view=TASKS" className="block active:scale-95 transition-all">
+                                <div className="glass p-6 rounded-[35px] border-l-4 border-red-600 flex justify-between items-center bg-red-600/5">
+                                    <div><h3 className="brand text-[10px] text-red-500 uppercase italic">Hazardous Findings</h3><p className="text-3xl font-black mt-1">{taskCount} <span className="text-xs text-slate-500 uppercase">TASKS</span></p></div>
+                                    <i className="fa-solid fa-triangle-exclamation text-red-500 text-2xl animate-pulse"></i>
+                                </div>
+                            </a>
 
-                    <a href="safety_ships.html" className="glass p-10 rounded-[50px] flex items-center gap-8 active:scale-95 transition-all border border-white/5 shadow-2xl">
-                        <div className="w-20 h-20 rounded-3xl bg-red-600/20 flex items-center justify-center text-red-500 text-4xl shadow-inner"><i className="fa-solid fa-user-shield"></i></div>
-                        <div><h2 className="brand text-lg text-white uppercase italic leading-none">Safety Officer</h2><p className="text-[11px] text-slate-400 font-bold uppercase mt-2 tracking-widest">Compliance Engine Active</p></div>
-                    </a>
+                            <div className="glass p-6 rounded-[35px] border border-white/5 shadow-xl">
+                                <h3 className="brand text-[10px] text-blue-400 uppercase italic mb-4 tracking-widest">Ship Visit Schedule</h3>
+                                <div className="space-y-4">{[
+                                    {n:"FELIX", p:"Δραπετσώνα", t:"07:00"},
+                                    {n:"BADJI MOKHTAR III", p:"ΕΛΕΥΣΙΝΑ", t:"11:00"},
+                                    {n:"ΑΡΙΑΔΝΗ", p:"ΕΛΕΥΣΙΝΑ", t:"13:00"},
+                                    {n:"RIGEL III", p:"Πέραμα", t:"15:00"}
+                                ].map((s,i)=>(
+                                    <div key={i} className="flex justify-between items-center py-2 border-b border-white/5 last:border-0">
+                                        <p className="font-bold text-xs uppercase">{s.n}</p>
+                                        <p className="text-[10px] text-slate-400 font-bold">{s.p} • {s.t}</p>
+                                    </div>
+                                ))}</div>
+                            </div>
+
+                            <a href="safety_ships.html" className="glass p-10 rounded-[50px] flex items-center gap-8 active:scale-95 transition-all border border-white/5 shadow-2xl">
+                                <div className="w-16 h-16 rounded-2xl bg-red-600/20 flex items-center justify-center text-red-500 text-3xl"><i className="fa-solid fa-user-shield"></i></div>
+                                <div><h2 className="brand text-sm text-white uppercase italic leading-none">Safety Officer</h2><p className="text-[10px] text-slate-400 font-bold uppercase mt-2 tracking-widest">Audit Engine</p></div>
+                            </a>
+                        </div>
+                    ) : (
+                        <div className="space-y-4">
+                            {logs.map(log => (
+                                <div key={log.id} className="glass p-6 rounded-[35px] border border-white/5 mb-4 shadow-lg">
+                                    <div className="flex justify-between">
+                                        <p className="text-[10px] text-slate-500 font-bold uppercase">{new Date(log.created_at).toLocaleDateString('el-GR')}</p>
+                                        <span className="text-[8px] bg-emerald-600/20 text-emerald-500 px-2 py-0.5 rounded-full font-black uppercase">Sync Complete</span>
+                                    </div>
+                                    <h4 className="font-black text-sm uppercase text-blue-400 mt-1">{log.ship_name}</h4>
+                                    <p className="text-[9px] text-slate-500 uppercase mt-1 italic">{log.port}</p>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
             );
         }

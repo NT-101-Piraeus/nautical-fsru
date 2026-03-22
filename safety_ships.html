@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="el"><head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SafeShip Pro | NTG Ecosystem</title>
+    <title>SafeShip Pro V25 | NTG Ecosystem</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -11,27 +11,25 @@
         body { font-family: 'Inter', sans-serif; background-color: #020617; color: white; margin: 0; touch-action: manipulation; }
         .brand { font-family: 'Orbitron', sans-serif; }
         .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.05); }
-        .status-btn { transition: all 0.2s; opacity: 0.3; border: 1px solid rgba(255,255,255,0.1); }
-        .status-btn.active-ok { background: #10b981 !important; opacity: 1; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
-        .status-btn.active-wait { background: #f59e0b !important; opacity: 1; box-shadow: 0 0 15px rgba(245, 158, 11, 0.4); }
-        .status-btn.active-block { background: #ef4444 !important; opacity: 1; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
-        .status-btn.active-na { background: #64748b !important; opacity: 1; }
-        input, textarea { background: #0f172a !important; border: 1px solid #1e293b !important; color: white !important; outline: none; width: 100%; }
+        .btn-status { transition: all 0.2s; opacity: 0.3; border: 1px solid rgba(255,255,255,0.1); }
+        .active-ok { background: #10b981 !important; opacity: 1; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+        .active-wait { background: #f59e0b !important; opacity: 1; box-shadow: 0 0 15px rgba(245, 158, 11, 0.4); }
+        .active-block { background: #ef4444 !important; opacity: 1; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
+        .active-na { background: #64748b !important; opacity: 1; }
+        input, textarea, select { background: #0f172a !important; border: 1px solid #1e293b !important; color: white !important; outline: none; width: 100%; }
         .safe-tap:active { transform: scale(0.97); opacity: 0.8; }
     </style></head><body>
     <div id="root"></div>
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        // ΣΤΑΝΤΑΡ ΧΩΡΟΙ ΑΝΑ ΤΥΠΟ ΠΛΟΙΟΥ
-        const SHIP_LOCATIONS = {
+        const LOCS_BY_TYPE = {
             "Tanker": ["Deck", "Engine Room", "Pump Room", "Cargo Tanks", "Accommodation"],
             "Ferry": ["Deck", "Engine Room", "Garage", "Accommodation", "Pax Areas"],
             "Cargo": ["Deck", "Engine Room", "Holds", "Accommodation"]
         };
 
-        // ΔΕΔΟΜΕΝΑ ΠΡΟΓΡΑΜΜΑΤΟΣ ΣΕΠΕ (ΜΑΡΤΙΟΣ 2026)
-        const INITIAL_SCHEDULE = [
+        const INITIAL_SHIPS = [
             { id: 1, name: "FELIX", time: "07:00", duration: "4h", port: "Πέραμα", type: "Tanker" },
             { id: 2, name: "BADJI MOKHTAR III", time: "11:00", duration: "2h", port: "Πέραμα", type: "Ferry" },
             { id: 3, name: "ΑΡΙΑΔΝΗ", time: "13:00", duration: "2h", port: "Πειραιάς", type: "Ferry" },
@@ -39,134 +37,191 @@
         ];
 
         function SafeShipApp() {
-            const [view, setView] = useState('DASHBOARD');
-            const [activeShipId, setActiveShipId] = useState(null);
-            const [projects, setProjects] = useState(() => JSON.parse(localStorage.getItem('ntg_ss_v24')) || INITIAL_SCHEDULE.map(s => ({ ...s, data: {}, gasFree: '', active: true })));
-            const [att, setAtt] = useState(() => JSON.parse(localStorage.getItem('ntg_ss_att')) || { in: '--:--', out: '--:--' });
-            const [time, setTime] = useState(new Date());
+            const [isAuth, setIsAuth] = useState(() => sessionStorage.getItem('ntg_ss_auth') === 'true');
+            const [pass, setPass] = useState('');
+            const [view, setView] = useState('DASHBOARD'); // DASHBOARD, NEW, INSPECTION, TASKS
+            const [activeId, setActiveId] = useState(null);
+            const [projects, setProjects] = useState(() => JSON.parse(localStorage.getItem('ntg_projects_v25')) || INITIAL_SHIPS.map(s => ({ ...s, data: {}, gasFree: '', signed: false })));
+            const [checkIn, setCheckIn] = useState(() => localStorage.getItem('ntg_checkin_time') || '--:--');
+            const [now, setNow] = useState(new Date());
 
             useEffect(() => {
-                const timer = setInterval(() => setTime(new Date()), 1000);
-                localStorage.setItem('ntg_ss_v24', JSON.stringify(projects));
-                return () => clearInterval(timer);
+                const t = setInterval(() => setNow(new Date()), 1000);
+                localStorage.setItem('ntg_projects_v25', JSON.stringify(projects));
+                return () => clearInterval(t);
             }, [projects]);
 
-            const logAttendance = (type) => {
-                const now = new Date().toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' });
-                const newAtt = { ...att, [type]: now };
-                setAtt(newAtt);
-                localStorage.setItem('ntg_ss_att', JSON.stringify(newAtt));
+            const login = (e) => {
+                e.preventDefault();
+                if (pass === 'NT2026') { sessionStorage.setItem('ntg_ss_auth', 'true'); setIsAuth(true); }
+                else { alert("Κωδικός Απορρίφθηκε"); }
             };
 
-            const updateShipData = (shipId, loc, field, val) => {
+            const addProject = (e) => {
+                e.preventDefault();
+                const newP = {
+                    id: Date.now(),
+                    name: e.target.ship.value.toUpperCase(),
+                    port: e.target.port.value.toUpperCase(),
+                    type: e.target.type.value,
+                    time: "08:00", duration: "2h",
+                    data: {}, gasFree: '', signed: false
+                };
+                setProjects([newP, ...projects]);
+                setActiveId(newP.id);
+                setView('INSPECTION');
+            };
+
+            const updateData = (shipId, loc, field, val) => {
                 setProjects(projects.map(p => {
                     if (p.id === shipId) {
-                        const shipData = p.data || {};
-                        const locData = shipData[loc] || {};
-                        return { ...p, data: { ...shipData, [loc]: { ...locData, [field]: val } } };
+                        const d = p.data || {};
+                        const l = d[loc] || {};
+                        return { ...p, data: { ...d, [loc]: { ...l, [field]: val } } };
                     }
                     return p;
                 }));
             };
 
-            const ship = projects.find(s => s.id === activeShipId);
-            const openTasks = projects.flatMap(p => 
-                Object.entries(p.data || {}).filter(([loc, d]) => d.status === 'block' || d.status === 'wait').map(([loc, d]) => ({ shipName: p.name, loc, ...d }))
-            );
-
-            // --- HEADER COMPONENT ---
-            const Header = ({ showBack }) => (
-                <header className="p-6 border-b border-slate-800 flex justify-between items-start">
-                    <div className="flex items-center gap-3">
-                        {showBack && <button onClick={() => setView('DASHBOARD')} className="bg-slate-800 w-10 h-10 rounded-full flex items-center justify-center safe-tap"><i className="fa-solid fa-arrow-left"></i></button>}
-                        <div>
-                            <h1 className="brand text-xs font-black text-red-500 uppercase tracking-tighter">SafeShip Manager</h1>
-                            <p className="text-[10px] text-slate-500 font-bold">{time.toLocaleDateString('el-GR')}</p>
-                        </div>
-                    </div>
-                    <div className="text-right">
-                        <p className="text-xl font-black text-white leading-none">{time.toLocaleTimeString('el-GR', {hour:'2-digit', minute:'2-digit'})}</p>
-                        <p className="text-[8px] text-red-500 font-black uppercase mt-1">Tactical Unit Active</p>
-                    </div>
-                </header>
-            );
-
-            // --- VIEW: DASHBOARD ---
-            if (view === 'DASHBOARD') return (
-                <div className="max-w-xl mx-auto pb-32 animate-fadeIn">
-                    <Header />
-                    <div className="p-5 space-y-6">
-                        {/* Attendance */}
-                        <div className="glass p-6 rounded-[35px] border-l-4 border-emerald-500 flex justify-between items-center">
-                            <div className="flex gap-6">
-                                <div><p className="text-[8px] text-slate-500 uppercase font-black">In</p><p className="text-xl font-black">{att.in}</p></div>
-                                <div><p className="text-[8px] text-slate-500 uppercase font-black">Out</p><p className="text-xl font-black">{att.out}</p></div>
-                            </div>
-                            <div className="flex gap-2">
-                                <button onClick={() => logAttendance('in')} className="bg-emerald-600 p-3 rounded-xl text-[9px] font-black uppercase safe-tap">Check In</button>
-                                <button onClick={() => logAttendance('out')} className="bg-red-700 p-3 rounded-xl text-[9px] font-black uppercase safe-tap">Check Out</button>
-                            </div>
-                        </div>
-
-                        {/* Global Tasks Button */}
-                        <button onClick={() => setView('TASKS')} className="w-full bg-red-600 p-6 rounded-[35px] flex justify-between items-center shadow-xl shadow-red-900/20 safe-tap">
-                            <div className="flex items-center gap-4">
-                                <div className="bg-white/20 w-10 h-10 rounded-full flex items-center justify-center"><i className="fa-solid fa-triangle-exclamation"></i></div>
-                                <div className="text-left"><h3 className="font-black text-sm uppercase italic leading-none">Global Tasks</h3><p className="text-[9px] opacity-70 uppercase font-bold mt-1">Pending Fleet Hazards</p></div>
-                            </div>
-                            <div className="text-xl font-black">{openTasks.length}</div>
-                        </button>
-
-                        {/* Ship Schedule */}
-                        <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] ml-2 italic">Πρόγραμμα Μαρτίου (ΣΕΠΕ)</h3>
-                        <div className="grid grid-cols-1 gap-4">
-                            {projects.map(s => (
-                                <div key={s.id} onClick={() => { setActiveShipId(s.id); setView('INSPECTION'); }} className="glass p-6 rounded-[35px] flex justify-between items-center border border-white/5 safe-tap">
-                                    <div>
-                                        <h4 className="font-black text-sm uppercase text-white">{s.name}</h4>
-                                        <p className="text-[9px] text-slate-400 font-bold uppercase mt-1">
-                                            <i className="fa-solid fa-location-dot text-red-500 mr-1"></i> {s.port} • {s.time} ({s.duration})
-                                        </p>
-                                    </div>
-                                    <div className="bg-slate-800 w-10 h-10 rounded-full flex items-center justify-center text-slate-500"><i className="fa-solid fa-chevron-right text-xs"></i></div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
+            if (!isAuth) return (
+                <div className="h-screen flex items-center justify-center p-6 bg-slate-950">
+                    <form onSubmit={login} className="glass p-10 rounded-[40px] w-full max-w-sm text-center">
+                        <h1 className="brand text-red-500 text-2xl mb-8 uppercase italic">SafeShip Access</h1>
+                        <input type="password" onChange={(e)=>setPass(e.target.value)} className="p-5 rounded-3xl mb-4 text-center text-2xl" placeholder="••••" />
+                        <button className="w-full bg-red-600 p-5 rounded-3xl font-black uppercase text-xs">Enter Command Center</button>
+                    </form>
                 </div>
             );
 
-            // --- VIEW: INSPECTION ---
-            if (view === 'INSPECTION' && ship) return (
+            const ship = projects.find(s => s.id === activeId);
+            const taskCount = projects.flatMap(p => Object.values(p.data || {})).filter(d => d.status === 'block' || d.status === 'wait').length;
+
+            return (
                 <div className="max-w-xl mx-auto pb-32 animate-fadeIn">
-                    <Header showBack />
-                    <div className="p-5 space-y-8">
-                        <div className="glass p-8 rounded-[40px] border-l-4 border-red-600 text-center">
-                            <h2 className="brand text-2xl font-black uppercase text-white tracking-tighter">{ship.name}</h2>
-                            <p className="text-[10px] text-slate-400 font-bold uppercase mt-1">{ship.type} • {ship.port} • {ship.time}</p>
+                    {/* FIXED HEADER */}
+                    <header className="p-6 border-b border-slate-800 flex justify-between items-start sticky top-0 bg-[#020617] z-50">
+                        <div className="flex items-center gap-3">
+                            {view !== 'DASHBOARD' && <button onClick={()=>setView('DASHBOARD')} className="bg-slate-800 w-10 h-10 rounded-full flex items-center justify-center safe-tap"><i className="fa-solid fa-arrow-left"></i></button>}
+                            <div><h1 className="brand text-xs font-black text-red-500 uppercase">SafeShip Manager</h1><p className="text-[10px] text-slate-500">{now.toLocaleDateString('el-GR')}</p></div>
                         </div>
-
-                        {/* Gas Free Check */}
-                        <div className="glass p-6 rounded-[30px] border border-blue-500/20">
-                            <h4 className="text-[10px] font-black text-blue-400 uppercase mb-3 tracking-widest"><i className="fa-solid fa-wind mr-2"></i> Compliance: Gas-Free Status</h4>
-                            <input 
-                                className="p-4 rounded-2xl text-xs font-bold" 
-                                placeholder="Expiry Date or Certificate No." 
-                                value={ship.gasFree || ''} 
-                                onChange={(e) => setProjects(projects.map(p => p.id === ship.id ? {...p, gasFree: e.target.value} : p))}
-                            />
+                        <div className="text-right">
+                            <p className="text-xl font-black text-white leading-none">{now.toLocaleTimeString('el-GR', {hour:'2-digit', minute:'2-digit'})}</p>
+                            <p className="text-[8px] text-red-500 font-black uppercase mt-1">Status: Online</p>
                         </div>
+                    </header>
 
-                        {/* Checklist */}
-                        <div className="space-y-10">
-                            {(SHIP_LOCATIONS[ship.type] || []).map(loc => {
-                                const data = ship.data[loc] || { status: '', note: '' };
-                                return (
-                                    <div key={loc} className="glass p-6 rounded-[40px] border border-white/5">
-                                        <h4 className="text-[11px] font-black uppercase text-slate-300 mb-6 flex justify-between">
-                                            <span>{loc}</span>
-                                            <span className="text-[8px] text-slate-600 italic">Location Verified</span>
-                                        </h4>
-                                        <div className="grid grid-cols-4 gap-2 mb-6">
-                                            <button onClick={() => updateShipData(ship.id, loc, 'status', 'ok')} className={`p-4 rounded-2xl text-[9px] font-black status-btn ${data.status==='ok' ? 'active-ok' : 'bg-slate-800'}`}>OK</button>
-                                            <button onClick={() => updateShipData(ship.id, loc, 'status', 'wait')} className={`p
+                    {/* VIEW: DASHBOARD */}
+                    {view === 'DASHBOARD' && (
+                        <div className="p-5 space-y-6">
+                            <div className="glass p-6 rounded-[35px] border-l-4 border-emerald-500 flex justify-between items-center">
+                                <div><p className="text-[8px] text-slate-500 uppercase font-black">Daily Check-In</p><p className="text-3xl font-black">{checkIn}</p></div>
+                                <button onClick={()=>{const t=new Date().toLocaleTimeString('el-GR',{hour:'2-digit',minute:'2-digit'}); setCheckIn(t); localStorage.setItem('ntg_checkin_time',t)}} className="bg-emerald-600 p-4 rounded-2xl text-[10px] font-black uppercase shadow-lg safe-tap">Set In</button>
+                            </div>
+
+                            <button onClick={()=>setView('TASKS')} className="w-full bg-red-600 p-6 rounded-[35px] flex justify-between items-center shadow-xl safe-tap">
+                                <div className="flex items-center gap-4">
+                                    <div className="bg-white/20 w-10 h-10 rounded-full flex items-center justify-center"><i className="fa-solid fa-triangle-exclamation"></i></div>
+                                    <div className="text-left"><h3 className="font-black text-sm uppercase italic leading-none">Global Tasks</h3><p className="text-[9px] opacity-70 uppercase font-bold mt-1">Fleet Risks Detected</p></div>
+                                </div>
+                                <div className="text-xl font-black">{taskCount}</div>
+                            </button>
+
+                            <button onClick={()=>setView('NEW')} className="w-full bg-slate-800 p-6 rounded-[35px] font-black text-xs uppercase border border-white/5 safe-tap">+ Register New Ship</button>
+
+                            <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] ml-2 italic">March 2026 Fleet Schedule</h3>
+                            <div className="space-y-4">
+                                {projects.map(s => (
+                                    <div key={s.id} onClick={()=>{setActiveId(s.id); setView('INSPECTION')}} className={`glass p-6 rounded-[35px] flex justify-between items-center safe-tap ${s.signed ? 'border-l-8 border-emerald-500' : 'border border-white/5'}`}>
+                                        <div>
+                                            <h4 className="font-black text-sm uppercase">{s.name}</h4>
+                                            <p className="text-[9px] text-slate-400 font-bold uppercase mt-1"><i className="fa-solid fa-location-dot text-red-500 mr-1"></i> {s.port} • {s.time} ({s.duration})</p>
+                                        </div>
+                                        <i className={`fa-solid ${s.signed ? 'fa-circle-check text-emerald-500 text-xl' : 'fa-chevron-right text-slate-800'}`}></i>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* VIEW: NEW PROJECT */}
+                    {view === 'NEW' && (
+                        <div className="p-6 space-y-6">
+                            <h2 className="brand text-xl uppercase italic">Ship Entry</h2>
+                            <form onSubmit={addProject} className="space-y-4">
+                                <input name="ship" required placeholder="Ship Name / IMO" className="p-5 rounded-2xl text-lg font-bold" />
+                                <input name="port" required placeholder="Port / Location" className="p-5 rounded-2xl text-sm" />
+                                <select name="type" className="p-5 rounded-2xl">
+                                    <option value="Tanker">Δεξαμενόπλοιο (Tanker)</option>
+                                    <option value="Ferry">Επιβατηγό (Ferry/Ro-Ro)</option>
+                                    <option value="Cargo">Φορτηγό (Bulk/Cargo)</option>
+                                </select>
+                                <button className="w-full bg-red-600 p-6 rounded-3xl font-black uppercase text-xs shadow-xl">Initialize Vessel Hub</button>
+                            </form>
+                        </div>
+                    )}
+
+                    {/* VIEW: INSPECTION */}
+                    {view === 'INSPECTION' && ship && (
+                        <div className="p-5 space-y-8">
+                            <div className="glass p-8 rounded-[40px] border-l-4 border-red-600 text-center">
+                                <h2 className="brand text-2xl font-black uppercase tracking-tighter">{ship.name}</h2>
+                                <p className="text-[10px] text-slate-400 font-bold uppercase mt-1">{ship.port} • {ship.type}</p>
+                            </div>
+
+                            <div className="glass p-6 rounded-[30px] border border-blue-500/20">
+                                <h4 className="text-[10px] font-black text-blue-400 uppercase mb-3"><i className="fa-solid fa-certificate mr-2"></i> Gas-Free Certificate Status</h4>
+                                <input placeholder="Number or Expiry Date" className="p-4 rounded-xl text-xs font-bold" value={ship.gasFree} onChange={(e)=>setProjects(projects.map(p=>p.id===ship.id?{...p, gasFree:e.target.value}:p))} />
+                            </div>
+
+                            <div className="space-y-10">
+                                {LOCS_BY_TYPE[ship.type].map(loc => {
+                                    const d = ship.data[loc] || { status: '', note: '' };
+                                    return (
+                                        <div key={loc} className="glass p-6 rounded-[40px] border border-white/5">
+                                            <h4 className="text-[11px] font-black uppercase text-slate-300 mb-6">{loc}</h4>
+                                            <div className="grid grid-cols-4 gap-2 mb-6">
+                                                <button onClick={()=>updateData(ship.id,loc,'status','ok')} className={`p-4 rounded-2xl text-[9px] font-black btn-status ${d.status==='ok'?'active-ok':'bg-slate-800'}`}>OK</button>
+                                                <button onClick={()=>updateData(ship.id,loc,'status','wait')} className={`p-4 rounded-2xl text-[9px] font-black btn-status ${d.status==='wait'?'active-wait':'bg-slate-800'}`}>WAIT</button>
+                                                <button onClick={()=>updateData(ship.id,loc,'status','block')} className={`p-4 rounded-2xl text-[9px] font-black btn-status ${d.status==='block'?'active-block':'bg-slate-800'}`}>BLOCK</button>
+                                                <button onClick={()=>updateData(ship.id,loc,'status','na')} className={`p-4 rounded-2xl text-[9px] font-black btn-status ${d.status==='na'?'active-na':'bg-slate-800'}`}>N/A</button>
+                                            </div>
+                                            <textarea className="p-5 rounded-3xl text-sm h-32 mb-4" placeholder="Observations..." value={d.note} onChange={(e)=>updateData(ship.id,loc,'note',e.target.value)} />
+                                            <button onClick={()=>document.getElementById('cam').click()} className="w-full bg-slate-900 border border-slate-800 p-4 rounded-2xl text-[10px] font-black uppercase flex items-center justify-center gap-2 safe-tap"><i className="fa-solid fa-camera text-red-500"></i> Evidence Photo</button>
+                                            <input type="file" id="cam" capture="camera" className="hidden" />
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            <button onClick={()=>{setProjects(projects.map(p=>p.id===ship.id?{...p, signed:true}:p)); setView('DASHBOARD');}} className="w-full bg-emerald-600 p-6 rounded-[35px] font-black uppercase text-xs shadow-xl safe-tap">Sign-Off & Complete Inspection</button>
+                        </div>
+                    )}
+
+                    {/* VIEW: GLOBAL TASKS */}
+                    {view === 'TASKS' && (
+                        <div className="p-6 space-y-6">
+                            <h2 className="brand text-xl uppercase italic">Fleet Risk Registry</h2>
+                            {taskCount === 0 ? <div className="glass p-20 rounded-[50px] text-center opacity-30 border-2 border-dashed border-slate-800 uppercase font-black text-xs">All Clear</div> : 
+                                projects.flatMap(p => Object.entries(p.data || {}).filter(([l,d])=>d.status==='block'||d.status==='wait').map(([l,d])=>(
+                                    <div key={p.id+l} className="glass p-6 rounded-[35px] border-l-4 border-amber-500">
+                                        <p className="text-[8px] font-black text-amber-500 uppercase">{p.name} • {l}</p>
+                                        <h4 className="font-bold text-sm text-white mt-1 uppercase">{d.status}</h4>
+                                        <p className="text-[11px] text-slate-400 mt-1 italic">{d.note || 'No notes added'}</p>
+                                    </div>
+                                )))
+                            }
+                        </div>
+                    )}
+
+                    {/* BOTTOM NAV */}
+                    <footer className="fixed bottom-0 left-0 right-0 p-6 glass border-t border-slate-800 flex justify-around bg-[#020617] z-50">
+                        <button onClick={()=>setView('DASHBOARD')} className={`flex flex-col items-center gap-1 ${view==='DASHBOARD'?'text-red-500':'text-slate-600'}`}><i className="fa-solid fa-calendar-day"></i><span className="text-[8px] font-bold">DASHBOARD</span></button>
+                        <button onClick={()=>setView('TASKS')} className={`flex flex-col items-center gap-1 ${view==='TASKS'?'text-red-500':'text-slate-600'}`}><i className="fa-solid fa-list-check"></i><span className="text-[8px] font-bold">TASKS</span></button>
+                        <a href="index.html" className="flex flex-col items-center gap-1 text-slate-600"><i className="fa-solid fa-house-user"></i><span className="text-[8px] font-bold">MAIN MENU</span></a>
+                    </footer>
+                </div>
+            );
+        }
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<SafeShipApp />);
+    </script></body></html>

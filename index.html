@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="el"><head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NTG COMMAND | HUB V46.2</title>
+    <title>NTG COMMAND | HUB V46.3</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -12,9 +12,6 @@
         body { font-family: 'Inter', sans-serif; background-color: #020617; color: white; margin: 0; overflow-x: hidden; }
         .brand { font-family: 'Orbitron', sans-serif; }
         .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.05); }
-        .stream-item { animation: slideIn 0.4s ease-out; }
-        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .border-legal { border: 2px solid #ef4444 !important; box-shadow: 0 0 20px rgba(239, 68, 68, 0.2); }
     </style></head><body>
     <div id="root"></div>
     <script type="text/babel">
@@ -23,18 +20,13 @@
 
         function App() {
             const [isAuth, setIsAuth] = useState(() => sessionStorage.getItem('ntg_auth') === 'true');
-            const [view, setView] = useState('DASHBOARD'); // DASHBOARD, MANAGER
+            const [view, setView] = useState('DASHBOARD');
             const [activities, setActivities] = useState([]);
             const [taskCount, setTaskCount] = useState(0);
 
             useEffect(() => {
                 if (isAuth) {
                     fetchInitialData();
-                    const channel = _supabase.channel('global-updates')
-                        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'ntg_logbook' }, p => setActivities(prev => [{ ...p.new, type: 'SURVEYOR' }, ...prev]))
-                        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'ntg_legal_logs' }, p => setActivities(prev => [{ ...p.new, type: 'LEGAL' }, ...prev]))
-                        .subscribe();
-                    
                     const saved = JSON.parse(localStorage.getItem('ntg_master_data'));
                     if (saved && saved.ships) {
                         const count = saved.ships.flatMap(s => Object.values(s.data || {})).flatMap(d => d.observations || []).filter(o => o.status === 'block').length;
@@ -45,13 +37,12 @@
 
             async function fetchInitialData() {
                 const { data: logs } = await _supabase.from('ntg_logbook').select('*').order('created_at', { ascending: false }).limit(5);
-                const { data: legal } = await _supabase.from('ntg_legal_logs').select('*').order('created_at', { ascending: false }).limit(3);
-                setActivities([...(logs||[]).map(l=>({...l, type:'SURVEYOR'})), ...(legal||[]).map(l=>({...l, type:'LEGAL'}))].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)));
+                setActivities((logs||[]).map(l=>({...l, type:'SURVEYOR'})));
             }
 
             if (!isAuth) return (
                 <div className="h-screen flex items-center justify-center p-6 bg-[#020617]">
-                    <form onSubmit={(e)=>{e.preventDefault(); if(e.target.p.value==='NT2026'){sessionStorage.setItem('ntg_auth','true');setIsAuth(true)}}} className="glass p-10 rounded-[40px] w-full max-w-sm text-center border border-blue-500/20">
+                    <form onSubmit={(e)=>{e.preventDefault(); if(e.target.p.value==='NT2026'){sessionStorage.setItem('ntg_auth','true');setIsAuth(true)}}} className="glass p-10 rounded-[40px] w-full max-w-sm text-center border border-blue-500/20 shadow-2xl">
                         <h1 className="brand text-blue-500 text-2xl mb-8 uppercase italic leading-none">NTG HUB</h1>
                         <input name="p" type="password" autoFocus className="w-full bg-slate-900 border border-slate-800 p-5 rounded-3xl mb-4 text-center text-white outline-none text-2xl" placeholder="••••" />
                         <button className="w-full bg-blue-600 py-5 rounded-3xl font-black text-xs uppercase shadow-xl">Identify</button>
@@ -62,19 +53,15 @@
             if (view === 'MANAGER') return (
                 <div className="max-w-xl mx-auto p-5 py-10 animate-fadeIn">
                     <header className="flex justify-between items-center mb-10">
-                        <button onClick={()=>setView('DASHBOARD')} className="text-slate-500 text-xs font-black uppercase">← Back</button>
+                        <button onClick={()=>setView('DASHBOARD')} className="text-slate-500 text-xs font-black uppercase">← HUB</button>
                         <h1 className="brand text-blue-400 text-xl font-black italic uppercase">Manager Log</h1>
                     </header>
-                    <div className="space-y-6">
-                        <h3 className="brand text-[10px] text-slate-500 uppercase tracking-[0.4em] mb-4">Activity Stream</h3>
+                    <div className="space-y-4">
                         {activities.map((act, i) => (
-                            <div key={i} className={`glass p-6 rounded-[35px] stream-item border border-white/5 ${act.type === 'LEGAL' ? 'border-legal' : ''}`}>
-                                <div className="flex justify-between mb-3">
-                                    <span className={`text-[8px] font-black px-2 py-0.5 rounded-full uppercase ${act.type==='LEGAL'?'bg-red-600':'bg-blue-600/20 text-blue-400'}`}>{act.type} LOG</span>
-                                    <p className="text-[9px] text-slate-600">{new Date(act.created_at).toLocaleTimeString()}</p>
-                                </div>
-                                <h4 className="font-black text-sm uppercase text-white">{act.ship_name || act.vessel_name}</h4>
-                                <p className="text-xs text-slate-400 mt-2 leading-relaxed">{act.description || `Daily inspection log received from ${act.port}.`}</p>
+                            <div key={i} className="glass p-6 rounded-[35px] border border-white/5">
+                                <p className="text-[8px] text-blue-400 font-black uppercase mb-2">SURVEYOR LOG • {new Date(act.created_at).toLocaleTimeString()}</p>
+                                <h4 className="font-black text-sm uppercase text-white">{act.ship_name}</h4>
+                                <p className="text-xs text-slate-400 mt-2">{act.port} inspection completed.</p>
                             </div>
                         ))}
                     </div>
@@ -83,34 +70,38 @@
 
             return (
                 <div className="max-w-xl mx-auto p-5 py-10 animate-fadeIn">
-                    <header className="flex justify-between items-start mb-12">
+                    <header className="flex justify-between items-center mb-12">
                         <h1 className="brand text-blue-500 text-2xl font-black italic uppercase">NTG HUB</h1>
-                        <button onClick={()=>{localStorage.clear(); window.location.reload();}} className="text-[8px] opacity-20 border p-1 rounded">RESET SYSTEM</button>
+                        {/* ΤΩΡΑ ΕΙΝΑΙ ΟΡΑΤΟ ΚΑΙ ΚΟΚΚΙΝΟ */}
+                        <button onClick={()=>{localStorage.clear(); window.location.reload();}} className="bg-red-600 text-white text-[10px] font-black px-3 py-1 rounded-full shadow-lg shadow-red-900/40">RESET SYSTEM</button>
                     </header>
+
                     <div className="space-y-6">
                         <div className="glass p-6 rounded-[35px] border-l-4 border-red-600 flex justify-between items-center bg-red-600/5">
-                            <div><h3 className="brand text-[10px] text-red-500 uppercase italic">Critical Hazards</h3><p className="text-3xl font-black mt-1">{taskCount} <span className="text-xs text-slate-500">TASKS</span></p></div>
+                            <div><h3 className="brand text-[10px] text-red-500 uppercase italic">Critical Hazards</h3><p className="text-3xl font-black mt-1">{taskCount} <span className="text-xs text-slate-500 font-black">TASKS</span></p></div>
                             <i className="fa-solid fa-triangle-exclamation text-red-500 text-2xl animate-pulse"></i>
                         </div>
-                        <div className="glass p-6 rounded-[35px] border border-white/5">
-                            <h3 className="brand text-[10px] text-blue-400 uppercase italic mb-4 tracking-widest">Fleet Schedule</h3>
+
+                        <div className="glass p-6 rounded-[35px] border border-white/5 shadow-xl">
+                            <h3 className="brand text-[10px] text-blue-400 uppercase italic mb-4">Fleet Schedule</h3>
                             <div className="space-y-4">{[
                                 {n:"FELIX", p:"Δραπετσώνα", t:"07:00"}, {n:"BADJI MOKHTAR III", p:"ΕΛΕΥΣΙΝΑ", t:"11:00"},
                                 {n:"ΑΡΙΑΔΝΗ", p:"ΕΛΕΥΣΙΝΑ", t:"13:00"}, {n:"RIGEL III", p:"Πέραμα", t:"15:00"}
                             ].map((s,i)=>(
-                                <div key={i} className="flex justify-between py-2 border-b border-white/5 last:border-0 uppercase">
-                                    <p className="font-bold text-sm">{s.n}</p>
-                                    <p className="text-[11px] text-slate-400 font-bold">{s.p} • {s.t}</p>
+                                <div key={i} className="flex justify-between py-2 border-b border-white/5 last:border-0 uppercase font-bold text-xs">
+                                    <p>{s.n}</p><p className="text-slate-400">{s.p} • {s.t}</p>
                                 </div>
                             ))}</div>
                         </div>
-                        <a href="safety_ships.html" className="glass p-10 rounded-[50px] flex items-center gap-8 border border-white/5 active:scale-95 transition-all">
+
+                        <a href="safety_ships.html" className="glass p-10 rounded-[50px] flex items-center gap-8 border border-white/5 active:scale-95 transition-all shadow-2xl">
                             <div className="w-16 h-16 rounded-2xl bg-red-600/20 flex items-center justify-center text-red-500 text-3xl"><i className="fa-solid fa-user-shield"></i></div>
-                            <div><h2 className="brand text-sm text-white uppercase italic">Safety Officer</h2><p className="text-[10px] text-slate-500 font-bold uppercase mt-2 tracking-widest">Active Fleet Audits</p></div>
+                            <div><h2 className="brand text-sm text-white uppercase italic">Safety Officer</h2><p className="text-[10px] text-slate-500 font-bold uppercase mt-2 tracking-widest">Inspection Engine</p></div>
                         </a>
+
                         <div onClick={() => { if(prompt("MANAGER PIN")==="1234") setView('MANAGER'); }} className="glass p-10 rounded-[50px] flex items-center gap-8 border border-blue-500/20 cursor-pointer active:scale-95 transition-all">
                             <div className="w-16 h-16 rounded-2xl bg-blue-600/20 flex items-center justify-center text-blue-400 text-3xl"><i className="fa-solid fa-tower-observation"></i></div>
-                            <div><h2 className="brand text-sm text-white uppercase italic">Manager Log</h2><p className="text-[10px] text-blue-400 font-bold uppercase mt-2 italic tracking-tighter">Restricted Access</p></div>
+                            <div><h2 className="brand text-sm text-white uppercase italic">Manager Log</h2><p className="text-[10px] text-blue-400 font-bold uppercase mt-2 italic">Restricted Access</p></div>
                         </div>
                     </div>
                 </div>

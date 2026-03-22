@@ -1,1 +1,71 @@
-<a href="index.html" class="text-slate-500"><i class="fa-solid fa-house-chimney"></i></a>
+<!DOCTYPE html><html lang="el"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NTG | HUB</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@400;700;900&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #020617; color: white; margin: 0; }
+        .brand { font-family: 'Orbitron', sans-serif; }
+        .glass { background: rgba(30, 41, 59, 0.6); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); }
+    </style></head><body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState } = React;
+        function Launchpad() {
+            const [pass, setPass] = useState('');
+            const [isAuth, setIsAuth] = useState(() => localStorage.getItem('ntg_signed_in') === 'true');
+
+            const handleLogin = (e) => {
+                e.preventDefault();
+                if(pass === 'NT2026') {
+                    localStorage.setItem('ntg_signed_in', 'true');
+                    setIsAuth(true);
+                } else { alert('Access Denied'); }
+            };
+
+            if (!isAuth) {
+                return (
+                    <div className="h-screen flex items-center justify-center p-6 bg-slate-950">
+                        <div className="glass p-10 rounded-[40px] w-full max-w-sm text-center shadow-2xl">
+                            <h1 className="brand text-blue-500 text-2xl font-black mb-8 uppercase italic">NTG HUB</h1>
+                            <form onSubmit={handleLogin}>
+                                <input type="password" value={pass} onChange={(e)=>setPass(e.target.value)} className="w-full bg-slate-900 border border-slate-800 p-5 rounded-3xl mb-4 text-center text-2xl text-white outline-none focus:border-blue-500" placeholder="••••" />
+                                <button className="w-full bg-blue-600 text-white py-5 rounded-3xl font-black brand text-xs uppercase shadow-xl">Connect</button>
+                            </form>
+                        </div>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="max-w-xl mx-auto p-6 py-12 animate-fadeIn">
+                    <header className="text-center mb-16">
+                        <h1 className="brand text-3xl text-blue-500 font-black tracking-tighter uppercase italic">NTG HUB</h1>
+                        <p className="text-[10px] text-slate-500 font-bold uppercase mt-2 italic">Fleet Secure Link Active</p>
+                    </header>
+                    <div className="grid grid-cols-1 gap-4">
+                        <AppBtn href="intel.html" icon="fa-tower-broadcast" label="Intel Division" sub="Hunter Agent & AIS" color="text-blue-400" />
+                        <AppBtn href="safety_ships.html" icon="fa-user-shield" label="Safety Officer" sub="Ship Compliance (Π.Δ. 70/90)" color="text-red-500" border="border-l-4 border-l-red-600" />
+                        <AppBtn href="#" icon="fa-ruler-combined" label="Tech Gauging" sub="UTM & Load Test (Coming Soon)" color="text-slate-600" />
+                        <AppBtn href="#" icon="fa-crown" label="Luxury Hub" sub="Mykonos Management" color="text-yellow-600" />
+                    </div>
+                    <button onClick={() => { localStorage.removeItem('ntg_signed_in'); setIsAuth(false); }} className="w-full mt-12 text-slate-700 text-[10px] font-black uppercase tracking-widest">Terminate Session</button>
+                </div>
+            );
+        }
+        function AppBtn({ href, icon, label, sub, color, border }) {
+            return (
+                <a href={href} className={`glass p-6 rounded-[35px] flex items-center gap-5 ${border} active:scale-95 transition-all`}>
+                    <div className={`w-12 h-12 rounded-2xl bg-slate-900 flex items-center justify-center ${color}`}><i className={`fa-solid ${icon} text-xl`}></i></div>
+                    <div><h2 className="brand text-sm text-white uppercase leading-none">{label}</h2><p className="text-[9px] text-slate-500 font-bold uppercase mt-1">{sub}</p></div>
+                </a>
+            );
+        }
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<Launchpad />);
+    </script></body></html>

@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="el"><head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SafeShip Manager V19 | NTG COMMAND</title>
+    <title>SafeShip Pro | March 2026 Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -13,204 +13,118 @@
         .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.05); }
         .safe-btn { transition: all 0.2s; cursor: pointer; -webkit-tap-highlight-color: transparent; }
         .safe-btn:active { transform: scale(0.95); opacity: 0.8; }
-        .status-ok { background: #10b981 !important; border-color: #34d399 !important; }
-        .status-wait { background: #f59e0b !important; border-color: #fbbf24 !important; }
-        .status-block { background: #ef4444 !important; border-color: #f87171 !important; }
+        .status-signed { border-left: 8px solid #10b981 !important; background: rgba(16, 185, 129, 0.1) !important; }
         input, textarea { background: #0f172a !important; border: 1px solid #1e293b !important; color: white !important; outline: none; }
     </style></head><body>
     <div id="root"></div>
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        const PD_CATS = ["1. Καθαρισμοί & Gas-Free", "2. Θερμές Εργασίες", "3. Ελασματουργικές", "4. Μηχανολογικές", "5. Επιφανειακή Επεξεργασία", "6. Ηλεκτρολογικές", "7. Βοηθητικές/Σκαλωσιά"];
-        const LOCATIONS = ["Deck", "Engine Room", "Tanks", "Pump Room", "Accommodation", "Hull/Dry Dock"];
+        const MARCH_SCHEDULE = [
+            { id: 'f22', name: 'FELIX', date: '2026-03-22', time: '07:00', duration: '4h', signed: false },
+            { id: 'f23', name: 'FELIX', date: '2026-03-23', time: '07:00', duration: '4h', signed: false },
+            { id: 'f24', name: 'FELIX', date: '2026-03-24', time: '07:00', duration: '4h', signed: false },
+            { id: 'f25', name: 'FELIX', date: '2026-03-25', time: '07:00', duration: '4h', signed: false },
+            { id: 'f26', name: 'FELIX', date: '2026-03-26', time: '07:00', duration: '4h', signed: false },
+            { id: 'f27', name: 'FELIX', date: '2026-03-27', time: '07:00', duration: '4h', signed: false },
+            { id: 'f28', name: 'FELIX', date: '2026-03-28', time: '07:00', duration: '4h', signed: false },
+            { id: 'f29', name: 'FELIX', date: '2026-03-29', time: '07:00', duration: '4h', signed: false },
+            { id: 'f30', name: 'FELIX', date: '2026-03-30', time: '07:00', duration: '4h', signed: false },
+            { id: 'f31', name: 'FELIX', date: '2026-03-31', time: '07:00', duration: '4h', signed: false }
+        ];
 
         function SafeShipApp() {
+            const [pass, setPass] = useState('');
+            const [isAuth, setIsAuth] = useState(() => sessionStorage.getItem('ntg_auth') === 'true');
             const [view, setView] = useState('dashboard');
-            const [projects, setProjects] = useState(() => JSON.parse(localStorage.getItem('safeship_v19_projects')) || []);
+            const [projects, setProjects] = useState(() => {
+                const saved = localStorage.getItem('safeship_v20_projects');
+                return saved ? JSON.parse(saved) : MARCH_SCHEDULE;
+            });
             const [activeId, setActiveId] = useState(null);
-            const [attendance, setAttendance] = useState(() => JSON.parse(localStorage.getItem('ntg_att')) || { in: '--:--', out: '--:--' });
-            const [now, setNow] = useState(new Date());
+            const [checkIn, setCheckIn] = useState(() => localStorage.getItem('ntg_checkin') || '--:--');
 
-            useEffect(() => {
-                const timer = setInterval(() => setNow(new Date()), 1000);
-                return () => clearInterval(timer);
-            }, []);
+            useEffect(() => { localStorage.setItem('safeship_v20_projects', JSON.stringify(projects)); }, [projects]);
 
-            useEffect(() => {
-                localStorage.setItem('safeship_v19_projects', JSON.stringify(projects));
-            }, [projects]);
+            const login = (e) => { e.preventDefault(); if(pass === 'NT2026') { sessionStorage.setItem('ntg_auth', 'true'); setIsAuth(true); } else { alert('Wrong Code'); } };
+
+            if (!isAuth) return (
+                <div className="h-screen flex items-center justify-center p-6 bg-slate-950">
+                    <div className="glass p-10 rounded-[40px] w-full max-w-sm text-center shadow-2xl border border-red-500/20">
+                        <h1 className="brand text-red-500 text-2xl font-black mb-8 italic uppercase leading-none">SafeShip Access</h1>
+                        <form onSubmit={login}><input type="password" onChange={(e)=>setPass(e.target.value)} className="w-full bg-slate-900 border border-slate-800 p-5 rounded-3xl mb-4 text-center text-2xl text-white outline-none" placeholder="••••" />
+                        <button className="w-full bg-red-600 text-white py-5 rounded-3xl font-black brand text-xs uppercase tracking-widest shadow-xl">Establish Link</button></form>
+                    </div>
+                </div>
+            );
 
             const activeP = projects.find(p => p.id === activeId);
 
-            // --- FUNCTIONS ---
-            const handleCreate = (e) => {
-                e.preventDefault();
-                const name = e.target.shipName.value.toUpperCase();
-                const newShip = { id: Date.now(), name, scope: [], checks: {} };
-                setProjects([newShip, ...projects]);
-                setActiveId(newShip.id);
-                setView('scope');
-            };
-
-            const toggleScope = (cat) => {
-                const updated = projects.map(p => {
-                    if (p.id === activeId) {
-                        const newScope = p.scope.includes(cat) ? p.scope.filter(c => c !== cat) : [...p.scope, cat];
-                        return { ...p, scope: newScope };
-                    }
-                    return p;
-                });
-                setProjects(updated);
-            };
-
-            const setStatus = (loc, status) => {
-                const updated = projects.map(p => {
-                    if (p.id === activeId) {
-                        return { ...p, checks: { ...p.checks, [loc]: { ...p.checks[loc], status } } };
-                    }
-                    return p;
-                });
-                setProjects(updated);
-            };
-
-            const setNote = (loc, note) => {
-                const updated = projects.map(p => {
-                    if (p.id === activeId) {
-                        return { ...p, checks: { ...p.checks, [loc]: { ...p.checks[loc], note } } };
-                    }
-                    return p;
-                });
-                setProjects(updated);
-            };
-
-            // --- VIEWS ---
-            
-            if (view === 'dashboard') return (
+            return (
                 <div className="max-w-xl mx-auto p-5 pb-32 animate-fadeIn">
-                    <header className="flex justify-between items-start py-6 mb-4 border-b border-slate-800">
-                        <div><h1 className="brand text-sm font-black italic text-red-500 uppercase">SafeShip Manager</h1><p className="text-[8px] text-slate-500 font-bold uppercase tracking-widest">Digital Operations</p></div>
+                    <header className="flex justify-between items-center py-6 mb-4 border-b border-slate-800">
+                        <div><h1 className="brand text-sm font-black italic text-red-500 uppercase">SafeShip Manager</h1><p className="text-[8px] text-slate-500 font-bold uppercase tracking-widest">Digital Tactical Log</p></div>
                         <div className="text-right">
-                            <p className="text-[10px] font-black uppercase">{now.toLocaleDateString('el-GR')}</p>
-                            <p className="text-xl font-bold text-red-500 leading-none mt-1">{now.toLocaleTimeString('el-GR', {hour:'2-digit', minute:'2-digit'})}</p>
+                            <p className="text-[10px] font-black uppercase text-slate-400">22 / 03 / 2026</p>
+                            <p className="text-xl font-bold text-red-500 leading-none mt-1">04:15 μ.μ.</p>
                         </div>
                     </header>
 
-                    <div className="glass p-6 rounded-[35px] border-l-4 border-red-600 flex justify-between items-center mb-8">
-                        <div className="flex gap-6">
-                            <div><p className="text-[8px] text-slate-500 font-black uppercase">In</p><p className="text-xl font-black">{attendance.in}</p></div>
-                            <div><p className="text-[8px] text-slate-500 font-black uppercase">Out</p><p className="text-xl font-black">{attendance.out}</p></div>
-                        </div>
-                        <div className="flex flex-col gap-2">
-                            <button onClick={() => {const t=new Date().toLocaleTimeString('el-GR',{hour:'2-digit',minute:'2-digit'}); setAttendance({...attendance, in:t}); localStorage.setItem('ntg_att', JSON.stringify({...attendance, in:t}))}} className="bg-emerald-600 px-5 py-2.5 rounded-2xl text-[9px] font-black uppercase safe-btn">In</button>
-                            <button onClick={() => {const t=new Date().toLocaleTimeString('el-GR',{hour:'2-digit',minute:'2-digit'}); setAttendance({...attendance, out:t}); localStorage.setItem('ntg_att', JSON.stringify({...attendance, out:t}))}} className="bg-red-700 px-5 py-2.5 rounded-2xl text-[9px] font-black uppercase safe-btn">Out</button>
-                        </div>
-                    </div>
-
-                    <button onClick={() => setView('new')} className="w-full bg-red-600 p-6 rounded-[35px] font-black text-xs uppercase tracking-widest shadow-2xl mb-10 safe-btn">+ New Ship Inspection</button>
-
-                    <div className="space-y-4">
-                        <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2 italic">Active Fleet</h3>
-                        {projects.length === 0 ? <p className="text-center py-10 opacity-20 italic">No vessels found.</p> : 
-                        projects.map(p => (
-                            <div key={p.id} onClick={() => { setActiveId(p.id); setView('daily'); }} className="glass p-6 rounded-[35px] flex justify-between items-center safe-btn border border-white/5">
-                                <div><h4 className="font-bold text-sm uppercase">{p.name}</h4><p className="text-[9px] text-slate-500 font-bold uppercase mt-1">{p.scope?.length || 0} Categories Active</p></div>
-                                <i className="fa-solid fa-chevron-right text-slate-800"></i>
+                    {view === 'dashboard' && (
+                        <div className="space-y-6">
+                            <div className="glass p-6 rounded-[35px] border-l-4 border-emerald-500 flex justify-between items-center mb-8">
+                                <div><p className="text-[8px] text-slate-500 font-black uppercase mb-1 tracking-widest">Attendance (In)</p><p className="text-3xl font-black">{checkIn}</p></div>
+                                <button onClick={() => {const t=new Date().toLocaleTimeString('el-GR',{hour:'2-digit',minute:'2-digit'}); setCheckIn(t); localStorage.setItem('ntg_checkin', t)}} className="bg-emerald-600 px-6 py-4 rounded-2xl text-xs font-black uppercase safe-btn shadow-lg">Check-in</button>
                             </div>
-                        ))}
-                    </div>
 
-                    <div className="fixed bottom-8 left-5 right-5 flex gap-4">
-                        <button onClick={() => setView('tasks')} className="flex-1 bg-slate-800 p-5 rounded-[30px] brand text-[10px] uppercase text-red-500 font-bold italic safe-btn border border-white/5">Open Tasks</button>
-                        <a href="index.html" className="bg-slate-900 w-16 h-16 rounded-[30px] flex items-center justify-center border border-white/5 safe-btn"><i className="fa-solid fa-house-user"></i></a>
-                    </div>
-                </div>
-            );
-
-            if (view === 'new') return (
-                <div className="max-w-xl mx-auto p-6 animate-fadeIn">
-                    <button onClick={() => setView('dashboard')} className="text-slate-500 text-[10px] font-black uppercase mb-10 tracking-widest">← Back</button>
-                    <h2 className="brand text-xl uppercase italic mb-8">Register Vessel</h2>
-                    <form onSubmit={handleCreate} className="space-y-6">
-                        <input name="shipName" required className="w-full p-6 rounded-[30px] font-bold text-2xl uppercase tracking-tighter" placeholder="SHIP NAME / IMO" autoFocus />
-                        <button type="submit" className="w-full bg-red-600 p-6 rounded-[30px] font-black uppercase text-xs tracking-widest shadow-2xl safe-btn">Initialize Project</button>
-                    </form>
-                </div>
-            );
-
-            if (view === 'scope') return (
-                <div className="max-w-xl mx-auto p-6 animate-fadeIn pb-32">
-                    <h2 className="brand text-sm text-red-500 uppercase italic mb-8">Define Scope: {activeP.name}</h2>
-                    <div className="space-y-3">
-                        {PD_CATS.map(cat => (
-                            <div key={cat} onClick={() => toggleScope(cat)} className={`glass p-5 rounded-[30px] flex justify-between items-center border-2 transition-all safe-btn ${activeP.scope.includes(cat) ? 'border-red-600 bg-red-600/10' : 'border-transparent opacity-40'}`}>
-                                <span className="text-[11px] font-bold uppercase">{cat}</span>
-                                {activeP.scope.includes(cat) && <i className="fa-solid fa-circle-check text-red-600 text-lg"></i>}
+                            <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2 italic">March 2026 Ship Schedule</h3>
+                            <div className="space-y-3">
+                                {projects.map(p => (
+                                    <div key={p.id} onClick={() => { setActiveId(p.id); setView('daily'); }} className={`glass p-6 rounded-[35px] flex justify-between items-center safe-btn ${p.signed ? 'status-signed' : 'border border-white/5'}`}>
+                                        <div><h4 className="font-bold text-sm uppercase">{p.name}</h4><p className="text-[9px] text-slate-500 font-bold uppercase mt-1">{p.date} • {p.time} ({p.duration})</p></div>
+                                        {p.signed ? <i className="fa-solid fa-circle-check text-emerald-500 text-xl"></i> : <i className="fa-solid fa-chevron-right text-slate-800"></i>}
+                                    </div>
+                                ))}
                             </div>
-                        ))}
-                    </div>
-                    <button onClick={() => setView('daily')} className="fixed bottom-10 left-6 right-6 bg-emerald-600 p-6 rounded-[35px] font-black uppercase text-xs tracking-widest safe-btn">Confirm Scope & Open Log</button>
-                </div>
-            );
+                        </div>
+                    )}
 
-            if (view === 'daily') return (
-                <div className="max-w-xl mx-auto p-5 pb-32 animate-fadeIn">
-                    <div className="flex justify-between items-center mb-6">
-                        <button onClick={() => setView('dashboard')} className="text-slate-500 text-[10px] font-black uppercase tracking-widest">← Fleet</button>
-                        <button onClick={() => setView('scope')} className="text-blue-500 text-[10px] font-black uppercase font-bold border-b border-blue-500">Edit Scope</button>
-                    </div>
-                    <div className="glass p-8 rounded-[40px] border-l-4 border-l-red-600 mb-8 text-center">
-                        <h2 className="brand text-2xl font-black uppercase text-white">{activeP.name}</h2>
-                        <p className="text-[10px] text-red-500 font-bold uppercase mt-1 italic tracking-widest">Inspection Log</p>
-                    </div>
+                    {view === 'daily' && activeP && (
+                        <div className="animate-fadeIn space-y-8">
+                            <button onClick={() => setView('dashboard')} className="text-slate-500 text-[10px] font-black uppercase tracking-widest">← Back to Schedule</button>
+                            <div className="glass p-8 rounded-[40px] border-l-4 border-red-600 text-center">
+                                <h2 className="brand text-2xl font-black uppercase text-white">{activeP.name}</h2>
+                                <p className="text-[10px] text-red-500 font-bold uppercase mt-1 italic tracking-widest">Inspection & Audit Hub</p>
+                            </div>
 
-                    <div className="space-y-10">
-                        {LOCATIONS.map(loc => {
-                            const check = activeP.checks[loc] || { status: '', note: '' };
-                            return (
-                                <div key={loc} className="glass p-6 rounded-[40px] border border-white/5">
-                                    <h4 className="text-[11px] font-black uppercase text-slate-400 mb-4">{loc}</h4>
-                                    <div className="grid grid-cols-3 gap-2 mb-4">
-                                        <button onClick={() => setStatus(loc, 'ok')} className={`p-4 rounded-2xl text-[10px] font-black uppercase border border-white/5 safe-btn ${check.status === 'ok' ? 'status-ok' : 'bg-slate-800'}`}>OK</button>
-                                        <button onClick={() => setStatus(loc, 'wait')} className={`p-4 rounded-2xl text-[10px] font-black uppercase border border-white/5 safe-btn ${check.status === 'wait' ? 'status-wait' : 'bg-slate-800'}`}>Wait</button>
-                                        <button onClick={() => setStatus(loc, 'block')} className={`p-4 rounded-2xl text-[10px] font-black uppercase border border-white/5 safe-btn ${check.status === 'block' ? 'status-block' : 'bg-slate-800'}`}>Block</button>
+                            <div className="space-y-6">
+                                <section className="glass p-6 rounded-[35px]">
+                                    <h4 className="text-[11px] font-black uppercase text-slate-400 mb-4">Daily Checklist</h4>
+                                    <div className="grid grid-cols-2 gap-2 mb-4">
+                                        <button className="bg-slate-800 p-4 rounded-xl text-[10px] font-black uppercase safe-btn border border-emerald-500/20 active:bg-emerald-600">Deck OK</button>
+                                        <button className="bg-slate-800 p-4 rounded-xl text-[10px] font-black uppercase safe-btn border border-red-500/20 active:bg-red-600">Engine OK</button>
                                     </div>
-                                    <textarea 
-                                        className="w-full p-5 rounded-3xl text-[12px] h-28 mb-4" 
-                                        placeholder="Add observation..."
-                                        value={check.note}
-                                        onChange={(e) => setNote(loc, e.target.value)}
-                                    />
-                                    <div className="flex gap-2">
-                                        <button className="flex-1 bg-slate-900 border border-slate-800 p-4 rounded-2xl text-[9px] font-black uppercase safe-btn"><i className="fa-solid fa-camera mr-2 text-red-500"></i> Photo</button>
-                                        <button className="flex-1 bg-slate-900 border border-slate-800 p-4 rounded-2xl text-[9px] font-black uppercase safe-btn"><i className="fa-solid fa-microphone mr-2 text-blue-500"></i> Voice</button>
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                    <button className="fixed bottom-10 left-6 right-6 bg-red-600 p-6 rounded-[35px] font-black uppercase text-xs tracking-widest safe-btn shadow-2xl">Generate Daily Report</button>
-                </div>
-            );
+                                    <textarea className="w-full p-5 rounded-3xl text-[12px] h-32 mb-4" placeholder="Enter findings or pending tasks..."></textarea>
+                                    <button onClick={() => {
+                                        setProjects(projects.map(p => p.id === activeId ? {...p, signed: true} : p));
+                                        alert("Inspection Signed & Verified");
+                                        setView('dashboard');
+                                    }} className="w-full bg-emerald-600 p-6 rounded-[35px] font-black uppercase text-xs tracking-widest shadow-2xl safe-btn">Sign-Off Today</button>
+                                </section>
+                            </div>
+                            
+                            <button className="w-full bg-slate-800 p-6 rounded-[35px] font-black uppercase text-[10px] tracking-widest opacity-40">Generate & Export PDF Report</button>
+                        </div>
+                    )}
 
-            if (view === 'tasks') return (
-                <div className="max-w-xl mx-auto p-6 animate-fadeIn pb-32">
-                    <button onClick={() => setView('dashboard')} className="text-slate-500 text-[10px] font-black uppercase mb-10 tracking-widest">← Home</button>
-                    <h2 className="brand text-xl uppercase italic mb-8">Fleet Tasks</h2>
-                    <div className="space-y-4">
-                        {projects.some(p => Object.values(p.checks).some(c => c.status === 'block' || c.status === 'wait')) ? 
-                            projects.map(p => Object.entries(p.checks).map(([loc, data]) => (data.status === 'block' || data.status === 'wait') && (
-                                <div key={p.id+loc} className="glass p-6 rounded-[30px] border-l-4 border-amber-500 flex justify-between items-center">
-                                    <div><p className="text-[10px] font-black text-amber-500 uppercase">{p.name}</p><h4 className="font-bold text-sm uppercase">{loc}</h4><p className="text-[11px] text-slate-400 mt-1 italic">{data.note || 'No notes'}</p></div>
-                                    <span className={`px-3 py-1 rounded-full text-[8px] font-black uppercase ${data.status === 'block' ? 'bg-red-600' : 'bg-amber-600'}`}>{data.status}</span>
-                                </div>
-                            ))) : <div className="glass p-20 rounded-[50px] text-center opacity-30 border-2 border-dashed border-slate-800 italic uppercase font-black text-xs">Fleet Secure. No Tasks.</div>
-                        }
-                    </div>
+                    <footer className="fixed bottom-0 left-0 right-0 p-6 glass border-t border-slate-800 flex justify-around">
+                        <button onClick={() => setView('dashboard')} className="text-red-500"><i className="fa-solid fa-calendar-day text-lg"></i></button>
+                        <button onClick={() => window.location.reload()} className="text-slate-600"><i className="fa-solid fa-sync text-lg"></i></button>
+                        <a href="index.html" className="text-slate-600"><i className="fa-solid fa-house-user text-lg"></i></a>
+                    </footer>
                 </div>
             );
         }
-
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<SafeShipApp />);
     </script></body></html>

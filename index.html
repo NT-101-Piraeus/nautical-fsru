@@ -1,63 +1,78 @@
 <!DOCTYPE html><html lang="el"><head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NTG | HUB</title>
+    <title>NTG COMMAND | HUB</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Inter:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@400;700;900&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #020617; color: white; margin: 0; }
-        .brand { font-family: 'Orbitron', sans-serif; color: #3b82f6; }
+        .brand { font-family: 'Orbitron', sans-serif; }
         .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.05); }
+        .alert-pulse { animation: pulse-red 2s infinite; }
+        @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
     </style></head><body>
     <div id="root"></div>
     <script type="text/babel">
-        const { useState } = React;
-        function Launchpad() {
-            const [pass, setPass] = useState('');
-            // Χρήση sessionStorage για να ζητάει κωδικό σε ΚΑΘΕ refresh
-            const [isAuth, setIsAuth] = useState(() => sessionStorage.getItem('ntg_session') === 'true');
+        const { useState, useEffect } = React;
+        function Hub() {
+            const [isAuth, setIsAuth] = useState(() => sessionStorage.getItem('ntg_auth') === 'true');
+            const [taskCount, setTaskCount] = useState(0);
 
-            const handleLogin = (e) => {
-                e.preventDefault();
-                if(pass === 'NT2026') {
-                    sessionStorage.setItem('ntg_session', 'true');
-                    setIsAuth(true);
-                } else { alert('Access Denied'); }
-            };
+            useEffect(() => {
+                // Διαβάζει τα Tasks από το Safety App (Key v29)
+                const data = JSON.parse(localStorage.getItem('ntg_v29_data'));
+                if (data && data.ships) {
+                    const count = data.ships.flatMap(s => Object.values(s.data || {}))
+                                      .flatMap(d => d.observations || [])
+                                      .filter(o => o.isTask).length;
+                    setTaskCount(count);
+                }
+            }, []);
 
-            if (!isAuth) {
-                return (
-                    <div className="h-screen flex items-center justify-center p-6 bg-slate-950">
-                        <div className="glass p-10 rounded-[40px] w-full max-w-sm text-center shadow-2xl border border-blue-500/10">
-                            <h1 className="brand text-blue-500 text-2xl font-black mb-8 uppercase italic">NTG HUB</h1>
-                            <form onSubmit={handleLogin}>
-                                <input type="password" value={pass} onChange={(e)=>setPass(e.target.value)} className="w-full bg-slate-900 border border-slate-800 p-5 rounded-3xl mb-4 text-center text-2xl text-white outline-none" placeholder="••••" />
-                                <button className="w-full bg-blue-600 text-white py-5 rounded-3xl font-black brand text-xs uppercase shadow-xl">Connect</button>
-                            </form>
-                        </div>
-                    </div>
-                );
-            }
+            if (!isAuth) return (
+                <div className="h-screen flex items-center justify-center bg-slate-950 p-6">
+                    <form onSubmit={(e)=>{e.preventDefault(); if(e.target.p.value==='NT2026'){sessionStorage.setItem('ntg_auth','true');setIsAuth(true)}}} className="glass p-10 rounded-[40px] w-full max-w-sm text-center">
+                        <h1 className="brand text-blue-500 text-2xl mb-8 uppercase italic">NTG HUB</h1>
+                        <input name="p" type="password" className="w-full bg-slate-900 border border-slate-800 p-5 rounded-3xl mb-4 text-center text-white" placeholder="••••" />
+                        <button className="w-full bg-blue-600 py-5 rounded-3xl font-black brand text-xs uppercase shadow-xl">Identify</button>
+                    </form>
+                </div>
+            );
 
             return (
                 <div className="max-w-xl mx-auto p-6 py-12 animate-fadeIn">
                     <header className="text-center mb-16"><h1 className="brand text-3xl text-blue-500 font-black tracking-tighter uppercase italic">NTG COMMAND</h1></header>
-                    <div className="grid grid-cols-1 gap-4">
-                        <a href="intel.html" className="glass p-6 rounded-[35px] flex items-center gap-5 active:scale-95 transition-all">
-                            <i className="fa-solid fa-tower-broadcast text-xl text-blue-400"></i>
-                            <div><h2 className="brand text-sm text-white uppercase leading-none">Intel Division</h2><p className="text-[9px] text-slate-500 font-bold uppercase mt-1">Agent & AIS</p></div>
+                    <div className="grid grid-cols-1 gap-6">
+                        {/* SAFETY OFFICER BUTTON */}
+                        <a href="safety_ships.html" className={`glass p-8 rounded-[40px] flex items-center justify-between transition-all active:scale-95 ${taskCount > 0 ? 'border-red-500/30' : ''}`}>
+                            <div className="flex items-center gap-6">
+                                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${taskCount > 0 ? 'bg-red-600 alert-pulse' : 'bg-red-600/20'}`}>
+                                    <i className="fa-solid fa-user-shield text-2xl text-white"></i>
+                                </div>
+                                <div>
+                                    <h2 className="brand text-sm text-white uppercase italic">Safety Officer</h2>
+                                    <p className="text-[10px] text-slate-500 font-bold uppercase mt-1">Compliance & Risks</p>
+                                </div>
+                            </div>
+                            {taskCount > 0 && (
+                                <div className="bg-red-600 px-4 py-1 rounded-full text-[10px] font-black uppercase">
+                                    {taskCount} TASKS
+                                </div>
+                            )}
                         </a>
-                        <a href="safety_ships.html" className="glass p-6 rounded-[35px] flex items-center gap-5 active:scale-95 transition-all border-l-4 border-l-red-600">
-                            <i className="fa-solid fa-user-shield text-xl text-red-500"></i>
-                            <div><h2 className="brand text-sm text-white uppercase leading-none">Safety Officer</h2><p className="text-[9px] text-slate-500 font-bold uppercase mt-1">Compliance Engine</p></div>
+
+                        {/* INTEL DIVISION */}
+                        <a href="intel.html" className="glass p-8 rounded-[40px] flex items-center gap-6 opacity-50 grayscale transition-all active:scale-95">
+                            <div className="w-14 h-14 rounded-2xl bg-blue-600/20 flex items-center justify-center"><i className="fa-solid fa-tower-broadcast text-2xl text-blue-400"></i></div>
+                            <div><h2 className="brand text-sm text-white uppercase italic">Intel Division</h2><p className="text-[10px] text-slate-500 font-bold uppercase mt-1">Vessel Tracking</p></div>
                         </a>
                     </div>
                 </div>
             );
         }
         const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<Launchpad />);
+        root.render(<Hub />);
     </script></body></html>

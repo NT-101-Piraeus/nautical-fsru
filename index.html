@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="el"><head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NTG COMMAND | V46.1 GUARDIAN</title>
+    <title>NTG COMMAND | V45 PRO</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -9,14 +9,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@400;700;900&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #020617; color: white; margin: 0; overflow-x: hidden; }
+        body { font-family: 'Inter', sans-serif; background-color: #020617; color: white; margin: 0; }
         .brand { font-family: 'Orbitron', sans-serif; }
         .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.05); }
-        .stream-item { transition: all 0.3s ease; animation: slideIn 0.4s ease-out; }
-        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .border-legal { border: 2px solid #ef4444 !important; box-shadow: 0 0 20px rgba(239, 68, 68, 0.3); }
-        .pulse-red { animation: pulse-red 2s infinite; }
-        @keyframes pulse-red { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        .margin-pill { background: linear-gradient(90deg, #10b981, #059669); }
     </style></head><body>
     <div id="root"></div>
     <script type="text/babel">
@@ -25,52 +21,10 @@
 
         function App() {
             const [isAuth, setIsAuth] = useState(() => sessionStorage.getItem('ntg_auth') === 'true');
-            const [showManager, setShowManager] = useState(false);
-            const [activities, setActivities] = useState([]);
-            const [taskCount, setTaskCount] = useState(0);
-            const [currentTime, setCurrentTime] = useState(new Date());
+            const [showCEO, setShowCEO] = useState(false);
+            const [stats, setStats] = useState({ revenue: 5000, expenses: 1200 }); // Example data
 
-            useEffect(() => {
-                const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-                if (isAuth) {
-                    fetchData();
-                    setupRealtime();
-                }
-                return () => clearInterval(timer);
-            }, [isAuth]);
-
-            async function fetchData() {
-                // Fetch Task Count from local storage or DB
-                try {
-                    const saved = JSON.parse(localStorage.getItem('ntg_v44_data'));
-                    if (saved && saved.ships) {
-                        const count = saved.ships.flatMap(s => Object.values(s.data || {}))
-                                          .flatMap(d => d.observations || [])
-                                          .filter(o => o.isTask).length;
-                        setTaskCount(count);
-                    }
-                } catch(e) {}
-
-                // Fetch Stream
-                const { data: logs } = await _supabase.from('ntg_logbook').select('*').limit(3);
-                const { data: legal } = await _supabase.from('ntg_legal_logs').select('*').limit(3);
-                const combined = [
-                    ...(logs || []).map(l => ({ ...l, type: 'SURVEYOR' })),
-                    ...(legal || []).map(l => ({ ...l, type: 'LEGAL' }))
-                ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-                setActivities(combined);
-            }
-
-            function setupRealtime() {
-                const channel = _supabase.channel('hub-stream')
-                    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'ntg_logbook' }, p => {
-                        setActivities(prev => [{ ...p.new, type: 'SURVEYOR' }, ...prev]);
-                    })
-                    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'ntg_legal_logs' }, p => {
-                        setActivities(prev => [{ ...p.new, type: 'LEGAL' }, ...prev]);
-                    })
-                    .subscribe();
-            }
+            const margin = ((stats.revenue - stats.expenses) / stats.revenue * 100).toFixed(1);
 
             if (!isAuth) return (
                 <div className="h-screen flex items-center justify-center p-6 bg-[#020617]">
@@ -82,78 +36,38 @@
                 </div>
             );
 
-            if (showManager) return (
-                <div className="max-w-xl mx-auto p-5 py-10 animate-fadeIn">
-                    <header className="flex justify-between items-center mb-10">
-                        <button onClick={()=>setShowManager(false)} className="text-slate-500 text-xs font-black uppercase tracking-widest">← HUB</button>
-                        <h1 className="brand text-blue-400 text-xl font-black italic uppercase">Command Center</h1>
-                    </header>
-
-                    <div className="space-y-6 mb-32">
-                        <h3 className="brand text-[10px] text-slate-500 uppercase tracking-[0.4em] mb-4 pulse-red">Live Activity Stream</h3>
-                        {activities.map((act, i) => (
-                            <div key={i} className={`glass p-6 rounded-[35px] stream-item border border-white/5 ${act.type === 'LEGAL' ? 'border-legal' : ''}`}>
-                                <div className="flex justify-between items-start mb-3">
-                                    <span className={`text-[8px] font-black px-3 py-1 rounded-full uppercase ${act.type === 'LEGAL' ? 'bg-red-600 text-white pulse-red' : 'bg-blue-600/20 text-blue-400'}`}>
-                                        {act.type} LOG
-                                    </span>
-                                    <p className="text-[10px] text-slate-600 font-bold">{new Date(act.created_at).toLocaleTimeString()}</p>
-                                </div>
-                                <h4 className="font-black text-sm uppercase text-white">{act.ship_name || act.vessel_name}</h4>
-                                <p className="text-xs text-slate-400 mt-2 leading-relaxed">
-                                    {act.description || `Inspection at ${act.port} completed successfully.`}
-                                </p>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            );
-
             return (
                 <div className="max-w-xl mx-auto p-5 py-10 animate-fadeIn">
-                    <header className="flex justify-between items-start mb-12">
-                        <div>
-                            <h1 className="brand text-blue-500 text-2xl font-black italic uppercase leading-none">NTG HUB</h1>
-                            <p className="text-[10px] text-slate-500 mt-3 font-bold uppercase tracking-[0.4em]">{currentTime.toLocaleDateString('el-GR')}</p>
-                        </div>
-                        <div className="text-right">
-                            <p className="text-2xl font-black text-white leading-none">{currentTime.toLocaleTimeString('el-GR', {hour:'2-digit', minute:'2-digit'})}</p>
-                            <p className="text-[8px] text-red-500 font-bold uppercase mt-1 pulse-red italic">Vessel Tracker Live</p>
+                    <header className="flex justify-between items-center mb-12">
+                        <h1 className="brand text-blue-500 text-2xl font-black italic uppercase">NTG HUB</h1>
+                        <div onClick={() => { const p = prompt("CEO PIN"); if(p==="2026") setShowCEO(!showCEO); }} className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center cursor-pointer border border-white/10">
+                            <i className="fa-solid fa-crown text-amber-500"></i>
                         </div>
                     </header>
 
+                    {showCEO && (
+                        <div className="glass p-8 rounded-[40px] border-l-8 border-emerald-500 mb-10 animate-slideDown">
+                            <h3 className="brand text-[10px] text-emerald-500 uppercase italic mb-4">Financial Oversight</h3>
+                            <div className="flex justify-between items-end">
+                                <div><p className="text-[10px] text-slate-500 uppercase font-black">Net Profit Margin</p><p className="text-4xl font-black text-white">{margin}%</p></div>
+                                <div className="text-right"><p className="text-[10px] text-slate-500 uppercase font-black">Daily Rev</p><p className="text-xl font-bold text-emerald-400">€{stats.revenue}</p></div>
+                            </div>
+                        </div>
+                    )}
+
                     <div className="space-y-6">
-                        {/* HAZARDOUS ALERT */}
-                        <div className="glass p-6 rounded-[35px] border-l-4 border-red-600 flex justify-between items-center bg-red-600/5">
-                            <div><h3 className="brand text-[10px] text-red-500 uppercase italic">Fleet Hazards</h3><p className="text-3xl font-black mt-1">{taskCount} <span className="text-xs text-slate-500 uppercase font-black">Open Tasks</span></p></div>
-                            <i className="fa-solid fa-triangle-exclamation text-red-500 text-2xl animate-pulse"></i>
-                        </div>
-
-                        {/* DAILY SCHEDULE */}
-                        <div className="glass p-6 rounded-[35px] border border-white/5 shadow-xl">
-                            <h3 className="brand text-[10px] text-blue-400 uppercase italic mb-6 tracking-widest">Active Vessel Schedule</h3>
-                            <div className="space-y-5">{[
-                                {n:"FELIX", p:"Δραπετσώνα", t:"07:00"},
-                                {n:"BADJI MOKHTAR III", p:"ΕΛΕΥΣΙΝΑ", t:"11:00"},
-                                {n:"ΑΡΙΑΔΝΗ", p:"ΕΛΕΥΣΙΝΑ", t:"13:00"},
-                                {n:"RIGEL III", p:"Πέραμα", t:"15:00"}
-                            ].map((s,i)=>(
-                                <div key={i} className="flex justify-between items-center py-2 border-b border-white/5 last:border-0">
-                                    <p className="font-black text-sm uppercase tracking-tighter">{s.n}</p>
-                                    <p className="text-[11px] text-slate-400 font-bold uppercase">{s.p} • {s.t}</p>
+                        <a href="safety_ships.html" className="glass p-10 rounded-[50px] flex items-center gap-8 active:scale-95 transition-all border border-white/5 shadow-2xl">
+                            <div className="w-20 h-20 rounded-3xl bg-red-600/20 flex items-center justify-center text-red-500 text-4xl shadow-inner"><i className="fa-solid fa-user-shield"></i></div>
+                            <div><h2 className="brand text-lg text-white uppercase italic leading-none">Safety Officer</h2><p className="text-[11px] text-slate-400 font-bold uppercase mt-2 tracking-widest">Active Field Audits</p></div>
+                        </a>
+                        
+                        <div className="glass p-8 rounded-[40px] border border-white/5 shadow-xl">
+                            <h3 className="brand text-[10px] text-blue-400 uppercase italic mb-6 tracking-widest">Hazard Registry (BLOCK/WAIT)</h3>
+                            <div className="space-y-4">
+                                <div className="bg-red-600/10 border-l-4 border-red-600 p-4 rounded-2xl">
+                                    <p className="text-[9px] font-black text-red-500 uppercase">IMO 9234567 • FELIX</p>
+                                    <p className="text-xs font-bold mt-1 uppercase">ΑΝΟΙΓΜΑΤΑ ΣΤΟ ΔΑΠΕΔΟ (ENGINE ROOM)</p>
                                 </div>
-                            ))}</div>
-                        </div>
-
-                        {/* NAVIGATION GRID */}
-                        <div className="grid grid-cols-1 gap-4">
-                            <a href="safety_ships.html" className="glass p-8 rounded-[45px] flex items-center gap-6 active:scale-95 transition-all border border-white/5 shadow-2xl">
-                                <div className="w-16 h-16 rounded-2xl bg-red-600/20 flex items-center justify-center text-red-500 text-3xl"><i className="fa-solid fa-user-shield"></i></div>
-                                <div><h2 className="brand text-sm text-white uppercase italic leading-none">Safety Officer</h2><p className="text-[10px] text-slate-500 font-bold uppercase mt-2">Active Field Audits</p></div>
-                            </a>
-                            <div onClick={() => { const p = prompt("ENTER MANAGER PIN"); if(p==="1234") setShowManager(true); }} className="glass p-8 rounded-[45px] flex items-center gap-6 active:scale-95 transition-all border border-blue-500/20 shadow-2xl cursor-pointer">
-                                <div className="w-16 h-16 rounded-2xl bg-blue-600/20 flex items-center justify-center text-blue-400 text-3xl"><i className="fa-solid fa-tower-observation"></i></div>
-                                <div><h2 className="brand text-sm text-white uppercase italic leading-none">Command Center</h2><p className="text-[10px] text-blue-400 font-bold uppercase mt-2 italic tracking-tighter">Manager Restricted Access</p></div>
                             </div>
                         </div>
                     </div>

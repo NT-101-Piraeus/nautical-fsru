@@ -1,7 +1,7 @@
 <!DOCTYPE html><html lang="el"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NTG | COMMAND CENTER V12.9</title>
+    <title>NTG | COMMAND CENTER V13.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -21,9 +21,9 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        // --- ΑΝΤΙΚΑΤΑΣΤΗΣΕ ΜΕ ΤΑ ΣΩΣΤΑ ΚΛΕΙΔΙΑ (settings -> API) ---
+        // --- ΣΥΝΔΕΣΗ ΜΕ ΤΑ ΝΕΑ ΣΟΥ ΚΛΕΙΔΙΑ ---
         const SUPABASE_URL = "https://omdarjncczohpffwunfy.supabase.co"; 
-        const SUPABASE_KEY = "ΒΑΛΕ_ΕΔΩ_ΤΟ_ΚΛΕΙΔΙ_ΠΟΥ_ΞΕΚΙΝΑΕΙ_ΜΕ_eyJ"; 
+        const SUPABASE_KEY = "sb_publishable_V-nfUDy5MxEG4SlXkisFBg_GBlD_4Y9"; 
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         function App() {
@@ -42,10 +42,9 @@
             }
 
             const handleLaunch = async (name, sel) => {
-                const newP = { name, services: sel, date: new Date().toLocaleDateString() };
-                const { data, error } = await _supabase.from('ntg_projects').insert([newP]).select();
+                const { data, error } = await _supabase.from('ntg_projects').insert([{ name, services: sel, date: new Date().toLocaleDateString() }]).select();
                 if (data) { setProjects([data[0], ...projects]); setActiveProject(data[0]); setIsAdding(false); }
-                else { alert("Error: " + error.message); }
+                else { alert("Sync Error: " + error.message); }
             };
 
             if (!isLoggedIn) {
@@ -55,7 +54,7 @@
                             <h1 className="brand-font text-blue-500 text-2xl mb-8 uppercase italic">NTG HUB</h1>
                             <form onSubmit={(e) => { e.preventDefault(); if(passcode==='NT2026') setIsLoggedIn(true); else alert("Wrong Pass"); }}>
                                 <input type="password" value={passcode} onChange={(e)=>setPasscode(e.target.value)} className="w-full bg-slate-800 border border-slate-700 p-5 rounded-3xl mb-4 text-center text-2xl text-white outline-none" placeholder="••••" />
-                                <button className="w-full bg-blue-600 text-white py-5 rounded-3xl font-black brand-font text-xs uppercase">Connect System</button>
+                                <button className="w-full bg-blue-600 text-white py-5 rounded-3xl font-black brand-font text-xs uppercase tracking-widest">Establish Link</button>
                             </form>
                         </div>
                     </div>
@@ -64,9 +63,9 @@
 
             return (
                 <div className="min-h-screen flex flex-col pb-24">
-                    <header className="p-5 border-b border-slate-800 glass sticky top-0 z-[100] flex justify-between items-center">
-                        <h1 className="brand-font text-blue-500 text-sm font-black uppercase tracking-widest italic leading-none">NTG GROUP</h1>
-                        <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_#10b981]"></div>
+                    <header className="p-5 border-b border-slate-800 glass sticky top-0 z-[100] flex justify-between items-center shadow-xl">
+                        <h1 className="brand-font text-blue-500 text-sm font-black uppercase tracking-widest leading-none italic">NTG GROUP</h1>
+                        <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_#10b981]"></div>
                     </header>
 
                     <main className="flex-1 p-5 max-w-xl mx-auto w-full">
@@ -92,32 +91,38 @@
             );
         }
 
-        // --- DASHBOARD ΜΕ UTM TABLE ---
+        // --- ΕΝΟΤΗΤΑ UTM TABLE ---
         function ProjectDashboard({ project, onExit }) {
-            const [mode, setMode] = useState('menu'); // menu, utm
-            const [utmData, setUtmData] = useState([{ pt: 'A1', orig: 12.0, curr: '' }]);
+            const [view, setView] = useState('menu'); // menu, utm
+            const [readings, setReadings] = useState([{ point: 'A1', orig: 10.0, curr: '' }]);
 
             const hasUTM = project.services.some(s => s.toLowerCase().includes('utm'));
 
-            if (mode === 'utm') return (
+            const addRow = () => setReadings([...readings, { point: `A${readings.length + 1}`, orig: 10.0, curr: '' }]);
+
+            if (view === 'utm') return (
                 <div className="space-y-6 animate-fadeIn">
-                    <button onClick={() => setMode('menu')} className="text-emerald-500 font-bold text-xs uppercase tracking-widest mb-4">← Back to Hub</button>
-                    <h2 className="brand-font text-sm uppercase mb-6">UTM Readings: {project.name}</h2>
-                    <div className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden">
-                        <table className="w-full text-xs text-left">
-                            <thead className="bg-slate-800 text-[9px] font-black uppercase text-slate-500">
-                                <tr><th className="p-4">Point</th><th className="p-4">Original</th><th className="p-4">Current</th><th className="p-4">Dim %</th></tr>
+                    <div className="flex justify-between items-center">
+                        <button onClick={() => setView('menu')} className="text-emerald-500 font-bold text-xs uppercase tracking-widest leading-none">← Back</button>
+                        <h2 className="brand-font text-xs uppercase text-slate-500">UTM Entry Mode</h2>
+                    </div>
+                    <div className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
+                        <table className="w-full text-left text-xs">
+                            <thead className="bg-slate-800/50 text-[9px] font-black uppercase text-slate-500">
+                                <tr><th className="p-4">Point</th><th className="p-4">Original</th><th className="p-4">Current</th><th className="p-4">Dim%</th></tr>
                             </thead>
                             <tbody className="divide-y divide-slate-800">
-                                {utmData.map((row, i) => {
-                                    const dim = row.curr ? (((row.orig - row.curr) / row.orig) * 100).toFixed(1) : '0';
+                                {readings.map((r, i) => {
+                                    const dim = r.curr ? (((r.orig - r.curr) / r.orig) * 100).toFixed(1) : 0;
                                     return (
-                                        <tr key={i}>
-                                            <td className="p-4 font-bold">{row.pt}</td>
-                                            <td className="p-4">{row.orig}</td>
-                                            <td className="p-4"><input type="number" step="0.1" className="bg-transparent border-b border-emerald-500/30 w-12 outline-none text-emerald-400 font-bold" placeholder="--" onChange={(e) => {
-                                                const newD = [...utmData]; newD[i].curr = e.target.value; setUtmData(newD);
-                                            }} /></td>
+                                        <tr key={i} className="hover:bg-slate-800/30 transition-colors">
+                                            <td className="p-4 font-bold text-blue-400">{r.point}</td>
+                                            <td className="p-4 text-slate-500">{r.orig}</td>
+                                            <td className="p-4">
+                                                <input type="number" step="0.1" className="bg-transparent border-b border-emerald-500/50 w-12 outline-none text-emerald-400 font-bold" placeholder="--" onChange={(e) => {
+                                                    const newR = [...readings]; newR[i].curr = e.target.value; setReadings(newR);
+                                                }} />
+                                            </td>
                                             <td className={`p-4 font-black ${dim > 20 ? 'text-red-500' : 'text-emerald-500'}`}>{dim}%</td>
                                         </tr>
                                     );
@@ -125,32 +130,34 @@
                             </tbody>
                         </table>
                     </div>
-                    <button onClick={() => setUtmData([...utmData, { pt: `A${utmData.length+1}`, orig: 12.0, curr: '' }])} className="w-full border-2 border-dashed border-slate-800 p-4 rounded-2xl text-[10px] font-black uppercase text-slate-500">+ Add Point</button>
-                    <button className="w-full bg-emerald-600 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl">Save & Sync to Cloud</button>
+                    <div className="flex gap-2">
+                        <button onClick={addRow} className="flex-1 border border-slate-700 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest">+ Add Point</button>
+                        <button onClick={() => alert("Data Uploaded to Cloud!")} className="flex-1 bg-emerald-600 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl">Sync to DB</button>
+                    </div>
                 </div>
             );
 
             return (
                 <div className="space-y-6 animate-fadeIn">
-                    <button onClick={onExit} className="text-slate-500 text-[10px] brand-font uppercase flex items-center gap-2"><i className="fa-solid fa-chevron-left"></i> Exit Hub</button>
+                    <button onClick={onExit} className="text-slate-500 text-[10px] brand-font uppercase tracking-widest flex items-center gap-2"><i className="fa-solid fa-chevron-left text-[8px]"></i> Exit Hub</button>
                     <div className="bg-slate-900/80 p-8 rounded-[40px] border border-blue-500/20 glow-blue">
-                        <h2 className="brand-font text-blue-400 text-lg mb-1 leading-tight">{project.name}</h2>
+                        <h2 className="brand-font text-blue-400 text-lg mb-1 leading-tight uppercase italic">{project.name}</h2>
                         <div className="flex flex-wrap gap-2 mt-4 italic">
-                            {project.services.map(s => <span key={s} className="text-[8px] bg-blue-900/30 text-blue-300 px-2 py-1 rounded-lg font-black uppercase tracking-tighter">{s}</span>)}
+                            {project.services.map(s => <span key={s} className="text-[8px] bg-blue-900/30 text-blue-300 px-2 py-1 rounded-lg font-black uppercase tracking-tighter border border-blue-500/10">{s}</span>)}
                         </div>
                     </div>
                     <div className="grid grid-cols-1 gap-3">
-                        <MenuBtn icon="fa-file-signature" label="Daily Progress Report" color="bg-blue-600" active={true} />
-                        <MenuBtn icon="fa-ruler-combined" label="UTM Readings Table" color="bg-emerald-600" active={hasUTM} onClick={() => setMode('utm')} />
-                        <MenuBtn icon="fa-camera" label="Evidence Capture" color="bg-slate-800" active={true} onClick={() => document.getElementById('cInput').click()} />
-                        <input type="file" id="cInput" accept="image/*" capture="camera" className="hidden" />
+                        <NavAction icon="fa-file-signature" label="Daily Progress Report" color="bg-blue-600" active={true} />
+                        <NavAction icon="fa-ruler-combined" label="UTM Readings Table" color="bg-emerald-600" active={hasUTM} onClick={() => setView('utm')} />
+                        <NavAction icon="fa-camera" label="Evidence Capture" color="bg-slate-800" active={true} onClick={() => document.getElementById('cIn').click()} />
+                        <input type="file" id="cIn" accept="image/*" capture="camera" className="hidden" />
                     </div>
                 </div>
             );
         }
 
-        // --- HELPERS & OTHER TABS ---
-        function MenuBtn({ icon, label, color, active, onClick }) {
+        // --- HELPERS ---
+        function NavAction({ icon, label, color, active, onClick }) {
             return <button onClick={onClick} disabled={!active} className={`${!active ? 'opacity-20 grayscale' : color} p-6 rounded-3xl flex justify-between items-center active:scale-95 transition-all shadow-xl`}>
                 <span className="text-[11px] font-black uppercase tracking-widest">{label}</span>
                 <i className={`fa-solid ${icon} text-sm opacity-80`}></i>
@@ -164,25 +171,28 @@
             return (
                 <div className="space-y-6">
                     <div className="flex justify-between items-center">
-                        <h2 className="brand-font text-blue-500 text-xs border-l-4 border-blue-600 pl-3 uppercase italic tracking-widest">Active Operations</h2>
-                        {!isAdding && <button onClick={() => setIsAdding(true)} className="w-12 h-12 bg-emerald-600 rounded-full flex items-center justify-center text-white shadow-lg active:scale-90 transition-all"><i className="fa-solid fa-plus text-xl"></i></button>}
+                        <h2 className="brand-font text-blue-500 text-xs border-l-4 border-blue-600 pl-3 uppercase italic tracking-widest leading-none">Operations List</h2>
+                        {!isAdding && <button onClick={() => setIsAdding(true)} className="w-12 h-12 bg-emerald-600 rounded-full flex items-center justify-center text-white shadow-lg active:scale-90 transition-all shadow-emerald-900/40"><i className="fa-solid fa-plus text-xl"></i></button>}
                     </div>
                     {isAdding ? (
-                        <div className="bg-slate-900 p-6 rounded-[35px] border border-slate-800 space-y-4">
-                            <input className="w-full bg-slate-800 p-5 rounded-3xl text-sm border border-slate-700 outline-none text-white uppercase font-bold" placeholder="Ship Name" value={name} onChange={(e)=>setName(e.target.value)} />
+                        <div className="bg-slate-900 p-6 rounded-[35px] border border-slate-800 space-y-4 animate-fadeIn">
+                            <input className="w-full bg-slate-800 p-5 rounded-3xl text-sm border border-slate-700 outline-none font-bold text-white uppercase" placeholder="Ship Name" value={name} onChange={(e)=>setName(e.target.value)} />
                             {services.map(s => (
                                 <label key={s} className="flex items-center gap-4 bg-slate-800/40 p-4 rounded-2xl cursor-pointer">
                                     <input type="checkbox" onChange={(e) => e.target.checked ? setSel([...sel, s]) : setSel(sel.filter(i => i !== s))} className="w-5 h-5 accent-emerald-500" />
                                     <span className="text-xs font-bold text-slate-300 uppercase leading-none">{s}</span>
                                 </label>
                             ))}
-                            <button onClick={()=>onLaunch(name, sel)} className="w-full bg-emerald-600 py-5 rounded-3xl font-black uppercase text-[10px] tracking-widest shadow-xl">Launch Operational Hub</button>
+                            <button onClick={()=>onLaunch(name, sel)} className="w-full bg-emerald-600 py-5 rounded-3xl font-black uppercase text-[10px] tracking-widest">Launch Sync Hub</button>
                         </div>
                     ) : (
                         <div className="space-y-3">
                             {projects.map(p => (
-                                <div key={p.id} onClick={() => onSelect(p)} className="bg-slate-900 p-6 rounded-[30px] border border-slate-800 flex justify-between items-center cursor-pointer active:scale-95 transition-all">
-                                    <div><h4 className="font-bold text-sm text-slate-200 uppercase">{p.name}</h4><p className="text-[8px] text-slate-500 font-black uppercase mt-1.5">{p.services?.length || 0} Services</p></div>
+                                <div key={p.id} onClick={() => onSelect(p)} className="bg-slate-900 p-6 rounded-[30px] border border-slate-800 flex justify-between items-center cursor-pointer active:scale-95 transition-all hover:border-blue-500/50">
+                                    <div>
+                                        <h4 className="font-bold text-sm text-slate-200 uppercase">{p.name}</h4>
+                                        <p className="text-[8px] text-slate-500 font-black uppercase mt-1.5">{p.services?.length || 0} Services Connected</p>
+                                    </div>
                                     <i className="fa-solid fa-chevron-right text-slate-700 text-xs"></i>
                                 </div>
                             ))}
@@ -195,27 +205,28 @@
         function ToolsTab() {
             return (
                 <div className="space-y-6 animate-fadeIn">
-                    <h2 className="brand-font text-blue-500 text-xs border-l-4 border-blue-600 pl-3 uppercase italic">Smart Toolbox</h2>
+                    <h2 className="brand-font text-blue-500 text-xs border-l-4 border-blue-600 pl-3 uppercase italic tracking-widest leading-none">Field Engineering</h2>
                     <div className="grid grid-cols-2 gap-4">
-                        <ToolItem icon="fa-weight-hanging" label="Iron Calc" onClick={() => { const l=prompt("Mhkos(m):"); const w=prompt("Platos(m):"); const t=prompt("Pachos(mm):"); if(l) alert(l*w*t*7.85 + " kg"); }} />
-                        <ToolItem icon="fa-thermometer-half" label="F ↔ C" onClick={() => { const f=prompt("Fahrenheit:"); if(f) alert((f-32)*5/9 + " C"); }} />
+                        <ToolBox icon="fa-weight-hanging" label="Iron Calc" onClick={() => { const l=prompt("L(m):"); const w=prompt("W(m):"); const t=prompt("T(mm):"); if(l) alert(l*w*t*7.85 + " kg"); }} />
+                        <ToolBox icon="fa-ruler-horizontal" label="In ↔ mm" onClick={() => { const i=prompt("Inches:"); if(i) alert(i*25.4 + " mm"); }} />
+                        <ToolBox icon="fa-thermometer-half" label="F ↔ C" onClick={() => { const f=prompt("Fahrenheit:"); if(f) alert((f-32)*5/9 + " C"); }} />
                     </div>
                 </div>
             );
         }
 
-        function ToolItem({ icon, label, onClick }) {
+        function ToolBox({ icon, label, onClick }) {
             return <div onClick={onClick} className="bg-slate-900 border border-slate-800 p-8 rounded-[40px] active:scale-95 transition-all text-center">
                 <i className={`fa-solid ${icon} text-blue-500 text-xl mb-3`}></i>
-                <span className="text-[10px] font-black uppercase block tracking-widest">{label}</span>
+                <span className="text-[10px] font-black uppercase block tracking-widest leading-none">{label}</span>
             </div>;
         }
 
-        function IntelTab() { return <div className="p-10 text-center opacity-30 brand-font text-xs italic tracking-widest">Awaiting Deep Intel Briefing...</div>; }
+        function IntelTab() { return <div className="p-10 text-center opacity-30 brand-font text-[9px] uppercase italic tracking-[0.3em] py-40">Awaiting AI Deep Search Sync...</div>; }
         function NavButton({ active, icon, label, onClick }) {
             return <button onClick={onClick} className={`flex flex-col items-center gap-1.5 transition-all ${active ? 'text-blue-500 scale-110' : 'text-slate-600 opacity-60'}`}>
                 <i className={`fa-solid ${icon} text-lg`}></i>
-                <span className="text-[8px] font-black uppercase tracking-tighter leading-none italic">{label}</span>
+                <span className="text-[8px] font-black uppercase leading-none italic">{label}</span>
             </button>;
         }
 

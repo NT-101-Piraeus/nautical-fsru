@@ -1,11 +1,10 @@
 <!DOCTYPE html><html lang="el"><head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NTG COMMAND | V36 HUB</title>
+    <title>NTG HUB | V36.1 Secure</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@400;700;900&display=swap');
@@ -15,31 +14,14 @@
     </style></head><body>
     <div id="root"></div>
     <script type="text/babel">
-        const { useState, useEffect } = React;
-        const _supabase = supabase.createClient("https://omdarjncczohpffunfy.supabase.co", "sb_publishable_V-nfUDy5MxEG4SlXkisFBg_GBlD_4Y9");
-
+        const { useState } = React;
         function Hub() {
-            const [isAuth, setIsAuth] = useState(() => sessionStorage.getItem('ntg_auth') === 'true');
-            const [view, setView] = useState('DASHBOARD');
-            const [time, setTime] = useState(new Date());
-            const [logs, setLogs] = useState([]);
-            const [contacts, setContacts] = useState(() => JSON.parse(localStorage.getItem('ntg_contacts')) || []);
-
-            useEffect(() => {
-                const timer = setInterval(() => setTime(new Date()), 1000);
-                if (isAuth) fetchArchive();
-                return () => clearInterval(timer);
-            }, [isAuth]);
-
-            async function fetchArchive() {
-                const { data } = await _supabase.from('ntg_logbook').select('*').order('created_at', { ascending: false });
-                if (data) setLogs(data);
-            }
+            const [isAuth, setIsAuth] = useState(false); // ΠΑΝΤΑ ζητάει κωδικό στην αρχή
 
             if (!isAuth) return (
                 <div className="h-screen flex items-center justify-center p-6 bg-[#020617]">
                     <form onSubmit={(e)=>{e.preventDefault(); if(e.target.p.value==='NT2026'){sessionStorage.setItem('ntg_auth','true');setIsAuth(true)}}} className="glass p-10 rounded-[40px] w-full max-w-sm text-center border border-blue-500/20">
-                        <h1 className="brand text-blue-500 text-2xl mb-8 uppercase italic">NTG COMMAND</h1>
+                        <h1 className="brand text-blue-500 text-2xl mb-8 uppercase italic leading-none">NTG HUB</h1>
                         <input name="p" type="password" autoFocus className="w-full bg-slate-900 border border-slate-800 p-5 rounded-3xl mb-4 text-center text-white outline-none text-2xl" placeholder="••••" />
                         <button className="w-full bg-blue-600 py-5 rounded-3xl font-black text-xs uppercase shadow-xl">Identify</button>
                     </form>
@@ -48,60 +30,11 @@
 
             return (
                 <div className="max-w-xl mx-auto p-5 py-10 animate-fadeIn">
-                    <header className="flex justify-between items-start mb-12">
-                        <div>
-                            <h1 className="brand text-blue-500 text-2xl font-black italic uppercase leading-none">NTG HUB</h1>
-                            <p className="text-[10px] text-slate-500 mt-2 font-bold tracking-[0.4em] uppercase">{time.toLocaleDateString('el-GR')}</p>
-                        </div>
-                        <div className="text-right">
-                            <p className="text-2xl font-black text-white leading-none">{time.toLocaleTimeString('el-GR',{hour:'2-digit',minute:'2-digit'})}</p>
-                            <p className="text-[8px] text-red-500 font-bold uppercase mt-1">System Active</p>
-                        </div>
-                    </header>
-
-                    <div className="flex gap-2 mb-10 overflow-x-auto pb-4">
-                        <button onClick={()=>setView('DASHBOARD')} className={`px-6 py-3 rounded-2xl text-[10px] font-black uppercase whitespace-nowrap ${view==='DASHBOARD'?'bg-blue-600':'bg-slate-800'}`}>Today</button>
-                        <button onClick={()=>setView('ARCHIVE')} className={`px-6 py-3 rounded-2xl text-[10px] font-black uppercase whitespace-nowrap ${view==='ARCHIVE'?'bg-blue-600':'bg-slate-800'}`}>Archive</button>
-                        <button onClick={()=>setView('LOGBOOK')} className={`px-6 py-3 rounded-2xl text-[10px] font-black uppercase whitespace-nowrap ${view==='LOGBOOK'?'bg-blue-600':'bg-slate-800'}`}>Manager Log</button>
-                    </div>
-
-                    {view === 'DASHBOARD' && (
-                        <div className="space-y-6">
-                            <a href="safety_ships.html" className="glass p-10 rounded-[50px] flex items-center gap-8 active:scale-95 transition-all border border-white/5 shadow-2xl">
-                                <div className="w-20 h-20 rounded-3xl bg-red-600/20 flex items-center justify-center text-red-500 text-4xl shadow-inner"><i className="fa-solid fa-user-shield"></i></div>
-                                <div><h2 className="brand text-lg text-white uppercase italic leading-none">Safety Officer</h2><p className="text-[11px] text-slate-400 font-bold uppercase mt-2">Tactical Inspections</p></div>
-                            </a>
-                        </div>
-                    )}
-
-                    {view === 'ARCHIVE' && (
-                        <div className="space-y-4">
-                            <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2 mb-6">Cloud Sync Records</h3>
-                            {logs.map(log => (
-                                <div key={log.id} className="glass p-6 rounded-[35px] border border-white/5 shadow-lg">
-                                    <p className="text-[10px] text-slate-500 font-bold uppercase">{new Date(log.created_at).toLocaleDateString('el-GR')}</p>
-                                    <h4 className="font-black text-sm uppercase text-blue-400 mt-1">{log.ship_name}</h4>
-                                    <p className="text-[9px] text-slate-500 uppercase mt-1 italic">{log.port}</p>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-
-                    {view === 'LOGBOOK' && (
-                        <div className="space-y-6">
-                            <div className="glass p-6 rounded-[35px] border-l-4 border-blue-500">
-                                <h3 className="brand text-[10px] text-blue-400 uppercase italic mb-6">Appointments & Contacts</h3>
-                                <div className="space-y-4">
-                                    <div className="bg-slate-900/50 p-4 rounded-2xl">
-                                        <p className="text-[8px] text-slate-500 font-bold uppercase">Example Contact</p>
-                                        <p className="text-xs font-bold mt-1">YIANNIS - CHIEF ENGINEER</p>
-                                        <p className="text-[10px] text-blue-400 mt-1">+30 694XXXXXXX</p>
-                                    </div>
-                                    <p className="text-[10px] text-slate-600 italic text-center">Add new contact features coming in V36.1</p>
-                                </div>
-                            </div>
-                        </div>
-                    )}
+                    <header className="mb-12"><h1 className="brand text-blue-500 text-2xl font-black italic uppercase">NTG HUB</h1><p className="text-[10px] text-slate-500 mt-2 font-bold tracking-[0.4em]">SYSTEM SECURE</p></header>
+                    <a href="safety_ships.html" className="glass p-10 rounded-[50px] flex items-center gap-8 active:scale-95 transition-all border border-white/5 shadow-2xl">
+                        <div className="w-20 h-20 rounded-3xl bg-red-600/20 flex items-center justify-center text-red-500 text-4xl shadow-inner"><i className="fa-solid fa-user-shield"></i></div>
+                        <div><h2 className="brand text-lg text-white uppercase italic leading-none">Safety Officer</h2><p className="text-[11px] text-slate-400 font-bold uppercase mt-2 tracking-widest">Inspection Engine</p></div>
+                    </a>
                 </div>
             );
         }

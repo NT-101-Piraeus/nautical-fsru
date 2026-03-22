@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="el"><head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NTG COMMAND | HUB V37</title>
+    <title>NTG HUB | V37.1</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -16,40 +16,51 @@
     <div id="root"></div>
     <script type="text/babel">
         const { useState, useEffect } = React;
-        const _supabase = supabase.createClient("https://omdarjncczohpffwunfy.supabase.co", "sb_publishable_V-nfUDy5MxEG4SlXkisFBg_GBlD_4Y9");
+        const _supabase = supabase.createClient("https://omdarjncczohpffunfy.supabase.co", "sb_publishable_V-nfUDy5MxEG4SlXkisFBg_GBlD_4Y9");
 
         function Hub() {
             const [view, setView] = useState('DASHBOARD');
             const [logs, setLogs] = useState([]);
+            const [loading, setLoading] = useState(false);
 
             useEffect(() => { if(view === 'ARCHIVE') fetchLogs(); }, [view]);
 
             async function fetchLogs() {
+                setLoading(true);
                 const { data } = await _supabase.from('ntg_logbook').select('*').order('created_at', { ascending: false });
                 if (data) setLogs(data);
+                setLoading(false);
             }
 
             return (
-                <div className="max-w-xl mx-auto p-5 py-10">
+                <div className="max-w-xl mx-auto p-5 py-10 animate-fadeIn">
                     <header className="flex justify-between items-center mb-10">
                         <h1 className="brand text-blue-500 text-xl font-black uppercase">NTG HUB</h1>
                         <div className="flex gap-2">
-                            <button onClick={() => setView('DASHBOARD')} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase ${view === 'DASHBOARD' ? 'bg-blue-600' : 'bg-slate-800'}`}>Current</button>
+                            <button onClick={() => setView('DASHBOARD')} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase ${view === 'DASHBOARD' ? 'bg-blue-600' : 'bg-slate-800'}`}>Today</button>
                             <button onClick={() => setView('ARCHIVE')} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase ${view === 'ARCHIVE' ? 'bg-blue-600' : 'bg-slate-800'}`}>Archive</button>
                         </div>
                     </header>
 
                     {view === 'DASHBOARD' ? (
-                        <a href="safety_ships.html" className="glass p-8 rounded-[40px] flex items-center gap-6 border border-white/5 active:scale-95 transition-all">
-                            <div className="w-14 h-14 rounded-2xl bg-red-600/20 flex items-center justify-center text-red-500 text-2xl"><i className="fa-solid fa-user-shield"></i></div>
-                            <div><h2 className="brand text-sm text-white uppercase italic">Safety Officer</h2><p className="text-[10px] text-slate-500 font-bold uppercase mt-2">Mobile Inspection Tool</p></div>
-                        </a>
+                        <div className="space-y-6">
+                            <a href="safety_ships.html" className="glass p-8 rounded-[40px] flex items-center gap-6 border border-white/5 active:scale-95 transition-all">
+                                <div className="w-14 h-14 rounded-2xl bg-red-600/20 flex items-center justify-center text-red-500 text-2xl"><i className="fa-solid fa-user-shield"></i></div>
+                                <div><h2 className="brand text-sm text-white uppercase italic">Safety Officer</h2><p className="text-[10px] text-slate-500 font-bold uppercase mt-2">Active Inspection Logs</p></div>
+                            </a>
+                        </div>
                     ) : (
                         <div className="space-y-4">
-                            {logs.map(log => (
-                                <div key={log.id} className="glass p-6 rounded-[35px] border border-white/5">
-                                    <p className="text-[10px] text-slate-500 font-bold uppercase">{new Date(log.created_at).toLocaleDateString('el-GR')}</p>
-                                    <h4 className="font-black text-sm uppercase text-blue-400">{log.ship_name}</h4>
+                            <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2 mb-4">Job Archive (Cloud Records)</h3>
+                            {loading ? <p className="text-center py-10 animate-pulse">Syncing with Supabase...</p> : 
+                             logs.length === 0 ? <p className="text-center opacity-30 py-10">No records found.</p> :
+                             logs.map(log => (
+                                <div key={log.id} className="glass p-6 rounded-[35px] border border-white/5 mb-4">
+                                    <div className="flex justify-between">
+                                        <p className="text-[10px] text-slate-500 font-bold uppercase">{new Date(log.created_at).toLocaleDateString('el-GR')}</p>
+                                        <span className="text-[8px] bg-emerald-600/20 text-emerald-500 px-2 py-0.5 rounded-full font-black uppercase">{log.status}</span>
+                                    </div>
+                                    <h4 className="font-black text-sm uppercase text-blue-400 mt-1">{log.ship_name}</h4>
                                     <p className="text-[9px] text-slate-500 uppercase mt-1 italic">{log.port}</p>
                                 </div>
                             ))}

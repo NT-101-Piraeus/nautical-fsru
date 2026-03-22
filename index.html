@@ -1,44 +1,115 @@
-<script type="text/babel">
-    const { useState } = React;
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>X-INTEL HUB | Lainas Group</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-100">
+    <div id="root"></div>
 
-    function MainHub() {
-        const [activeApp, setActiveApp] = useState('home');
+    <script type="text/babel">
+        const { useState } = React;
 
-        // Ορισμός των "Εφαρμογών" σου
-        const apps = [
-            { id: 'safety', name: 'Τεχνικός Ασφαλείας', icon: 'fa-user-shield', color: 'bg-emerald-600', group: 'MARINE' },
-            { id: 'utm', name: 'UTL / UTM Hull', icon: 'fa-ruler-combined', color: 'bg-blue-600', group: 'MARINE' },
-            { id: 'load_test', name: 'Load Testing', icon: 'fa-weight-hanging', color: 'bg-cyan-600', group: 'MARINE' },
-            { id: 'legal', name: 'Νομικές Υποθέσεις', icon: 'fa-gavel', color: 'bg-red-800', group: 'LEGAL' },
-            { id: 'intel', name: 'Ship & Yard Intel', icon: 'fa-tower-observation', color: 'bg-slate-800', group: 'INTEL' },
-            { id: 'airbnb', name: 'Airbnb Manager', icon: 'fa-bed', color: 'bg-pink-500', group: 'BUSINESS' },
-            { id: 'competitors', name: 'Competition Watch', icon: 'fa-eye', color: 'bg-orange-600', group: 'INTEL' }
-        ];
+        function MainHub() {
+            const [isLoggedIn, setIsLoggedIn] = useState(false);
+            const [passcode, setPasscode] = useState('');
+            const [activeApp, setActiveApp] = useState('home');
 
-        if (activeApp === 'home') {
-            return (
-                <div className="p-4 max-w-lg mx-auto">
-                    <header className="mb-8 text-center">
-                        <h1 className="text-3xl font-black text-slate-900">X-INTEL HUB</h1>
-                        <p className="text-slate-500 text-xs font-bold uppercase tracking-widest">Lainas Group Command Center</p>
-                    </header>
+            const handleLogin = (e) => {
+                e.preventDefault();
+                if (passcode === 'NT2026') setIsLoggedIn(true);
+                else alert("Λάθος Κωδικός!");
+            };
 
-                    <div className="space-y-6">
-                        {['MARINE', 'LEGAL', 'INTEL', 'BUSINESS'].map(group => (
-                            <div key={group}>
-                                <h3 className="text-[10px] font-black text-slate-400 mb-2 border-b border-slate-200 pb-1">{group}</h3>
-                                <div className="grid grid-cols-2 gap-3">
-                                    {apps.filter(a => a.group === group).map(app => (
-                                        <button 
-                                            key={app.id}
-                                            onClick={() => setActiveApp(app.id)}
-                                            className={`${app.color} p-4 rounded-2xl text-white shadow-lg active:scale-95 transition-all flex flex-col items-center justify-center h-28`}
-                                        >
-                                            <i className={`fa-solid ${app.icon} text-2xl mb-2`}></i>
-                                            <span className="text-[10px] font-bold uppercase text-center">{app.name}</span>
-                                        </button>
-                                    ))}
+            if (!isLoggedIn) {
+                return (
+                    <div className="h-screen flex items-center justify-center bg-slate-900 p-6">
+                        <div className="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-sm text-center">
+                            <h1 className="text-2xl font-black text-slate-800 mb-1">X-INTEL HUB</h1>
+                            <p className="text-slate-400 mb-6 text-[10px] font-bold uppercase tracking-widest">Lainas Group Command</p>
+                            <form onSubmit={handleLogin}>
+                                <input 
+                                    type="password" 
+                                    className="w-full border-2 border-slate-100 p-4 rounded-2xl mb-4 text-center text-xl outline-none focus:border-blue-500"
+                                    placeholder="••••"
+                                    value={passcode}
+                                    onChange={(e) => setPasscode(e.target.value)}
+                                />
+                                <button className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold shadow-lg active:scale-95 transition-all">ΕΙΣΟΔΟΣ</button>
+                            </form>
+                        </div>
+                    </div>
+                );
+            }
+
+            const apps = [
+                { id: 'safety', name: 'Τεχνικός Ασφαλείας', icon: 'fa-user-shield', color: 'bg-emerald-600', group: 'MARINE' },
+                { id: 'utm', name: 'UTL / UTM Hull', icon: 'fa-ruler-combined', color: 'bg-blue-600', group: 'MARINE' },
+                { id: 'legal', name: 'Νομικές Υποθέσεις', icon: 'fa-gavel', color: 'bg-red-800', group: 'LEGAL' },
+                { id: 'intel', name: 'Ship & Yard Intel', icon: 'fa-tower-observation', color: 'bg-slate-800', group: 'INTEL' },
+                { id: 'airbnb', name: 'Airbnb Manager', icon: 'fa-bed', color: 'bg-pink-500', group: 'BUSINESS' }
+            ];
+
+            if (activeApp === 'home') {
+                return (
+                    <div className="p-6 max-w-lg mx-auto">
+                        <header className="mb-8 flex justify-between items-center">
+                            <div>
+                                <h1 className="text-2xl font-black text-slate-900 leading-none">X-INTEL</h1>
+                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em]">Lainas Group Hub</p>
+                            </div>
+                            <div className="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center">
+                                <i className="fa-solid fa-user text-slate-500"></i>
+                            </div>
+                        </header>
+
+                        <div className="space-y-8">
+                            {['MARINE', 'LEGAL', 'INTEL', 'BUSINESS'].map(group => (
+                                <div key={group}>
+                                    <h3 className="text-[10px] font-black text-slate-400 mb-3 border-b border-slate-200 pb-1 tracking-widest">{group}</h3>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        {apps.filter(a => a.group === group).map(app => (
+                                            <button 
+                                                key={app.id}
+                                                onClick={() => setActiveApp(app.id)}
+                                                className={`${app.color} p-5 rounded-3xl text-white shadow-xl active:scale-90 transition-all flex flex-col items-center justify-center h-32`}
+                                            >
+                                                <i className={`fa-solid ${app.icon} text-3xl mb-3`}></i>
+                                                <span className="text-[10px] font-black uppercase text-center leading-tight">{app.name}</span>
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
+                            ))}
+                        </div>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="min-h-screen bg-white flex flex-col">
+                    <header className="bg-slate-900 p-5 text-white flex justify-between items-center sticky top-0 z-50">
+                        <span className="font-black text-xs uppercase tracking-widest">{apps.find(a => a.id === activeApp).name}</span>
+                        <button onClick={() => setActiveApp('home')} className="text-[10px] font-bold bg-white/10 px-4 py-2 rounded-full uppercase">Κλείσιμο</button>
+                    </header>
+                    
+                    <div className="p-6 flex-1">
+                        {activeApp === 'legal' && <LegalModule />}
+                        {activeApp === 'intel' && <IntelModule />}
+                        {['safety', 'utm', 'airbnb'].map(id => activeApp === id && (
+                            <div key={id} className="text-center py-20 text-slate-300 italic">
+                                <i className="fa-solid fa-screwdriver-wrench text-5xl mb-4 block"></i>
+                                Η ενότητα {id.toUpperCase()} παραμετροποιείται...
                             </div>
                         ))}
                     </div>
@@ -46,59 +117,39 @@
             );
         }
 
-        // Εδώ είναι η λογική για το τι δείχνει κάθε App
-        return (
-            <div className="min-h-screen bg-white">
-                <header className="bg-slate-900 p-4 text-white flex justify-between items-center">
-                    <span className="font-bold text-xs uppercase">{apps.find(a => a.id === activeApp).name}</span>
-                    <button onClick={() => setActiveApp('home')} className="text-xs bg-white/20 px-3 py-1 rounded-full">ΚΛΕΙΣΙΜΟ</button>
-                </header>
-                
-                <div className="p-6">
-                    {activeApp === 'legal' && <LegalModule />}
-                    {activeApp === 'intel' && <IntelModule />}
-                    {activeApp === 'utm' && <UTMModule />}
-                    {/* Τα υπόλοιπα modules προστίθενται εδώ */}
+        function LegalModule() {
+            return (
+                <div className="space-y-4">
+                    <div className="p-5 bg-red-50 border-l-4 border-red-800 rounded-r-2xl shadow-sm">
+                        <h4 className="font-black text-red-900 text-sm uppercase">Υπόθεση Τερμέ</h4>
+                        <p className="text-xs text-red-700 mt-1 italic">"Αναμονή για κατάθεση υπομνήματος."</p>
+                    </div>
+                    <div className="p-5 bg-slate-50 border-l-4 border-slate-800 rounded-r-2xl shadow-sm">
+                        <h4 className="font-black text-slate-800 text-sm uppercase">Σαμσούντα</h4>
+                        <p className="text-xs text-slate-500 mt-1">Status: Active Case</p>
+                    </div>
                 </div>
-            </div>
-        );
-    }
+            );
+        }
 
-    // Παράδειγμα Module για Νομικά
-    function LegalModule() {
-        return (
-            <div className="space-y-4">
-                <div className="p-4 bg-red-50 border-l-4 border-red-800 rounded-r-xl">
-                    <h4 className="font-bold text-red-900">Υπόθεση Τερμέ</h4>
-                    <p className="text-xs text-red-700">Τελευταία ενημέρωση από δικηγόρο: "Αναμονή για κατάθεση υπομνήματος".</p>
+        function IntelModule() {
+            return (
+                <div className="space-y-4">
+                    <div className="p-5 bg-blue-50 border border-blue-100 rounded-3xl shadow-sm">
+                        <h4 className="font-black text-blue-900 text-sm uppercase">🚢 NAFTOCEMENT IV</h4>
+                        <p className="text-[11px] text-blue-700 mt-1">Εντοπίστηκε: Πέραμα (Ζώνη)</p>
+                        <span className="text-[9px] font-black bg-blue-600 text-white px-2 py-1 rounded-full mt-3 inline-block uppercase">Live Track</span>
+                    </div>
+                    <div className="p-5 bg-orange-50 border border-orange-100 rounded-3xl shadow-sm">
+                        <h4 className="font-black text-orange-900 text-sm uppercase">🏭 Ναυπηγεία Τουρκίας</h4>
+                        <p className="text-[11px] text-orange-700 mt-1">Αναφορά: Αυξημένη κίνηση Bulk Carriers.</p>
+                    </div>
                 </div>
-                <div className="p-4 bg-slate-50 border-l-4 border-slate-800 rounded-r-xl">
-                    <h4 className="font-bold text-slate-800">Σαμσούντα</h4>
-                    <p className="text-xs text-slate-600">Status: Active</p>
-                </div>
-            </div>
-        );
-    }
+            );
+        }
 
-    // Παράδειγμα Module για Intel (Ships & Yards)
-    function IntelModule() {
-        return (
-            <div className="space-y-4">
-                <div className="p-4 bg-blue-50 border rounded-xl">
-                    <h4 className="font-bold">🚢 NAFTOCEMENT IV</h4>
-                    <p className="text-xs text-blue-800">Εντοπίστηκε: Πέραμα (Ζώνη)</p>
-                    <span className="text-[10px] bg-blue-200 px-2 py-1 rounded mt-2 inline-block">LIVE TRACKING</span>
-                </div>
-                <div className="p-4 bg-orange-50 border rounded-xl">
-                    <h4 className="font-bold">🏭 Ναυπηγεία Τουρκίας</h4>
-                    <p className="text-xs text-orange-800">Αναφορές για αυξημένη κίνηση σε Bulk Carriers.</p>
-                </div>
-            </div>
-        );
-    }
-
-    function UTMModule() { return <div>UTM Reports & Hull Gauging Logic...</div>; }
-
-    const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<MainHub />);
-</script>
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<MainHub />);
+    </script>
+</body>
+</html>

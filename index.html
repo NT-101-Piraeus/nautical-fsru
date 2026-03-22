@@ -1,7 +1,7 @@
 <!DOCTYPE html><html lang="el"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NTG | COMMAND CENTER V12.1</title>
+    <title>NTG | COMMAND CENTER V12.2</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -11,10 +11,10 @@
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;700&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #020617; color: #f8fafc; }
         .brand-font { font-family: 'Orbitron', sans-serif; letter-spacing: 1px; }
-        .glass { background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.05); }
+        .glass { background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.05); }
         .glow-red { box-shadow: 0 0 20px rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); }
         .glow-blue { box-shadow: 0 0 20px rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.4); }
-        .scan-line { width: 100%; height: 1px; background: rgba(59, 130, 246, 0.5); position: absolute; animation: moveScan 3s infinite linear; }
+        .scan-line { width: 100%; height: 1px; background: rgba(59, 130, 246, 0.4); position: absolute; animation: moveScan 3s infinite linear; }
         @keyframes moveScan { 0% { top: 0; } 100% { top: 100%; } }
     </style></head><body>
     <div id="root"></div>
@@ -23,160 +23,124 @@
         const { useState } = React;
 
         function App() {
-            const [activeTab, setActiveTab] = useState('intel'); // Landing on Intel V12.1
+            const [activeTab, setActiveTab] = useState('intel'); 
             const [isAddingProject, setIsAddingProject] = useState(false);
+            const [activeProject, setActiveProject] = useState(null);
             const [projects, setProjects] = useState([
-                { id: 1, name: "RIGEL III - Annual Survey", services: ["UTM", "ε1", "Safety PD 70/90"] }
+                { id: 101, name: "MT FELIX", services: ["Safety Division", "UTM: Hull Gauging"], date: "22/03/2026" }
             ]);
+
+            const handleLaunch = (name, selectedServices) => {
+                if(!name) { alert("Παρακαλώ δώστε όνομα πλοίου"); return; }
+                const newProject = { id: Date.now(), name, services: selectedServices, date: new Date().toLocaleDateString() };
+                setProjects([newProject, ...projects]);
+                setActiveProject(newProject);
+                setIsAddingProject(false);
+            };
 
             return (
                 <div className="min-h-screen flex flex-col pb-24">
-                    {/* --- HEADER --- */}
                     <header className="p-5 border-b border-slate-800 glass sticky top-0 z-[100]">
                         <div className="max-w-xl mx-auto flex justify-between items-center">
                             <div>
-                                <h1 className="brand-font text-blue-500 text-lg font-black leading-none">NTG GROUP</h1>
-                                <p className="text-[8px] font-bold text-slate-500 tracking-[0.4em] uppercase">Intel Division • Command Center</p>
+                                <h1 className="brand-font text-blue-500 text-lg font-black leading-none uppercase">NTG GROUP</h1>
+                                <p className="text-[8px] font-bold text-slate-500 tracking-[0.4em] uppercase mt-1 italic">Intel Division System</p>
                             </div>
                             <div className="flex items-center gap-2">
                                 <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_#10b981]"></span>
-                                <span className="text-[9px] font-black uppercase text-slate-400">Secure Node</span>
+                                <span className="text-[9px] font-black uppercase text-slate-400 tracking-tighter">Node Secure</span>
                             </div>
                         </div>
                     </header>
 
-                    {/* --- MAIN CONTENT --- */}
                     <main className="flex-1 p-5 max-w-xl mx-auto w-full">
-                        {activeTab === 'intel' && <IntelTab />}
-                        {activeTab === 'projects' && (
-                            <ProjectsTab 
-                                projects={projects} 
-                                isAdding={isAddingProject} 
-                                setIsAdding={setIsAddingProject} 
-                            />
+                        {activeProject ? (
+                            <ProjectDashboard project={activeProject} onExit={() => setActiveProject(null)} />
+                        ) : (
+                            <>
+                                {activeTab === 'intel' && <IntelTab />}
+                                {activeTab === 'projects' && <ProjectsTab projects={projects} isAdding={isAddingProject} setIsAdding={setIsAddingProject} onLaunch={handleLaunch} onSelect={setActiveProject} />}
+                                {activeTab === 'tools' && <ToolsTab />}
+                                {activeTab === 'business' && <BusinessTab />}
+                            </>
                         )}
-                        {activeTab === 'tools' && <ToolsTab />}
-                        {activeTab === 'business' && <BusinessTab />}
                     </main>
 
-                    {/* --- BOTTOM NAV --- */}
-                    <nav className="fixed bottom-0 left-0 right-0 glass border-t border-slate-800 flex justify-around p-4 z-[100]">
-                        <NavButton active={activeTab==='intel'} icon="fa-tower-broadcast" label="Intel" onClick={()=>setActiveTab('intel')} />
-                        <NavButton active={activeTab==='projects'} icon="fa-folder-tree" label="Projects" onClick={()=>setActiveTab('projects')} />
-                        <NavButton active={activeTab==='tools'} icon="fa-toolbox" label="Tools" onClick={()=>setActiveTab('tools')} />
-                        <NavButton active={activeTab==='business'} icon="fa-crown" label="Mykonos" onClick={()=>setActiveTab('business')} />
-                    </nav>
+                    {!activeProject && (
+                        <nav className="fixed bottom-0 left-0 right-0 glass border-t border-slate-800 flex justify-around p-4 z-[100]">
+                            <NavButton active={activeTab==='intel'} icon="fa-tower-broadcast" label="Intel" onClick={()=>setActiveTab('intel')} />
+                            <NavButton active={activeTab==='projects'} icon="fa-folder-tree" label="Projects" onClick={()=>setActiveTab('projects')} />
+                            <NavButton active={activeTab==='tools'} icon="fa-toolbox" label="Tools" onClick={()=>setActiveTab('tools')} />
+                            <NavButton active={activeTab==='business'} icon="fa-crown" label="Mykonos" onClick={()=>setActiveTab('business')} />
+                        </nav>
+                    )}
                 </div>
             );
         }
 
-        // --- 1. INTEL TAB (SEPARATION OF CASES) ---
+        // --- 1. INTEL TAB (Legal Cases) ---
         function IntelTab() {
             return (
                 <div className="space-y-6 animate-fadeIn">
                     <h2 className="brand-font text-blue-500 text-xs border-l-4 border-blue-600 pl-3">ACTIVE LEGAL CASES</h2>
                     
-                    {/* CASE A: NAFTOCEMENT IV */}
-                    <div className="bg-slate-900 rounded-3xl p-6 glow-blue relative overflow-hidden">
+                    <div className="bg-slate-900/80 rounded-3xl p-6 glow-blue relative overflow-hidden">
                         <div className="scan-line"></div>
-                        <div className="flex justify-between items-start mb-4">
-                            <span className="text-[10px] bg-blue-900/50 text-blue-400 px-3 py-1 rounded-full font-bold uppercase tracking-widest">Case A: Asset Trailing</span>
-                            <i className="fa-solid fa-anchor text-blue-500"></i>
-                        </div>
-                        <h3 className="brand-font text-sm font-black mb-2 uppercase italic text-blue-100">Naftocement IV</h3>
+                        <h3 className="brand-font text-xs font-black text-blue-400 uppercase mb-3 italic">Case A: Naftocement IV</h3>
                         <p className="text-[11px] text-slate-400 leading-relaxed mb-4">
-                            Ο Agent σκανάρει: Vietnam Registries & IMO History. Εντοπισμός μεταβίβασης ιδιοκτησίας και ίχνη AIS στην περιοχή του Βιετνάμ.
+                            Asset Trailing: Monitoring Vietnam Registries. Εντοπισμός ύποπτων ιχνηλατήσεων AIS στην περιοχή του Βιετνάμ.
                         </p>
-                        <div className="flex gap-2">
-                            <button className="flex-1 bg-slate-800 text-[9px] font-bold py-2 rounded-xl border border-blue-900/50 uppercase tracking-tighter hover:bg-blue-900/20 transition-all">Download Evidence</button>
-                            <button className="flex-1 bg-blue-600 text-[9px] font-bold py-2 rounded-xl uppercase tracking-tighter">Live AIS Track</button>
-                        </div>
+                        <button className="w-full bg-blue-900/30 py-2 rounded-xl text-[9px] font-black uppercase border border-blue-500/30">Download AIS Evidence</button>
                     </div>
 
-                    {/* CASE B: TERME SHIPYARD */}
-                    <div className="bg-slate-900 rounded-3xl p-6 glow-red relative overflow-hidden">
-                        <div className="flex justify-between items-start mb-4">
-                            <span className="text-[10px] bg-red-900/50 text-red-400 px-3 py-1 rounded-full font-bold uppercase tracking-widest">Case B: 40M Dispute</span>
-                            <i className="fa-solid fa-gavel text-red-500"></i>
-                        </div>
-                        <h3 className="brand-font text-sm font-black mb-2 uppercase italic text-red-100">Terme Shipyard Board</h3>
-                        <div className="space-y-3 mt-4">
+                    <div className="bg-slate-900/80 rounded-3xl p-6 glow-red">
+                        <h3 className="brand-font text-xs font-black text-red-500 uppercase mb-3 italic">Case B: Terme Shipyard (40M)</h3>
+                        <div className="space-y-3">
                             {['Tugrul Karaca', 'Emir Ozturk', 'Erkan Zorlu'].map(name => (
                                 <div key={name} className="flex justify-between items-center bg-black/40 p-3 rounded-xl border border-red-900/20">
                                     <span className="text-xs font-bold text-slate-300">{name}</span>
-                                    <span className="text-[8px] font-black text-red-500 uppercase tracking-widest animate-pulse">Monitoring Registries</span>
+                                    <span className="text-[8px] font-black text-red-500 uppercase tracking-widest animate-pulse">Monitoring Assets</span>
                                 </div>
                             ))}
                         </div>
-                        <p className="text-[10px] text-slate-500 mt-4 border-t border-slate-800 pt-3">
-                            Deep Scan: Turkish Registry & Relative Assets. Στόχος: Εντοπισμός περιουσιακών στοιχείων για την κάλυψη της διαφοράς.
-                        </p>
                     </div>
                 </div>
             );
         }
 
-        // --- 2. PROJECTS TAB (ACTIVATION & FORM) ---
-        function ProjectsTab({ projects, isAdding, setIsAdding }) {
-            const services = [
-                { id: 'safety', label: 'Safety Division: Π.Δ. 70/90' },
-                { id: 'utm', label: 'UTM: Hull Gauging' },
-                { id: 'e1', label: 'Load Test ε1: Cargo Gear' },
-                { id: 'e2', label: 'Load Test ε2: Means of Access' },
-                { id: 'e3', label: 'Load Test ε3: Winches BHC' },
-                { id: 'e4', label: 'Load Test ε4: Ramps/Stoppers' },
-                { id: 'e5', label: 'Load Test ε5: Bollard Pull' }
-            ];
+        // --- 2. PROJECTS TAB (Full Launch Activation) ---
+        function ProjectsTab({ projects, isAdding, setIsAdding, onLaunch, onSelect }) {
+            const [name, setName] = useState('');
+            const [sel, setSel] = useState([]);
+            const services = ["Safety Division: Π.Δ. 70/90", "UTM: Hull Gauging", "Load Test ε1: Cargo Gear", "Load Test ε2: Means of Access", "Load Test ε3: Winches BHC", "Load Test ε4: Ramps/Stoppers", "Load Test ε5: Bollard Pull"];
+
+            const toggle = (s) => setSel(p => p.includes(s) ? p.filter(i => i !== s) : [...p, s]);
 
             return (
                 <div className="space-y-6">
                     <div className="flex justify-between items-center">
-                        <h2 className="brand-font text-blue-500 text-xs border-l-4 border-blue-600 pl-3 uppercase">Maritime Operations</h2>
-                        <button 
-                            onClick={() => setIsAdding(true)} 
-                            className="w-10 h-10 bg-emerald-600 rounded-full flex items-center justify-center text-white shadow-lg active:scale-90 transition-all"
-                        >
-                            <i className="fa-solid fa-plus"></i>
-                        </button>
+                        <h2 className="brand-font text-blue-500 text-xs border-l-4 border-blue-600 pl-3 uppercase italic tracking-widest">Active Projects</h2>
+                        {!isAdding && <button onClick={() => setIsAdding(true)} className="w-10 h-10 bg-emerald-600 rounded-full flex items-center justify-center text-white shadow-lg active:scale-90 transition-all"><i className="fa-solid fa-plus"></i></button>}
                     </div>
-
                     {isAdding ? (
-                        <div className="bg-slate-900 p-6 rounded-3xl border border-slate-800 space-y-6 animate-slideIn">
-                            <div className="flex justify-between items-center border-b border-slate-800 pb-3">
-                                <h3 className="brand-font text-[10px] text-emerald-500 uppercase">Δημιουργία Νέου Έργου</h3>
-                                <button onClick={()=>setIsAdding(false)} className="text-slate-500 text-xs"><i className="fa-solid fa-xmark"></i></button>
+                        <div className="bg-slate-900 p-6 rounded-3xl border border-slate-800 space-y-4 animate-slideIn">
+                            <input className="w-full bg-slate-800 p-4 rounded-2xl text-sm border border-slate-700 outline-none focus:border-emerald-500" placeholder="Ship Name (e.g. MT FELIX)" value={name} onChange={(e)=>setName(e.target.value)} />
+                            <div className="space-y-2 max-h-64 overflow-y-auto pr-2">
+                                {services.map(s => (
+                                    <label key={s} className="flex items-center gap-3 bg-slate-800/50 p-4 rounded-2xl cursor-pointer hover:bg-slate-800 transition-colors">
+                                        <input type="checkbox" checked={sel.includes(s)} onChange={()=>toggle(s)} className="w-4 h-4 accent-emerald-500" />
+                                        <span className="text-xs font-bold text-slate-300">{s}</span>
+                                    </label>
+                                ))}
                             </div>
-                            
-                            <div className="space-y-4">
-                                <input className="w-full bg-slate-800 p-4 rounded-2xl text-sm border border-slate-700 focus:border-emerald-500 outline-none" placeholder="Όνομα Πλοίου / Project ID" />
-                                <div className="space-y-2">
-                                    <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Επιλογή Υπηρεσιών</p>
-                                    <div className="grid grid-cols-1 gap-2">
-                                        {services.map(s => (
-                                            <label key={s.id} className="flex items-center gap-3 bg-slate-800/50 p-4 rounded-2xl cursor-pointer hover:bg-slate-800 transition-colors">
-                                                <input type="checkbox" className="w-4 h-4 rounded border-slate-700 bg-slate-900 text-emerald-500" />
-                                                <span className="text-xs font-bold text-slate-300">{s.label}</span>
-                                            </label>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <button className="w-full bg-emerald-600 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-emerald-900/20">
-                                Launch Project Hub
-                            </button>
+                            <button onClick={()=>onLaunch(name, sel)} className="w-full bg-emerald-600 py-4 rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] shadow-xl active:scale-95 transition-all">Launch Project Hub</button>
                         </div>
                     ) : (
                         <div className="space-y-3">
                             {projects.map(p => (
-                                <div key={p.id} className="bg-slate-900 p-5 rounded-3xl border border-slate-800 flex justify-between items-center active:scale-95 transition-all">
-                                    <div>
-                                        <h4 className="font-bold text-sm text-slate-200">{p.name}</h4>
-                                        <div className="flex flex-wrap gap-1 mt-2">
-                                            {p.services.map(s => <span key={s} className="text-[8px] bg-blue-900/30 text-blue-400 px-2 py-0.5 rounded font-black uppercase tracking-tighter">{s}</span>)}
-                                        </div>
-                                    </div>
-                                    <i className="fa-solid fa-chevron-right text-slate-700 text-xs"></i>
+                                <div key={p.id} onClick={() => onSelect(p)} className="bg-slate-900 p-5 rounded-3xl border border-slate-800 flex justify-between items-center cursor-pointer hover:border-blue-500/50 transition-all active:scale-95">
+                                    <div><h4 className="font-bold text-sm text-slate-200">{p.name}</h4><p className="text-[9px] text-slate-500 uppercase font-black mt-1">{p.services.length} Services • {p.date}</p></div>
+                                    <i className="fa-solid fa-chevron-right text-slate-700"></i>
                                 </div>
                             ))}
                         </div>
@@ -185,12 +149,49 @@
             );
         }
 
-        function ToolsTab() {
+        // --- 3. PROJECT DASHBOARD (The Next Step) ---
+        function ProjectDashboard({ project, onExit }) {
             return (
-                <div className="space-y-6">
+                <div className="space-y-6 animate-fadeIn">
+                    <button onClick={onExit} className="text-slate-500 text-xs flex items-center gap-2 brand-font uppercase tracking-widest"><i className="fa-solid fa-chevron-left text-[10px]"></i> Close Hub</button>
+                    <div className="bg-slate-900 p-6 rounded-3xl border-2 border-emerald-500/20 glow-blue">
+                        <h2 className="brand-font text-blue-400 text-lg mb-1">{project.name}</h2>
+                        <p className="text-[10px] text-slate-500 uppercase font-black mb-4">Command Center / Active Project</p>
+                        <div className="flex flex-wrap gap-2">
+                            {project.services.map(s => <span key={s} className="text-[8px] bg-emerald-900/30 text-emerald-400 px-2 py-1 rounded-lg border border-emerald-500/20 font-black uppercase">{s}</span>)}
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-1 gap-3">
+                        <ActionButton icon="fa-file-signature" label="Daily Progress Report" color="bg-blue-600" />
+                        <ActionButton icon="fa-shield-halved" label="Safety Risk Assessment" color="bg-red-700" />
+                        <ActionButton icon="fa-camera" label="Capture Site Photo" color="bg-slate-800" />
+                        <ActionButton icon="fa-file-export" label="Generate Final Report" color="bg-emerald-600" />
+                    </div>
+                </div>
+            );
+        }
+
+        // --- 4. SMART TOOLS (Restored) ---
+        function ToolsTab() {
+            const tools = [
+                { icon: 'fa-thermometer-half', label: 'F ↔ C', sub: 'Temperature' },
+                { icon: 'fa-ruler-horizontal', label: 'IN ↔ MM', sub: 'Thickness' },
+                { icon: 'fa-weight-hanging', label: 'IRON CALC', sub: 'Steel Weight' },
+                { icon: 'fa-map-location-dot', label: 'SEA DIST.', sub: 'Port Distance' },
+                { icon: 'fa-coins', label: 'FX RATES', sub: 'Live Currency' },
+                { icon: 'fa-box-open', label: 'INVENTORY', sub: 'Calibration' }
+            ];
+            return (
+                <div className="space-y-6 animate-fadeIn">
                     <h2 className="brand-font text-blue-500 text-xs border-l-4 border-blue-600 pl-3 uppercase">Smart Toolbox</h2>
-                    <div className="p-10 text-center text-slate-600 text-[10px] border-2 border-dashed border-slate-800 rounded-3xl">
-                        Calibration & Converter Modules Ready for Sync
+                    <div className="grid grid-cols-2 gap-4">
+                        {tools.map(t => (
+                            <div key={t.label} className="bg-slate-900/50 border border-slate-800 p-6 rounded-3xl flex flex-col items-center text-center shadow-lg active:scale-95 transition-all">
+                                <i className={`fa-solid ${t.icon} text-blue-500 text-xl mb-3`}></i>
+                                <span className="text-[10px] font-black uppercase tracking-widest">{t.label}</span>
+                                <span className="text-[8px] text-slate-600 uppercase mt-1 font-bold">{t.sub}</span>
+                            </div>
+                        ))}
                     </div>
                 </div>
             );
@@ -198,26 +199,32 @@
 
         function BusinessTab() {
             return (
-                <div className="space-y-6">
-                    <h2 className="brand-font text-yellow-600 text-xs border-l-4 border-yellow-600 pl-3 uppercase tracking-[0.2em]">Luxury Business Unit</h2>
-                    <div className="bg-black/40 border border-yellow-600/30 p-6 rounded-3xl">
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="brand-font text-[10px] text-yellow-600 uppercase">Live in Mykonos</h3>
-                            <i className="fa-solid fa-crown text-yellow-600"></i>
-                        </div>
-                        <p className="text-xs text-slate-500 italic">"Premium Management Hub active. Monitoring seasonal occupancy."</p>
+                <div className="space-y-6 animate-fadeIn">
+                    <h2 className="brand-font text-yellow-600 text-xs border-l-4 border-yellow-600 pl-3 uppercase italic tracking-widest">Luxury Estate Management</h2>
+                    <div className="bg-black/40 border border-yellow-600/30 p-8 rounded-[40px] text-center">
+                        <i className="fa-solid fa-crown text-yellow-600 text-3xl mb-4"></i>
+                        <h3 className="brand-font text-white text-xs mb-2">LIVE IN MYKONOS</h3>
+                        <p className="text-[10px] text-slate-500 italic uppercase">Premium Concierge & Yield Hub Active</p>
                     </div>
                 </div>
             );
         }
 
-        // --- UI HELPERS ---
+        // --- HELPERS ---
         function NavButton({ active, icon, label, onClick }) {
             return (
                 <button onClick={onClick} className={`flex flex-col items-center gap-1 transition-all ${active ? 'text-blue-500 scale-110' : 'text-slate-600 opacity-50'}`}>
                     <i className={`fa-solid ${icon} text-lg`}></i>
                     <span className="text-[8px] font-black uppercase tracking-widest">{label}</span>
-                    {active && <div className="w-1 h-1 bg-blue-500 rounded-full mt-1"></div>}
+                </button>
+            );
+        }
+
+        function ActionButton({ icon, label, color }) {
+            return (
+                <button className={`${color} p-5 rounded-2xl flex justify-between items-center border border-white/5 active:scale-95 transition-all shadow-xl`}>
+                    <span className="text-xs font-black uppercase tracking-widest">{label}</span>
+                    <i className={`fa-solid ${icon} text-sm opacity-80`}></i>
                 </button>
             );
         }

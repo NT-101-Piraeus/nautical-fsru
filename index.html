@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="el"><head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NTG COMMAND | MANAGER HUB</title>
+    <title>NTG COMMAND | MANAGER HUB V44.1</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -30,7 +30,6 @@
             useEffect(() => {
                 if (isAuth) {
                     fetchInitialData();
-                    // REALTIME SUBSCRIPTION
                     const channel = _supabase.channel('realtime-stream')
                         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'ntg_logbook' }, payload => {
                             setActivities(prev => [ { ...payload.new, type: 'SURVEYOR' }, ...prev ]);
@@ -45,7 +44,7 @@
 
             async function fetchInitialData() {
                 const { data: logs } = await _supabase.from('ntg_logbook').select('*').order('created_at', { ascending: false }).limit(5);
-                const { data: leads } = await _supabase.from('ntg_merchant_leads').select('*').limit(5);
+                const { data: leads } = await _supabase.from('ntg_merchant_leads').select('*').order('created_at', { ascending: false }).limit(5);
                 const combined = [
                     ...(logs || []).map(l => ({ ...l, type: 'SURVEYOR' })),
                     ...(leads || []).map(l => ({ ...l, type: 'HUNTER' }))
@@ -56,12 +55,12 @@
             async function sendDecision() {
                 if(!decision) return;
                 const { error } = await _supabase.from('ntg_decisions').insert([{ text: decision, priority: true }]);
-                if(!error) { alert("COMMAND SENT TO FLEET"); setDecision(""); }
+                if(!error) { alert("COMMAND BROADCASTED"); setDecision(""); }
             }
 
             if (!isAuth) return (
                 <div className="h-screen flex items-center justify-center p-6 bg-[#020617]">
-                    <form onSubmit={(e)=>{e.preventDefault(); if(e.target.p.value==='NT2026'){sessionStorage.setItem('ntg_auth','true');setIsAuth(true)}}} className="glass p-10 rounded-[40px] w-full max-w-sm text-center border border-blue-500/20">
+                    <form onSubmit={(e)=>{e.preventDefault(); if(e.target.p.value==='NT2026'){sessionStorage.setItem('ntg_auth','true');setIsAuth(true)}}} className="glass p-10 rounded-[40px] w-full max-w-sm text-center border border-blue-500/20 shadow-2xl">
                         <h1 className="brand text-blue-500 text-2xl mb-8 uppercase italic leading-none">NTG COMMAND</h1>
                         <input name="p" type="password" autoFocus className="w-full bg-slate-900 border border-slate-800 p-5 rounded-3xl mb-4 text-center text-white outline-none text-2xl" placeholder="••••" />
                         <button className="w-full bg-blue-600 py-5 rounded-3xl font-black text-xs uppercase shadow-xl">Identify</button>
@@ -71,13 +70,13 @@
 
             if (showManager) return (
                 <div className="max-w-xl mx-auto p-5 py-10 animate-fadeIn">
-                    <header className="flex justify-between items-center mb-8">
-                        <button onClick={()=>setShowManager(false)} className="text-slate-500 text-xs font-black uppercase">← HUB</button>
+                    <header className="flex justify-between items-center mb-10">
+                        <button onClick={()=>setShowManager(false)} className="text-slate-500 text-xs font-black uppercase tracking-widest">← Back</button>
                         <h1 className="brand text-blue-400 text-xl font-black italic">COMMAND CENTER</h1>
                     </header>
 
                     <div className="space-y-4 mb-32">
-                        <h3 className="brand text-[10px] text-slate-500 uppercase tracking-[0.3em] mb-4">Agent Activity Stream</h3>
+                        <h3 className="brand text-[10px] text-slate-500 uppercase tracking-[0.3em] mb-6">Live Activity Stream</h3>
                         {activities.map((act, i) => (
                             <div key={i} className={`glass p-6 rounded-[35px] stream-item border border-white/5 ${act.status === 'BLOCK' ? 'border-block' : ''}`}>
                                 <div className="flex justify-between items-start mb-2">
@@ -86,9 +85,15 @@
                                     </span>
                                     <p className="text-[9px] text-slate-600 font-bold uppercase">{new Date(act.created_at).toLocaleTimeString()}</p>
                                 </div>
-                                <h4 className="font-black text-sm uppercase text-white">{act.ship_name || "Unknown Vessel"}</h4>
-                                <p className="text-xs text-slate-400 mt-1">
-                                    {act.type === 'SURVEYOR' ? `New inspection report received from ${act.port}.` : `High Probability Lead (Score: ${act.lead_score}%).`}
+                                <div className="flex justify-between items-end">
+                                    <div>
+                                        <h4 className="font-black text-sm uppercase text-white leading-none">{act.ship_name}</h4>
+                                        {act.ship_class && <p className="text-[9px] text-blue-400 font-bold mt-2 uppercase tracking-widest italic">Class: {act.ship_class}</p>}
+                                    </div>
+                                    {act.type === 'HUNTER' && <div className="text-right"><p className="text-[8px] text-slate-500 uppercase">Lead Score</p><p className="text-sm font-black text-emerald-500">{act.lead_score}%</p></div>}
+                                </div>
+                                <p className="text-xs text-slate-400 mt-3 italic">
+                                    {act.type === 'SURVEYOR' ? `Report from ${act.port}: Inspection data received.` : `Vessel identified at Piraeus range.`}
                                 </p>
                             </div>
                         ))}
@@ -96,8 +101,8 @@
 
                     <div className="fixed bottom-0 left-0 right-0 p-6 glass border-t border-white/10 z-50">
                         <div className="max-w-xl mx-auto flex gap-2">
-                            <input value={decision} onChange={(e)=>setDecision(e.target.value)} className="flex-1 bg-slate-900 border border-white/10 rounded-2xl p-4 text-xs font-bold" placeholder="Broadcasting decision..." />
-                            <button onClick={sendDecision} className="bg-red-600 w-14 h-14 rounded-2xl flex items-center justify-center text-xl shadow-xl"><i className="fa-solid fa-paper-plane"></i></button>
+                            <input value={decision} onChange={(e)=>setDecision(e.target.value)} className="flex-1 bg-slate-900 border border-white/10 rounded-2xl p-4 text-xs font-bold" placeholder="Broadcast decision to fleet..." />
+                            <button onClick={sendDecision} className="bg-red-600 w-14 h-14 rounded-2xl flex items-center justify-center text-xl shadow-xl active:scale-90 transition-all"><i className="fa-solid fa-paper-plane"></i></button>
                         </div>
                     </div>
                 </div>
@@ -105,18 +110,18 @@
 
             return (
                 <div className="max-w-xl mx-auto p-5 py-10 animate-fadeIn text-center">
-                    <header className="mb-16"><h1 className="brand text-blue-500 text-3xl font-black italic uppercase">NTG HUB</h1></header>
+                    <header className="mb-20"><h1 className="brand text-blue-500 text-3xl font-black italic uppercase">NTG HUB</h1></header>
                     <div className="grid grid-cols-1 gap-6">
                         <a href="safety_ships.html" className="glass p-10 rounded-[50px] flex items-center gap-8 border border-white/5 active:scale-95 transition-all shadow-2xl text-left">
                             <div className="w-16 h-16 rounded-2xl bg-red-600/20 flex items-center justify-center text-red-500 text-3xl"><i className="fa-solid fa-user-shield"></i></div>
-                            <div><h2 className="brand text-sm text-white uppercase italic leading-none">Safety Officer</h2><p className="text-[10px] text-slate-500 font-bold uppercase mt-2 tracking-widest">Active Fleet Audits</p></div>
+                            <div><h2 className="brand text-sm text-white uppercase italic leading-none">Safety Officer</h2><p className="text-[10px] text-slate-500 font-bold uppercase mt-2">Active Fleet Audits</p></div>
                         </a>
                         <div onClick={() => {
-                            const val = prompt("ENTER 4-DIGIT PIN");
+                            const val = prompt("ENTER MANAGER PIN");
                             if(val === "1234") setShowManager(true);
                         }} className="glass p-10 rounded-[50px] flex items-center gap-8 border border-blue-500/20 active:scale-95 transition-all shadow-2xl cursor-pointer text-left">
                             <div className="w-16 h-16 rounded-2xl bg-blue-600/20 flex items-center justify-center text-blue-400 text-3xl"><i className="fa-solid fa-tower-observation"></i></div>
-                            <div><h2 className="brand text-sm text-white uppercase italic leading-none">Command Center</h2><p className="text-[10px] text-slate-400 font-bold uppercase mt-2 italic">Restricted - PIN Required</p></div>
+                            <div><h2 className="brand text-sm text-white uppercase italic leading-none">Command Center</h2><p className="text-[10px] text-slate-400 font-bold uppercase mt-2 italic">Manager Restricted Access</p></div>
                         </div>
                     </div>
                 </div>

@@ -11,62 +11,82 @@
         body { font-family: 'Inter', sans-serif; background-color: #020617; color: white; margin: 0; }
         .brand { font-family: 'Orbitron', sans-serif; color: #ef4444; }
         .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.05); }
-        .category-card { transition: all 0.3s ease; border: 1px solid rgba(255,255,255,0.05); }
-        .category-card.active { border-color: #ef4444; background: rgba(239, 68, 68, 0.1); }
     </style></head><body>
     <div id="root"></div>
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        const WORK_CATEGORIES = [
-            { id: 1, title: "Προπαρασκευαστικές & Καθαρισμοί", tasks: ["Tank Cleaning", "Gas-Freeing", "Sludge Removal", "Hydro-blasting"] },
-            { id: 2, title: "Θερμές Εργασίες (Hot Works)", tasks: ["Ηλεκτροσυγκόλληση", "Οξυγονοκοπή", "Τρόχισμα", "Προθέρμανση"] },
-            { id: 3, title: "Ελασματουργικές / Σωληνουργικές", tasks: ["Steel Renewal", "Repair Piping", "Μονώσεις"] },
-            { id: 4, title: "Μηχανολογικές Εργασίες", tasks: ["Κύρια Μηχανή", "Άξονες/Προπέλες", "Βοηθητικά", "Πηδάλια"] },
-            { id: 5, title: "Επιφανειακή Επεξεργασία", tasks: ["Sandblasting", "Painting", "Scraping"] },
-            { id: 6, title: "Ηλεκτρολογικές Εργασίες", tasks: ["Καλωδιώσεις", "Πίνακες", "Ηλεκτροκινητήρες"] },
-            { id: 7, title: "Βοηθητικές Εργασίες", tasks: ["Scaffolding", "Crane Ops", "Fire Watch"] }
+        const CATS = [
+            "Προπαρασκευαστικές & Καθαρισμοί",
+            "Θερμές Εργασίες (Hot Works)",
+            "Ελασματουργικές / Σωληνουργικές",
+            "Μηχανολογικές Εργασίες",
+            "Επιφανειακή Επεξεργασία",
+            "Ηλεκτρολογικές Εργασίες",
+            "Βοηθητικές Εργασίες"
         ];
 
         function SafetyApp() {
-            const [view, setView] = useState('list'); // list, new, project
-            const [projects, setProjects] = useState(() => JSON.parse(localStorage.getItem('ntg_safety_projects')) || []);
-            const [activeProject, setActiveProject] = useState(null);
+            const [view, setView] = useState('list');
+            const [projects, setProjects] = useState(() => JSON.parse(localStorage.getItem('ntg_safety_v2')) || []);
+            const [activeId, setActiveId] = useState(null);
 
+            // Sync με LocalStorage
             useEffect(() => {
-                localStorage.setItem('ntg_safety_projects', JSON.stringify(projects));
+                localStorage.setItem('ntg_safety_v2', JSON.stringify(projects));
             }, [projects]);
 
-            const createProject = (e) => {
+            const activeP = projects.find(p => p.id === activeId);
+
+            const createP = (e) => {
                 e.preventDefault();
-                const formData = new FormData(e.target);
                 const newP = {
                     id: Date.now(),
-                    ship: formData.get('ship'),
-                    start: formData.get('start'),
-                    categories: [],
-                    logs: []
+                    ship: e.target.ship.value.toUpperCase(),
+                    start: e.target.start.value,
+                    selectedCats: [],
+                    diary: ''
                 };
                 setProjects([newP, ...projects]);
-                setActiveProject(newP);
+                setActiveId(newP.id);
                 setView('project');
             };
 
+            const toggleCat = (catName) => {
+                const updated = projects.map(p => {
+                    if (p.id === activeId) {
+                        const hasCat = p.selectedCats.includes(catName);
+                        return {
+                            ...p,
+                            selectedCats: hasCat 
+                                ? p.selectedCats.filter(c => c !== catName)
+                                : [...p.selectedCats, catName]
+                        };
+                    }
+                    return p;
+                });
+                setProjects(updated);
+            };
+
+            const updateDiary = (text) => {
+                setProjects(projects.map(p => p.id === activeId ? {...p, diary: text} : p));
+            };
+
             return (
-                <div className="max-w-xl mx-auto p-4 pb-20">
+                <div className="max-w-xl mx-auto p-4 pb-24">
                     <header className="flex justify-between items-center py-6 border-b border-slate-800 mb-6">
-                        <h1 className="brand text-sm uppercase italic">Safety Officer</h1>
+                        <h1 className="brand text-sm uppercase italic">Safety Ships</h1>
                         <a href="index.html" className="text-slate-500"><i className="fa-solid fa-house"></i></a>
                     </header>
 
                     {view === 'list' && (
                         <div className="space-y-4">
-                            <button onClick={() => setView('new')} className="w-full bg-red-600 p-5 rounded-[30px] font-bold text-xs uppercase tracking-widest shadow-lg shadow-red-900/20">+ Νέο Έργο (Π.Δ. 70/90)</button>
+                            <button onClick={() => setView('new')} className="w-full bg-red-600 p-5 rounded-[30px] font-bold text-xs uppercase shadow-xl">+ Νέο Έργο</button>
                             {projects.map(p => (
-                                <div key={p.id} onClick={() => { setActiveProject(p); setView('project'); }} className="glass p-6 rounded-[35px] flex justify-between items-center active:scale-95 transition-all">
+                                <div key={p.id} onClick={() => { setActiveId(p.id); setView('project'); }} className="glass p-6 rounded-[35px] flex justify-between items-center">
                                     <div>
                                         <h3 className="font-bold text-white uppercase">{p.ship}</h3>
-                                        <p className="text-[10px] text-slate-500 uppercase mt-1">Έναρξη: {p.start}</p>
+                                        <p className="text-[10px] text-slate-500 uppercase">{p.start}</p>
                                     </div>
                                     <i className="fa-solid fa-chevron-right text-slate-700"></i>
                                 </div>
@@ -75,46 +95,45 @@
                     )}
 
                     {view === 'new' && (
-                        <form onSubmit={createProject} className="animate-fadeIn space-y-6">
-                            <button onClick={() => setView('list')} className="text-slate-500 text-xs uppercase font-bold">← Επιστροφή</button>
-                            <h2 className="brand text-lg uppercase">Δημιουργία Έργου</h2>
-                            <div className="space-y-4">
-                                <input name="ship" required className="w-full bg-slate-900 border border-slate-800 p-5 rounded-3xl outline-none focus:border-red-500 uppercase font-bold" placeholder="Όνομα Πλοίου" />
-                                <input name="start" type="date" required className="w-full bg-slate-900 border border-slate-800 p-5 rounded-3xl outline-none focus:border-red-500" />
-                            </div>
-                            <button className="w-full bg-red-600 p-5 rounded-3xl font-bold uppercase">Έναρξη Εποπτείας</button>
+                        <form onSubmit={createP} className="space-y-6">
+                            <input name="ship" required className="w-full bg-slate-900 border border-slate-800 p-5 rounded-3xl outline-none uppercase font-bold" placeholder="Όνομα Πλοίου" />
+                            <input name="start" type="date" required className="w-full bg-slate-900 border border-slate-800 p-5 rounded-3xl outline-none" />
+                            <button className="w-full bg-red-600 p-5 rounded-3xl font-bold uppercase">Έναρξη</button>
                         </form>
                     )}
 
-                    {view === 'project' && activeProject && (
-                        <div className="animate-fadeIn space-y-6">
-                            <button onClick={() => setView('list')} className="text-slate-500 text-xs uppercase font-bold">← Λίστα Έργων</button>
+                    {view === 'project' && activeP && (
+                        <div className="space-y-6">
+                            <button onClick={() => setView('list')} className="text-slate-500 text-xs uppercase font-bold">← Επιστροφή</button>
                             <div className="bg-red-600/10 border border-red-500/20 p-6 rounded-[40px]">
-                                <h2 className="brand text-xl uppercase tracking-tighter">{activeProject.ship}</h2>
-                                <p className="text-[10px] text-red-500 font-bold uppercase mt-1 tracking-widest">Active Safety Supervision</p>
+                                <h2 className="brand text-xl uppercase tracking-tighter">{activeP.ship}</h2>
+                                <p className="text-[10px] text-red-500 font-bold uppercase mt-1">Supervision Active</p>
                             </div>
 
                             <div className="space-y-3">
-                                <h3 className="text-[10px] font-black text-slate-500 uppercase ml-2 tracking-[0.3em]">Κατηγορίες Εργασιών</h3>
-                                {WORK_CATEGORIES.map(cat => (
-                                    <div key={cat.id} className="glass p-5 rounded-[30px] flex justify-between items-center active:scale-95 transition-all">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-[10px] font-bold">{cat.id}</div>
-                                            <span className="text-xs font-bold text-slate-300">{cat.title}</span>
+                                <h3 className="text-[10px] font-black text-slate-500 uppercase ml-2 tracking-widest">Κατηγορίες Εργασιών</h3>
+                                {CATS.map((cat, idx) => (
+                                    <div 
+                                        key={idx} 
+                                        onClick={() => toggleCat(cat)}
+                                        className={`glass p-5 rounded-[30px] flex justify-between items-center transition-all cursor-pointer ${activeP.selectedCats.includes(cat) ? 'border-red-500 bg-red-500/10' : ''}`}
+                                    >
+                                        <span className={`text-xs font-bold ${activeP.selectedCats.includes(cat) ? 'text-white' : 'text-slate-400'}`}>{cat}</span>
+                                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${activeP.selectedCats.includes(cat) ? 'bg-red-500 border-red-500' : 'border-slate-700'}`}>
+                                            {activeP.selectedCats.includes(cat) && <i className="fa-solid fa-check text-[10px] text-white"></i>}
                                         </div>
-                                        <input type="checkbox" className="w-5 h-5 accent-red-600" />
                                     </div>
                                 ))}
                             </div>
 
-                            <div className="grid grid-cols-1 gap-3 pt-6">
-                                <button className="w-full bg-slate-800 p-5 rounded-2xl font-bold text-[10px] uppercase flex justify-between items-center" onClick={() => alert("Άνοιγμα Ημερολογίου...")}>
-                                    Ημερολόγιο Μέτρων Ασφαλείας <i className="fa-solid fa-book text-red-500"></i>
-                                </button>
-                                <button className="w-full bg-slate-800 p-5 rounded-2xl font-bold text-[10px] uppercase flex justify-between items-center" onClick={() => document.getElementById('cam').click()}>
-                                    Φωτογραφία Παράβασης <i className="fa-solid fa-camera text-red-500"></i>
-                                </button>
-                                <input type="file" id="cam" accept="image/*" capture="camera" className="hidden" />
+                            <div className="glass p-6 rounded-[35px]">
+                                <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">Ημερολόγιο Μέτρων</h3>
+                                <textarea 
+                                    className="w-full bg-transparent border-none outline-none text-sm h-48 text-slate-300" 
+                                    placeholder="Γράψτε εδώ τις παρατηρήσεις σας..."
+                                    value={activeP.diary}
+                                    onChange={(e) => updateDiary(e.target.value)}
+                                />
                             </div>
                         </div>
                     )}

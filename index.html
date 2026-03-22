@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NAUTICAL TECHNOLOGY GROUP | Intel Division</title>
+    <title>NTG COMMAND CENTER V12.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -12,13 +12,12 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=Inter:wght@400;700;900&display=swap');
-        .brand-font { font-family: 'Orbitron', sans-serif; letter-spacing: 2px; }
+        .brand-font { font-family: 'Orbitron', sans-serif; }
         body { font-family: 'Inter', sans-serif; background-color: #020617; color: #f8fafc; overflow-x: hidden; }
-        .glow-blue { box-shadow: 0 0 20px rgba(59, 130, 246, 0.2); }
-        .scanning-line { height: 2px; background: rgba(59, 130, 246, 0.4); width: 100%; position: absolute; animation: scan 3s infinite linear; }
-        @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
-        .animate-fadeIn { animation: fadeIn 0.3s ease-in; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(51, 65, 85, 0.5); }
+        .neon-border-blue { border: 1px solid rgba(59, 130, 246, 0.5); box-shadow: 0 0 15px rgba(59, 130, 246, 0.2); }
+        .neon-border-red { border: 1px solid rgba(239, 68, 68, 0.5); box-shadow: 0 0 15px rgba(239, 68, 68, 0.2); }
+        .animate-pulse-slow { animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
     </style>
 </head>
 <body>
@@ -28,46 +27,20 @@
         const { useState, useEffect } = React;
 
         function App() {
-            const [page, setPage] = useState('legal'); 
+            const [view, setView] = useState('intel'); 
             const [isLoggedIn, setIsLoggedIn] = useState(false);
             const [passcode, setPasscode] = useState('');
-
-            const handleLogin = (e) => {
-                e.preventDefault();
-                if (passcode === 'NT2026') setIsLoggedIn(true);
-                else alert("❌ Λάθος Κωδικός!");
-            };
-
-            const generatePDF = () => {
-                try {
-                    const { jsPDF } = window.jspdf;
-                    const doc = new jsPDF();
-                    doc.setFont("helvetica", "bold");
-                    doc.text("NAUTICAL TECHNOLOGY GROUP - FORENSIC REPORT", 10, 20);
-                    doc.setFontSize(10);
-                    doc.text("CASE: NAFTOCEMENT IV / AUGUST DISCREPANCIES", 10, 30);
-                    doc.text("TARGET: TERME SHIPYARD BOARD MEMBERS", 10, 35);
-                    doc.text("-------------------------------------------------------------", 10, 40);
-                    doc.text("STATUS: DARK AIS PERIODS DETECTED WITHIN YARD RADIUS.", 10, 50);
-                    doc.save("NTG_Forensic_Evidence.pdf");
-                } catch(e) { alert("PDF Error: Δοκιμάστε ξανά σε λίγο."); }
-            };
+            const [systemHealth, setSystemHealth] = useState('online');
 
             if (!isLoggedIn) {
                 return (
                     <div className="h-screen flex items-center justify-center bg-slate-950 p-6">
-                        <div className="bg-slate-900 p-8 rounded-3xl border border-slate-800 shadow-2xl w-full max-w-sm text-center">
-                            <h1 className="brand-font text-blue-500 text-xl font-black mb-1 italic">NTG HUB</h1>
-                            <p className="text-slate-500 mb-6 text-[9px] font-bold uppercase tracking-[0.3em]">Secure Intel Entry</p>
-                            <form onSubmit={handleLogin}>
-                                <input 
-                                    type="password" 
-                                    className="w-full bg-slate-800 border border-slate-700 p-4 rounded-2xl mb-4 text-center text-white outline-none focus:border-blue-500 text-xl"
-                                    placeholder="••••"
-                                    value={passcode}
-                                    onChange={(e) => setPasscode(e.target.value)}
-                                />
-                                <button className="w-full bg-blue-600 text-white py-4 rounded-2xl font-black uppercase tracking-widest shadow-lg active:scale-95 transition-all">Login</button>
+                        <div className="glass p-8 rounded-[2rem] neon-border-blue w-full max-w-sm text-center">
+                            <h1 className="brand-font text-blue-500 text-2xl font-black mb-1 tracking-tighter italic">NTG HUB V12</h1>
+                            <p className="text-slate-500 mb-8 text-[9px] font-bold uppercase tracking-[0.4em]">Nautical Technology Group</p>
+                            <form onSubmit={(e) => { e.preventDefault(); if(passcode==='NT2026') setIsLoggedIn(true); else alert('Error'); }}>
+                                <input type="password" value={passcode} onChange={(e)=>setPasscode(e.target.value)} className="w-full bg-slate-800 border border-slate-700 p-4 rounded-2xl mb-4 text-center text-white text-xl outline-none focus:border-blue-500" placeholder="••••" />
+                                <button className="w-full bg-blue-600 text-white py-4 rounded-2xl font-black uppercase tracking-widest active:scale-95 transition-all">Command Entry</button>
                             </form>
                         </div>
                     </div>
@@ -75,66 +48,73 @@
             }
 
             return (
-                <div className="min-h-screen flex flex-col pb-28">
-                    {/* TOP BRANDING */}
-                    <header className="p-6 border-b border-blue-900/30 bg-slate-900/90 backdrop-blur-xl sticky top-0 z-50 shadow-2xl">
-                        <div className="max-w-lg mx-auto text-center">
-                            <h1 className="brand-font text-blue-500 text-lg font-black uppercase">Nautical Technology Group</h1>
-                            <div className="flex justify-center items-center gap-2 mt-1">
-                                <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-ping"></span>
-                                <p className="text-[8px] font-bold text-slate-500 uppercase tracking-[0.4em]">Intel Division Online</p>
+                <div className="min-h-screen flex flex-col pb-24">
+                    {/* Header με System Health */}
+                    <header className="p-5 glass sticky top-0 z-50 flex justify-between items-center">
+                        <div>
+                            <h1 className="brand-font text-blue-500 text-sm font-black uppercase">NTG Intel Div.</h1>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                                <div className={`w-2 h-2 rounded-full ${systemHealth === 'online' ? 'bg-emerald-500' : 'bg-red-500'} animate-pulse`}></div>
+                                <span className="text-[8px] font-bold text-slate-500 uppercase">System {systemHealth}</span>
                             </div>
+                        </div>
+                        <div className="flex gap-3">
+                             <i className="fa-solid fa-wifi text-[10px] text-blue-500/50"></i>
+                             <i className="fa-solid fa-database text-[10px] text-blue-500/50"></i>
                         </div>
                     </header>
 
-                    {/* MAIN WORKSPACES */}
-                    <main className="flex-1 p-6 max-w-lg mx-auto w-full">
-                        {page === 'legal' && <LegalWorkspace onPdf={generatePDF} />}
-                        {page === 'marine' && <MarineWorkspace />}
-                        {page === 'intel' && <IntelWorkspace />}
+                    <main className="p-5 max-w-lg mx-auto w-full flex-1">
+                        {view === 'intel' && <IntelModule />}
+                        {view === 'projects' && <ProjectsModule />}
+                        {view === 'tools' && <ToolsModule />}
+                        {view === 'business' && <BusinessModule />}
                     </main>
 
-                    {/* BOTTOM NAVIGATION */}
-                    <nav className="fixed bottom-0 left-0 right-0 bg-slate-900/95 border-t border-blue-900/30 p-5 flex justify-around backdrop-blur-md z-50">
-                        <NavTab active={page==='legal'} icon="fa-shield-halved" label="Legal" onClick={()=>setPage('legal')} />
-                        <NavTab active={page==='marine'} icon="fa-ship" label="Marine" onClick={()=>setPage('marine')} />
-                        <NavTab active={page==='intel'} icon="fa-tower-observation" label="Intel" onClick={()=>setPage('intel')} />
+                    {/* Navigation Bar */}
+                    <nav className="fixed bottom-0 left-0 right-0 glass border-t border-slate-800 p-4 flex justify-around z-50">
+                        <NavBtn active={view==='intel'} icon="fa-tower-observation" label="Intel" onClick={()=>setView('intel')} />
+                        <NavBtn active={view==='projects'} icon="fa-diagram-project" label="Projects" onClick={()=>setView('projects')} />
+                        <NavBtn active={view==='tools'} icon="fa-screwdriver-wrench" label="Tools" onClick={()=>setView('tools')} />
+                        <NavBtn active={view==='business'} icon="fa-briefcase" label="Business" onClick={()=>setView('business')} />
                     </nav>
                 </div>
             );
         }
 
-        function NavTab({ active, icon, label, onClick }) {
+        function NavBtn({ active, icon, label, onClick }) {
             return (
                 <button onClick={onClick} className={`flex flex-col items-center gap-1 transition-all ${active ? 'text-blue-400 scale-110' : 'text-slate-600'}`}>
-                    <i className={`fa-solid ${icon} text-xl`}></i>
-                    <span className="text-[9px] font-black uppercase tracking-widest">{label}</span>
+                    <i className={`fa-solid ${icon} text-lg`}></i>
+                    <span className="text-[9px] font-black uppercase tracking-tighter">{label}</span>
                 </button>
             );
         }
 
-        function LegalWorkspace({ onPdf }) {
+        // --- MODULES ---
+
+        function IntelModule() {
             return (
                 <div className="space-y-6 animate-fadeIn">
-                    <h2 className="brand-font text-red-500 text-xs border-l-4 border-red-600 pl-3 uppercase">Legal Intelligence</h2>
-                    <div className="bg-slate-900/50 border border-slate-800 rounded-3xl p-6 glow-blue relative overflow-hidden">
-                        <div className="scanning-line"></div>
-                        <h3 className="brand-font text-blue-400 text-[11px] mb-4 uppercase">Naftocement IV Forensics</h3>
-                        <p className="text-xs text-slate-400 leading-relaxed mb-6">
-                            Ανάλυση "Dark Periods" Αυγούστου. Το σύστημα εντόπισε ύποπτη παύση AIS σήματος εντός του ναυπηγείου Terme.
-                        </p>
-                        <button onClick={onPdf} className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-4 rounded-2xl text-[10px] uppercase tracking-widest transition-all shadow-lg shadow-red-900/30">
-                            Generate Forensic Evidence PDF
-                        </button>
+                    <h2 className="brand-font text-blue-500 text-xs border-l-4 border-blue-600 pl-3 uppercase">Strategic Alerts</h2>
+                    
+                    <div className="p-5 glass neon-border-red rounded-3xl">
+                         <div className="flex justify-between items-center mb-3">
+                            <span className="text-[10px] font-black text-red-500 uppercase tracking-widest">Forensic Alert</span>
+                            <span className="text-[8px] text-slate-500 uppercase font-bold">Aug Forensic Case</span>
+                         </div>
+                         <h4 className="font-bold text-sm mb-1 uppercase">Naftocement IV</h4>
+                         <p className="text-[11px] text-slate-400 italic mb-4 leading-relaxed italic">"Dark AIS Period" εντοπίστηκε εντός ναυπηγείου Terme. Ανάλυση σε εξέλιξη.</p>
+                         <button className="w-full bg-red-900/40 text-red-400 text-[10px] font-black py-2 rounded-xl border border-red-500/30 uppercase tracking-widest">Generate PDF Evidence</button>
                     </div>
 
-                    <div className="bg-slate-900/50 border border-slate-800 rounded-3xl p-6">
-                        <h4 className="brand-font text-[9px] text-slate-500 mb-4 uppercase tracking-tighter">Watchlist: Terme Board Members</h4>
+                    <div className="p-5 glass rounded-3xl border border-slate-800">
+                        <h4 className="text-[10px] font-black text-slate-500 mb-3 uppercase tracking-widest">Live Newsfeed Sources</h4>
                         <div className="space-y-3">
-                            {['Tugrul Karaca', 'Emir Ozturk', 'Erkan Zorlu'].map(name => (
-                                <div key={name} className="flex justify-between items-center bg-black/30 p-4 rounded-2xl border border-white/5">
-                                    <span className="text-xs font-bold text-slate-300">{name}</span>
-                                    <span className="text-[8px] font-black text-blue-500 uppercase tracking-widest animate-pulse">Monitoring</span>
+                            {['Tugrul Karaca', 'Erkan Zorlu'].map(name => (
+                                <div key={name} className="flex justify-between items-center bg-black/40 p-3 rounded-xl border border-white/5">
+                                    <span className="text-xs font-bold">{name}</span>
+                                    <button className="text-[8px] bg-blue-900/50 text-blue-400 px-2 py-1 rounded font-black uppercase">Save as Source</button>
                                 </div>
                             ))}
                         </div>
@@ -143,68 +123,99 @@
             );
         }
 
-        function MarineWorkspace() {
+        function ProjectsModule() {
+            const [showNew, setShowNew] = useState(false);
             return (
-                <div className="space-y-6 animate-fadeIn">
-                    <h2 className="brand-font text-blue-500 text-xs border-l-4 border-blue-600 pl-3 uppercase">Marine Operations</h2>
-                    <div className="grid grid-cols-1 gap-4">
-                        <div className="bg-emerald-900/20 border border-emerald-500/30 p-5 rounded-3xl flex justify-between items-center">
-                            <div>
-                                <h4 className="font-bold text-sm text-emerald-400 tracking-tight">SAFETY PD 70/90</h4>
-                                <p className="text-[9px] text-slate-500 uppercase font-bold mt-1">Status: Active Inspection</p>
+                <div className="space-y-6">
+                    <div className="flex justify-between items-center">
+                        <h2 className="brand-font text-emerald-500 text-xs border-l-4 border-emerald-600 pl-3 uppercase tracking-tighter">Active Projects</h2>
+                        <button onClick={()=>setShowNew(true)} className="bg-emerald-600 text-white p-2 rounded-full text-xs"><i className="fa-solid fa-plus px-1"></i></button>
+                    </div>
+
+                    {showNew && (
+                        <div className="glass p-6 rounded-[2rem] neon-border-blue mb-6">
+                            <h3 className="brand-font text-[10px] text-blue-400 mb-4 uppercase">New Combined Project</h3>
+                            <input type="text" placeholder="Project Name (e.g. Rigel III)" className="w-full bg-slate-800 border border-slate-700 p-3 rounded-xl mb-4 text-xs" />
+                            <div className="space-y-3 mb-6">
+                                <p className="text-[9px] font-bold text-slate-500 uppercase">Services Selection:</p>
+                                {['Safety (PD 70/90)', 'UTM Gauging', 'Load Test (Cargo Gear)', 'Load Test (Means of Access)'].map(s => (
+                                    <label key={s} className="flex items-center gap-3 text-xs bg-slate-900/50 p-3 rounded-xl">
+                                        <input type="checkbox" className="accent-blue-500 h-4 w-4" />
+                                        <span>{s}</span>
+                                    </label>
+                                ))}
                             </div>
-                            <i className="fa-solid fa-user-shield text-2xl text-emerald-500"></i>
+                            <button className="w-full bg-blue-600 p-3 rounded-xl text-[10px] font-black uppercase tracking-widest" onClick={()=>setShowNew(false)}>Initialize Project Hub</button>
                         </div>
-                        <div className="bg-blue-900/20 border border-blue-500/30 p-5 rounded-3xl flex justify-between items-center">
-                            <div>
-                                <h4 className="font-bold text-sm text-blue-400 tracking-tight">UTM HULL GAUGING</h4>
-                                <p className="text-[9px] text-slate-500 uppercase font-bold mt-1">Target: Rigel III (Zone)</p>
-                            </div>
-                            <i className="fa-solid fa-ruler-combined text-2xl text-blue-500"></i>
-                        </div>
+                    )}
+
+                    <div className="bg-slate-900/50 p-5 rounded-3xl border border-slate-800 flex justify-between items-center opacity-50 italic">
+                        <span className="text-xs">No active combined projects yet...</span>
                     </div>
                 </div>
             );
         }
 
-        function IntelWorkspace() {
+        function ToolsModule() {
             return (
                 <div className="space-y-6 animate-fadeIn">
-                    <h2 className="brand-font text-amber-500 text-xs border-l-4 border-amber-600 pl-3 uppercase tracking-tighter">Strategic Intel Hub</h2>
-                    
-                    {/* SHIP ARRIVALS ALERT */}
-                    <div className="bg-slate-900 border border-blue-500/20 p-5 rounded-3xl flex items-center gap-5 shadow-xl">
-                        <i className="fa-solid fa-ship text-blue-500 text-2xl"></i>
-                        <div>
-                            <h4 className="text-[10px] font-black text-blue-400 uppercase tracking-widest">Repair Zone Monitor</h4>
-                            <p className="text-[11px] text-slate-300 leading-tight mt-1 italic">Σάρωση AIS: 12 πλοία σε αναμονή για Πέραμα / Σαλαμίνα.</p>
+                    <h2 className="brand-font text-amber-500 text-xs border-l-4 border-amber-600 pl-3 uppercase">Smart Toolbox</h2>
+                    <div className="grid grid-cols-2 gap-4">
+                        <ToolItem icon="fa-thermometer" label="F ↔ C" sub="Temp" />
+                        <ToolItem icon="fa-ruler-horizontal" label="In ↔ mm" sub="Thickness" />
+                        <ToolItem icon="fa-weight-hanging" label="Iron Calc" sub="Plate Weight" />
+                        <ToolItem icon="fa-map-location-dot" label="Sea Dist." sub="Port to Port" />
+                        <ToolItem icon="fa-coins" label="FX Rates" sub="Live USD/EUR" />
+                        <ToolItem icon="fa-camera" label="AR Meas." sub="Camera" />
+                    </div>
+                </div>
+            );
+        }
+
+        function ToolItem({ icon, label, sub }) {
+            return (
+                <div className="bg-slate-900 border border-slate-800 p-5 rounded-3xl flex flex-col items-center justify-center text-center active:scale-95 transition-all cursor-pointer">
+                    <i className={`fa-solid ${icon} text-amber-500 text-xl mb-2`}></i>
+                    <span className="text-[10px] font-black uppercase leading-tight">{label}</span>
+                    <span className="text-[8px] text-slate-500 uppercase mt-1 tracking-tighter">{sub}</span>
+                </div>
+            );
+        }
+
+        function BusinessModule() {
+            return (
+                <div className="space-y-6">
+                    <div className="p-6 bg-gradient-to-br from-rose-900/40 to-slate-900 rounded-[2rem] border border-rose-500/30">
+                        <h2 className="brand-font text-rose-400 text-sm mb-2 uppercase italic tracking-tighter font-black">Live in Mykonos</h2>
+                        <p className="text-[9px] text-rose-200/50 uppercase tracking-[0.3em] font-bold mb-6 italic">Luxury Estate Management</p>
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="bg-black/30 p-4 rounded-2xl text-center">
+                                <p className="text-[8px] text-slate-500 uppercase mb-1">Bookings</p>
+                                <p className="font-bold text-lg leading-none">04</p>
+                            </div>
+                            <div className="bg-black/30 p-4 rounded-2xl text-center">
+                                <p className="text-[8px] text-slate-500 uppercase mb-1">Check-ins</p>
+                                <p className="font-bold text-lg leading-none">02</p>
+                            </div>
                         </div>
                     </div>
 
-                    {/* TERME & NAFTOCEMENT FORENSICS */}
-                    <div className="bg-slate-900 border border-red-500/20 p-5 rounded-3xl flex items-center gap-5 shadow-xl">
-                        <i className="fa-solid fa-microscope text-red-500 text-2xl"></i>
-                        <div>
-                            <h4 className="text-[10px] font-black text-red-400 uppercase tracking-widest leading-none">Forensic Investigation</h4>
-                            <p className="text-[11px] text-slate-300 mt-1 italic">Naftocement IV: Ανάλυση "Dark Period". Η Terme υπό επιτήρηση.</p>
-                        </div>
+                    <div className="p-6 glass rounded-[2rem] border border-blue-500/20">
+                         <h3 className="brand-font text-blue-400 text-[10px] mb-4 uppercase">Warehouse & Assets</h3>
+                         <div className="space-y-3">
+                            <div className="flex justify-between items-center text-xs bg-slate-900/50 p-3 rounded-xl">
+                                <span>UTM Gauge #1</span>
+                                <span className="text-[8px] text-emerald-500 font-bold uppercase tracking-widest animate-pulse-slow">Calibrated</span>
+                            </div>
+                            <div className="flex justify-between items-center text-xs bg-slate-900/50 p-3 rounded-xl">
+                                <span>Load Cells 50T</span>
+                                <span className="text-[8px] text-amber-500 font-bold uppercase">Due Apr 2026</span>
+                            </div>
+                         </div>
                     </div>
 
-                    {/* COMPETITION WATCH */}
-                    <div className="bg-slate-900 border border-emerald-500/20 p-5 rounded-3xl flex items-center gap-5 shadow-xl">
-                        <i className="fa-solid fa-users-viewfinder text-emerald-500 text-2xl"></i>
-                        <div>
-                            <h4 className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Price Scanner Market</h4>
-                            <p className="text-[11px] text-slate-300 mt-1 italic">Navaltech: Καμία αλλαγή τιμοκαταλόγου το τελευταίο 24ωρο.</p>
-                        </div>
-                    </div>
-
-                    {/* LIVE TERMINAL LOGS */}
-                    <div className="bg-black p-5 rounded-3xl font-mono text-[9px] text-emerald-500 border border-emerald-900/50 shadow-inner overflow-hidden">
-                        <p className="opacity-40 mb-2 font-bold tracking-widest uppercase">-- System Terminal Output --</p>
-                        <p className="mb-1">> Hunter Agent: Scanning maritime intelligence...</p>
-                        <p className="mb-1">> Entity Watch: Checking "Karaca, Ozturk, Zorlu"...</p>
-                        <p className="animate-pulse">> Target Identified: Naftocement IV | Tracking Historical Logs...</p>
+                    <div className="p-4 bg-slate-900/50 rounded-2xl text-center border border-dashed border-slate-700">
+                         <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest italic">External Link: E-Shop Independent Module</p>
                     </div>
                 </div>
             );

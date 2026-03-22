@@ -1,40 +1,127 @@
-<script type="text/babel">
-    // ... (Οι σταθερές INITIAL_SHIPS, TRADES παραμένουν) ...
+<!DOCTYPE html><html lang="el"><head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SafeShip Pro | March 2026</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@300;400;600;800&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #020617; color: white; margin: 0; touch-action: manipulation; }
+        .brand { font-family: 'Orbitron', sans-serif; }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.05); }
+        .active-ok { background: #10b981 !important; opacity: 1; }
+        .active-wait { background: #f59e0b !important; opacity: 1; }
+        .active-block { background: #ef4444 !important; opacity: 1; }
+        .active-na { background: #64748b !important; opacity: 1; }
+        input, textarea { background: #0f172a !important; border: 1px solid #1e293b !important; color: white !important; outline: none; }
+        .specialty-active { background: #3b82f6 !important; border-color: #60a5fa !important; }
+    </style></head><body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState, useEffect } = React;
 
-    // ΠΡΟΣΘΗΚΗ: Άλλες εργασίες στο Calendar
-    const OTHER_WORKS = [
-        { date: '2026-03-23', title: 'Επιθεώρηση UTM - ΑΡΙΑΔΝΗ', time: '10:00' },
-        { date: '2026-03-25', title: 'Ραντεβού με Τεχνικό Διευθυντή', time: '12:00' }
-    ];
+        const TRADES = ["Ηλεκτρολόγοι", "Μηχανικοί", "Ελασματουργοί", "Σωληνουργοί", "Καθαριστές", "Βαφείς", "Σκαλωσέρ"];
+        const INITIAL_SHIPS = [
+            { id: 1, name: "FELIX", time: "07:00", duration: "4h", port: "Δραπετσώνα", type: "Tanker" },
+            { id: 2, name: "BADJI MOKHTAR III", time: "11:00", duration: "2h", port: "ΕΛΕΥΣΙΝΑ", type: "Ferry" },
+            { id: 3, name: "ΑΡΙΑΔΝΗ", time: "13:00", duration: "2h", port: "ΕΛΕΥΣΙΝΑ", type: "Ferry" },
+            { id: 4, name: "RIGEL III", time: "15:00", duration: "2h", port: "Πέραμα", type: "Ferry" }
+        ];
 
-    // Στο SafeShipApp component, πρόσθεσε στο View:
-    if (view === 'CALENDAR') return (
-        <div className="p-6 pb-32 animate-fadeIn">
-            <h2 className="brand text-xl uppercase italic mb-8 tracking-tighter">Work Schedule & Calendar</h2>
-            <div className="space-y-6">
-                {/* 1. SAFETY OFFICER HOURS (Από PDF ΣΕΠΕ) */}
-                <div className="glass p-6 rounded-[35px] border-l-4 border-red-600">
-                    <h3 className="text-[10px] font-black text-red-500 uppercase mb-4 italic">Safety Officer Program (SEPE)</h3>
-                    {INITIAL_SHIPS.map(s => (
-                        <div key={s.id} className="flex justify-between items-center py-3 border-b border-white/5 last:border-0">
-                            <div><p className="font-bold text-xs uppercase">{s.name}</p><p className="text-[8px] text-slate-500 uppercase">{s.port}</p></div>
-                            <div className="text-right"><p className="text-xs font-black">{s.time}</p><p className="text-[8px] text-slate-500 uppercase">{s.duration}</p></div>
+        function App() {
+            const [view, setView] = useState('DASHBOARD'); // DASHBOARD, INSPECTION, TASKS, SCHEDULE
+            const [activeId, setActiveId] = useState(null);
+            const [projects, setProjects] = useState(() => {
+                const saved = JSON.parse(localStorage.getItem('ntg_v31_data'));
+                return saved ? saved.ships : INITIAL_SHIPS.map(s => ({ ...s, data: {}, signedToday: false }));
+            });
+
+            useEffect(() => { localStorage.setItem('ntg_v31_data', JSON.stringify({ ships: projects })); }, [projects]);
+
+            const updateObs = (shipId, loc, obsId, field, val) => {
+                setProjects(projects.map(p => {
+                    if (p.id === shipId) {
+                        const updated = p.data[loc].observations.map(o => o.id === obsId ? { ...o, [field]: val } : o);
+                        return { ...p, data: { ...p.data, [loc]: { ...p.data[loc], observations: updated } } };
+                    }
+                    return p;
+                }));
+            };
+
+            const ship = projects.find(s => s.id === activeId);
+            const allTasks = projects.flatMap(p => Object.entries(p.data).flatMap(([loc, d]) => d.observations?.filter(o => o.isTask).map(o => ({ ship: p.name, loc, ...o })) || []));
+
+            return (
+                <div className="max-w-xl mx-auto pb-32 animate-fadeIn">
+                    <header className="p-6 border-b border-slate-800 flex justify-between items-center sticky top-0 bg-[#020617] z-50">
+                        <div><h1 className="brand text-xs font-black text-red-500 uppercase">SafeShip Manager</h1><p className="text-[10px] text-slate-500">{new Date().toLocaleDateString('el-GR')}</p></div>
+                        <div className="text-right"><p className="text-xl font-black">{new Date().toLocaleTimeString('el-GR',{hour:'2-digit',minute:'2-digit'})}</p></div>
+                    </header>
+
+                    {view === 'DASHBOARD' && (
+                        <div className="p-5 space-y-4">
+                            {projects.map(s => (
+                                <div key={s.id} onClick={()=>{setActiveId(s.id); setView('INSPECTION')}} className={`glass p-6 rounded-[35px] flex justify-between items-center ${s.signedToday ? 'border-l-8 border-emerald-500 bg-emerald-500/5' : 'border border-white/5'}`}>
+                                    <div><h4 className="font-black text-sm uppercase">{s.name}</h4><p className="text-[9px] text-slate-400 font-bold uppercase mt-1">{s.port} • {s.time}</p></div>
+                                    <i className={`fa-solid ${s.signedToday ? 'fa-circle-check text-emerald-500' : 'fa-chevron-right text-slate-800'}`}></i>
+                                </div>
+                            ))}
                         </div>
-                    ))}
-                </div>
+                    )}
 
-                {/* 2. OTHER WORKS */}
-                <div className="glass p-6 rounded-[35px] border-l-4 border-blue-500">
-                    <h3 className="text-[10px] font-black text-blue-500 uppercase mb-4 italic">Technical & Other Works</h3>
-                    {OTHER_WORKS.map((w, i) => (
-                        <div key={i} className="flex justify-between items-center py-3 border-b border-white/5 last:border-0">
-                            <div><p className="font-bold text-xs uppercase">{w.title}</p><p className="text-[8px] text-slate-500 uppercase">{w.date}</p></div>
-                            <p className="text-xs font-black">{w.time}</p>
+                    {view === 'SCHEDULE' && (
+                        <div className="p-6 space-y-6">
+                            <h2 className="brand text-xl uppercase italic mb-8">Work Schedule</h2>
+                            <div className="glass p-6 rounded-[35px] border-l-4 border-red-600">
+                                <h3 className="text-[10px] font-black text-red-500 uppercase mb-4 italic">Safety Officer Program (SEPE)</h3>
+                                {INITIAL_SHIPS.map(s => (
+                                    <div key={s.id} className="flex justify-between py-3 border-b border-white/5 last:border-0"><p className="text-xs uppercase font-bold">{s.name}</p><p className="text-xs font-black">{s.time}</p></div>
+                                ))}
+                            </div>
+                            <div className="glass p-6 rounded-[35px] border-l-4 border-blue-500 opacity-50">
+                                <h3 className="text-[10px] font-black text-blue-500 uppercase mb-4 italic">UTM & Other Technical Works</h3>
+                                <p className="text-[10px] italic">No other entries for today.</p>
+                            </div>
                         </div>
-                    ))}
+                    )}
+
+                    {view === 'INSPECTION' && ship && (
+                        <div className="p-5 space-y-8">
+                            <div className="glass p-8 rounded-[40px] border-l-4 border-red-600 text-center">
+                                <h2 className="brand text-2xl font-black uppercase">{ship.name}</h2>
+                                <p className="text-[9px] font-bold uppercase text-slate-400">{ship.port} • {ship.type}</p>
+                            </div>
+                            <button onClick={()=>{
+                                setProjects(projects.map(p=>p.id===ship.id?{...p, signedToday:!p.signedToday}:p));
+                                setView('DASHBOARD');
+                            }} className={`w-full p-6 rounded-[35px] font-black uppercase text-xs shadow-xl ${ship.signedToday ? 'bg-emerald-600' : 'bg-red-600'}`}>
+                                {ship.signedToday ? 'VERIFIED ✓' : 'SIGN-OFF INSPECTION'}
+                            </button>
+                        </div>
+                    )}
+
+                    {view === 'TASKS' && (
+                        <div className="p-6 space-y-6">
+                            <h2 className="brand text-xl uppercase italic mb-8">Open Risk Tasks</h2>
+                            {allTasks.length === 0 ? <div className="glass p-20 rounded-[50px] text-center opacity-30 italic uppercase font-black text-[10px]">No Risks Found</div> : 
+                                allTasks.map((t, i) => (
+                                    <div key={i} className="glass p-6 rounded-[35px] border-l-4 border-amber-500"><p className="text-[8px] font-black text-amber-500 uppercase">{t.ship} • {t.loc}</p><p className="text-[13px] text-slate-200 mt-2 leading-relaxed">{t.text}</p></div>
+                                ))
+                            }
+                        </div>
+                    )}
+
+                    <footer className="fixed bottom-0 left-0 right-0 p-6 glass border-t border-slate-800 flex justify-around bg-[#020617] z-50">
+                        <button onClick={()=>setView('DASHBOARD')} className={`flex flex-col items-center gap-1 ${view==='DASHBOARD'?'text-red-500':'text-slate-600'}`}><i className="fa-solid fa-anchor"></i><span className="text-[8px] font-bold">HUB</span></button>
+                        <button onClick={()=>setView('SCHEDULE')} className={`flex flex-col items-center gap-1 ${view==='SCHEDULE'?'text-red-500':'text-slate-600'}`}><i className="fa-solid fa-calendar-alt"></i><span className="text-[8px] font-bold">PLAN</span></button>
+                        <button onClick={()=>setView('TASKS')} className={`flex flex-col items-center gap-1 ${view==='TASKS'?'text-red-500':'text-slate-600'}`}><i className="fa-solid fa-list-check"></i><span className="text-[8px] font-bold">TASKS ({allTasks.length})</span></button>
+                        <a href="index.html" className="flex flex-col items-center gap-1 text-slate-600"><i className="fa-solid fa-house-user"></i><span className="text-[8px] font-bold">EXIT</span></a>
+                    </footer>
                 </div>
-            </div>
-        </div>
-    );
-    // ... (Το υπόλοιπο App συνεχίζει κανονικά) ...
-</script>
+            );
+        }
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script></body></html>

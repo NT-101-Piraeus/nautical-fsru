@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="el"><head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NTG COMMAND | V31</title>
+    <title>NTG COMMAND | DASHBOARD</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -11,18 +11,24 @@
         body { font-family: 'Inter', sans-serif; background-color: #020617; color: white; margin: 0; }
         .brand { font-family: 'Orbitron', sans-serif; }
         .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.05); }
-        .alert-glow { box-shadow: 0 0 20px rgba(239, 68, 68, 0.5); border: 1px solid #ef4444 !important; }
     </style></head><body>
     <div id="root"></div>
     <script type="text/babel">
         const { useState, useEffect } = React;
+
+        const SCHEDULE = [
+            { name: "FELIX", port: "Δραπετσώνα", time: "07:00" },
+            { name: "BADJI MOKHTAR III", port: "ΕΛΕΥΣΙΝΑ", time: "11:00" },
+            { name: "ΑΡΙΑΔΝΗ", port: "ΕΛΕΥΣΙΝΑ", time: "13:00" },
+            { name: "RIGEL III", port: "Πέραμα", time: "15:00" }
+        ];
+
         function Hub() {
-            // Force false on every load to trigger password screen
-            const [isAuth, setIsAuth] = useState(false); 
+            const [isAuth, setIsAuth] = useState(() => sessionStorage.getItem('ntg_auth') === 'true');
             const [taskCount, setTaskCount] = useState(0);
 
             useEffect(() => {
-                const data = JSON.parse(localStorage.getItem('ntg_v31_data'));
+                const data = JSON.parse(localStorage.getItem('ntg_v33_data'));
                 if (data && data.ships) {
                     const count = data.ships.flatMap(s => Object.values(s.data || {}))
                                       .flatMap(d => d.observations || [])
@@ -32,30 +38,51 @@
             }, []);
 
             if (!isAuth) return (
-                <div className="h-screen flex items-center justify-center bg-[#010409] p-6">
-                    <form onSubmit={(e)=>{e.preventDefault(); if(e.target.p.value==='NT2026'){setIsAuth(true)}}} className="glass p-10 rounded-[40px] w-full max-w-sm text-center">
-                        <h1 className="brand text-blue-500 text-2xl mb-2 uppercase italic">NTG COMMAND</h1>
-                        <p className="text-[10px] text-slate-500 mb-8 font-bold">SYSTEM VERSION 31.0</p>
-                        <input name="p" type="password" autoFocus className="w-full bg-slate-900 border border-slate-800 p-5 rounded-3xl mb-4 text-center text-white outline-none text-2xl" placeholder="••••" />
-                        <button className="w-full bg-blue-600 py-5 rounded-3xl font-black brand text-xs uppercase shadow-xl">Establish Connection</button>
+                <div className="h-screen flex items-center justify-center bg-slate-950 p-6">
+                    <form onSubmit={(e)=>{e.preventDefault(); if(e.target.p.value==='NT2026'){sessionStorage.setItem('ntg_auth','true');setIsAuth(true)}}} className="glass p-10 rounded-[40px] w-full max-w-sm text-center">
+                        <h1 className="brand text-blue-500 text-2xl mb-8 uppercase italic">NTG COMMAND</h1>
+                        <input name="p" type="password" autoFocus className="w-full bg-slate-900 border border-slate-800 p-5 rounded-3xl mb-4 text-center text-white" placeholder="••••" />
+                        <button className="w-full bg-blue-600 py-5 rounded-3xl font-black text-xs uppercase shadow-xl">Identify</button>
                     </form>
                 </div>
             );
 
             return (
-                <div className="max-w-xl mx-auto p-6 py-12 animate-fadeIn">
-                    <header className="text-center mb-16"><h1 className="brand text-3xl text-blue-500 font-black tracking-tighter uppercase italic leading-none">NTG HUB</h1><p className="text-[10px] text-slate-600 mt-2 font-bold tracking-[0.5em]">FLEET OPERATIONS</p></header>
-                    <div className="grid grid-cols-1 gap-6">
-                        <a href="safety_ships.html" className={`glass p-8 rounded-[40px] flex items-center justify-between transition-all active:scale-95 ${taskCount > 0 ? 'alert-glow' : 'border-white/5'}`}>
-                            <div className="flex items-center gap-6">
-                                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${taskCount > 0 ? 'bg-red-600' : 'bg-slate-800'}`}><i className="fa-solid fa-user-shield text-2xl text-white"></i></div>
-                                <div><h2 className="brand text-sm text-white uppercase italic">Safety Officer</h2><p className="text-[10px] text-slate-500 font-bold uppercase mt-1">Compliance & Risks</p></div>
-                            </div>
-                            {taskCount > 0 && <div className="bg-red-600 px-4 py-1.5 rounded-full text-[10px] font-black uppercase animate-pulse">{taskCount} TASKS</div>}
-                        </a>
-                        <a href="intel.html" className="glass p-8 rounded-[40px] flex items-center gap-6 opacity-30 grayscale transition-all active:scale-95">
-                            <div className="w-14 h-14 rounded-2xl bg-blue-600/20 flex items-center justify-center"><i className="fa-solid fa-tower-broadcast text-2xl text-blue-400"></i></div>
-                            <div><h2 className="brand text-sm text-white uppercase italic">Intel Division</h2><p className="text-[10px] text-slate-500 font-bold uppercase mt-1">Vessel Tracking</p></div>
+                <div className="max-w-xl mx-auto p-5 py-10 animate-fadeIn">
+                    <header className="flex justify-between items-center mb-12">
+                        <div><h1 className="brand text-blue-500 text-2xl font-black italic tracking-tighter uppercase">NTG HUB</h1><p className="text-[9px] font-bold text-slate-500 tracking-[0.4em]">FLEET OPERATIONS CENTER</p></div>
+                        <div className="bg-blue-600/10 p-3 rounded-2xl border border-blue-500/20 text-center">
+                            <p className="text-[10px] font-black">{new Date().toLocaleDateString('el-GR')}</p>
+                            <p className="text-sm font-bold text-blue-400">{new Date().toLocaleTimeString('el-GR',{hour:'2-digit',minute:'2-digit'})}</p>
+                        </div>
+                    </header>
+
+                    {/* GLOBAL STATUS CARD */}
+                    <div className="grid grid-cols-1 gap-4 mb-10">
+                        <div className="glass p-6 rounded-[35px] border-l-4 border-red-600 flex justify-between items-center">
+                            <div><h3 className="brand text-[10px] text-red-500 uppercase italic">Hazardous Findings</h3><p className="text-3xl font-black mt-1">{taskCount} <span className="text-xs text-slate-500">ACTIVE TASKS</span></p></div>
+                            <div className="w-12 h-12 bg-red-600/20 rounded-full flex items-center justify-center"><i className="fa-solid fa-triangle-exclamation text-red-500 text-xl"></i></div>
+                        </div>
+                    </div>
+
+                    {/* VISIT SCHEDULE TABLE */}
+                    <div className="glass p-6 rounded-[35px] border border-white/5 mb-8">
+                        <h3 className="brand text-[10px] text-blue-400 uppercase italic mb-4">Today's Vessel Deployments</h3>
+                        <div className="space-y-4">
+                            {SCHEDULE.map((s, i) => (
+                                <div key={i} className="flex justify-between items-center py-3 border-b border-white/5 last:border-0">
+                                    <div><p className="font-bold text-xs uppercase">{s.name}</p><p className="text-[9px] text-slate-500 uppercase">{s.port}</p></div>
+                                    <div className="text-right"><p className="text-xs font-black">{s.time}</p><p className="text-[8px] text-emerald-500 font-bold uppercase">Scheduled</p></div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* APP LINKS */}
+                    <div className="grid grid-cols-1 gap-4">
+                        <a href="safety_ships.html" className="glass p-6 rounded-[35px] flex items-center gap-6 active:scale-95 transition-all">
+                            <div className="w-14 h-14 rounded-2xl bg-red-600/20 flex items-center justify-center"><i className="fa-solid fa-user-shield text-2xl text-red-500"></i></div>
+                            <div><h2 className="brand text-sm text-white uppercase italic">Safety Officer</h2><p className="text-[10px] text-slate-500 font-bold uppercase mt-1">Audit & Risk Management</p></div>
                         </a>
                     </div>
                 </div>

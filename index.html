@@ -1,7 +1,7 @@
 <!DOCTYPE html><html lang="el"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NTG | COMMAND CENTER V12.5 SYNC</title>
+    <title>NTG | COMMAND CENTER V12.6</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -13,17 +13,15 @@
         body { font-family: 'Inter', sans-serif; background-color: #020617; color: #f8fafc; margin: 0; }
         .brand-font { font-family: 'Orbitron', sans-serif; letter-spacing: 1px; }
         .glass { background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.05); }
-        .glow-blue { box-shadow: 0 0 20px rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.4); }
+        .glow-blue { box-shadow: 0 0 20px rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.4); }
         .btn-disabled { opacity: 0.2; filter: grayscale(1); cursor: not-allowed; pointer-events: none; }
-        .animate-fadeIn { animation: fadeIn 0.5s ease-in; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style></head><body>
     <div id="root"></div>
 
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        // --- ΕΝΣΩΜΑΤΩΜΕΝΑ ΚΛΕΙΔΙΑ SUPABASE NTG ---
+        // --- ΣΥΝΔΕΣΗ SUPABASE NTG ---
         const SUPABASE_URL = "https://omdarjncczohpffwunfy.supabase.co"; 
         const SUPABASE_KEY = "sb_publishable_V-nfUDy5MxEG4SlXkisFBg_GBlD_4Y9";
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -36,40 +34,32 @@
             const [activeProject, setActiveProject] = useState(null);
             const [isAdding, setIsAdding] = useState(false);
 
-            useEffect(() => {
-                if (isLoggedIn) fetchProjects();
-            }, [isLoggedIn]);
+            useEffect(() => { if (isLoggedIn) fetchProjects(); }, [isLoggedIn]);
 
             async function fetchProjects() {
-                const { data, error } = await _supabase
-                    .from('ntg_projects')
-                    .select('*')
-                    .order('created_at', { ascending: false });
+                const { data, error } = await _supabase.from('ntg_projects').select('*').order('created_at', { ascending: false });
                 if (data) setProjects(data);
             }
 
             const handleLaunch = async (name, sel) => {
-                if(!name || sel.length === 0) return;
+                if(!name || sel.length === 0) { alert("Data Missing!"); return; }
                 const newProject = { name, services: sel, date: new Date().toLocaleDateString() };
                 const { data, error } = await _supabase.from('ntg_projects').insert([newProject]).select();
                 if (data) {
                     setProjects([data[0], ...projects]);
                     setActiveProject(data[0]);
                     setIsAdding(false);
-                } else {
-                    alert("Σφάλμα: " + error.message);
-                }
+                } else { alert("Sync Error: " + error.message); }
             };
 
             if (!isLoggedIn) {
                 return (
                     <div className="h-screen flex items-center justify-center bg-slate-950 p-6">
                         <div className="glass p-10 rounded-[40px] glow-blue w-full max-w-sm text-center">
-                            <h1 className="brand-font text-blue-500 text-2xl mb-2 font-black italic uppercase">NTG HUB</h1>
-                            <p className="text-[9px] text-slate-500 uppercase tracking-[0.4em] mb-8 italic">Secure Cloud Terminal</p>
-                            <form onSubmit={(e) => { e.preventDefault(); if(passcode==='NT2026') setIsLoggedIn(true); else alert("Access Denied"); }}>
-                                <input type="password" value={passcode} onChange={(e)=>setPasscode(e.target.value)} className="w-full bg-slate-800 border border-slate-700 p-5 rounded-3xl mb-4 text-center text-2xl text-white outline-none focus:border-blue-500" placeholder="••••" />
-                                <button className="w-full bg-blue-600 text-white py-5 rounded-3xl font-black brand-font text-xs tracking-widest active:scale-95 transition-all uppercase">Establish Connection</button>
+                            <h1 className="brand-font text-blue-500 text-2xl mb-2 font-black uppercase">NTG HUB</h1>
+                            <form onSubmit={(e) => { e.preventDefault(); if(passcode==='NT2026') setIsLoggedIn(true); else alert("Wrong Pass"); }}>
+                                <input type="password" value={passcode} onChange={(e)=>setPasscode(e.target.value)} className="w-full bg-slate-800 border border-slate-700 p-5 rounded-3xl mb-4 text-center text-2xl text-white outline-none" placeholder="••••" />
+                                <button className="w-full bg-blue-600 text-white py-5 rounded-3xl font-black brand-font text-xs uppercase">Connect</button>
                             </form>
                         </div>
                     </div>
@@ -79,11 +69,8 @@
             return (
                 <div className="min-h-screen flex flex-col pb-24">
                     <header className="p-5 border-b border-slate-800 glass sticky top-0 z-[100] flex justify-between items-center">
-                        <h1 className="brand-font text-blue-500 text-sm font-black uppercase tracking-widest italic leading-none">NTG GROUP</h1>
-                        <div className="flex items-center gap-2">
-                            <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_5px_#10b981]"></div>
-                            <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">Live Sync</span>
-                        </div>
+                        <h1 className="brand-font text-blue-500 text-sm font-black uppercase tracking-widest leading-none">NTG GROUP</h1>
+                        <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
                     </header>
 
                     <main className="flex-1 p-5 max-w-xl mx-auto w-full">
@@ -110,30 +97,31 @@
         }
 
         function ProjectDashboard({ project, onExit }) {
-            const hasSafety = project.services.some(s => s.includes('Safety'));
-            const hasUTM = project.services.some(s => s.includes('UTM'));
+            const hasSafety = project.services.some(s => s.toLowerCase().includes('safety'));
+            const hasUTM = project.services.some(s => s.toLowerCase().includes('utm'));
             return (
                 <div className="space-y-6 animate-fadeIn">
-                    <button onClick={onExit} className="text-slate-500 text-[10px] brand-font uppercase flex items-center gap-2"><i className="fa-solid fa-chevron-left text-[8px]"></i> Back to Fleet</button>
+                    <button onClick={onExit} className="text-slate-500 text-[10px] brand-font uppercase flex items-center gap-2"><i className="fa-solid fa-chevron-left"></i> Back</button>
                     <div className="bg-slate-900 p-8 rounded-[40px] border border-blue-500/20 glow-blue">
                         <h2 className="brand-font text-blue-400 text-lg mb-1 leading-tight">{project.name}</h2>
-                        <div className="flex flex-wrap gap-2 mt-4 italic">
-                            {project.services.map(s => <span key={s} className="text-[8px] bg-blue-900/30 text-blue-300 px-2 py-1 rounded-lg font-black uppercase tracking-tighter border border-blue-500/10">{s}</span>)}
+                        <div className="flex flex-wrap gap-2 mt-4">
+                            {project.services.map(s => <span key={s} className="text-[8px] bg-blue-900/30 text-blue-300 px-2 py-1 rounded-lg font-black uppercase">{s}</span>)}
                         </div>
                     </div>
                     <div className="grid grid-cols-1 gap-3">
-                        <ActionButton icon="fa-file-signature" label="Daily Progress Report" color="bg-blue-600" active={true} />
-                        <ActionButton icon="fa-shield-halved" label="Safety Risk Assessment" color="bg-red-700" active={hasSafety} />
-                        <ActionButton icon="fa-ruler-combined" label="UTM Readings Table" color="bg-emerald-600" active={hasUTM} />
-                        <ActionButton icon="fa-camera" label="Evidence Capture" color="bg-slate-800" active={true} />
+                        <ActionButton icon="fa-file-signature" label="Daily Progress Report" color="bg-blue-600" active={true} onClick={() => alert("Daily Report Active")} />
+                        <ActionButton icon="fa-shield-halved" label="Safety Risk Assessment" color="bg-red-700" active={hasSafety} onClick={() => alert("Safety Module Active")} />
+                        <ActionButton icon="fa-ruler-combined" label="UTM Readings Table" color="bg-emerald-600" active={hasUTM} onClick={() => alert("UTM Module Active")} />
+                        <ActionButton icon="fa-camera" label="Evidence Capture" color="bg-slate-800" active={true} onClick={() => document.getElementById('camInput').click()} />
+                        <input type="file" id="camInput" accept="image/*" capture="camera" className="hidden" />
                     </div>
                 </div>
             );
         }
 
-        function ActionButton({ icon, label, color, active }) {
+        function ActionButton({ icon, label, color, active, onClick }) {
             return (
-                <button disabled={!active} className={`${!active ? 'btn-disabled' : color} p-6 rounded-3xl flex justify-between items-center active:scale-95 transition-all shadow-xl`}>
+                <button onClick={onClick} disabled={!active} className={`${!active ? 'btn-disabled' : color} p-6 rounded-3xl flex justify-between items-center active:scale-95 transition-all shadow-xl`}>
                     <span className="text-[11px] font-black uppercase tracking-widest">{label}</span>
                     <i className={`fa-solid ${icon} text-sm opacity-80`}></i>
                 </button>
@@ -145,34 +133,33 @@
             const [sel, setSel] = useState([]);
             const services = ["Safety Division: Π.Δ. 70/90", "UTM: Hull Gauging", "Load Test ε1-ε5"];
             return (
-                <div className="space-y-6 animate-fadeIn">
+                <div className="space-y-6">
                     <div className="flex justify-between items-center">
-                        <h2 className="brand-font text-blue-500 text-xs border-l-4 border-blue-600 pl-3 uppercase italic tracking-widest">Active Operations</h2>
-                        {!isAdding && <button onClick={() => setIsAdding(true)} className="w-12 h-12 bg-emerald-600 rounded-full flex items-center justify-center text-white shadow-lg active:scale-90 transition-all shadow-emerald-900/40"><i className="fa-solid fa-plus"></i></button>}
+                        <h2 className="brand-font text-blue-500 text-xs border-l-4 border-blue-600 pl-3 uppercase">Operations</h2>
+                        {!isAdding && <button onClick={() => setIsAdding(true)} className="w-12 h-12 bg-emerald-600 rounded-full flex items-center justify-center text-white shadow-lg"><i className="fa-solid fa-plus"></i></button>}
                     </div>
                     {isAdding ? (
                         <div className="bg-slate-900 p-6 rounded-[35px] border border-slate-800 space-y-4">
-                            <input className="w-full bg-slate-800 p-5 rounded-3xl text-sm border border-slate-700 outline-none focus:border-emerald-500 font-bold text-white uppercase" placeholder="Ship Name" value={name} onChange={(e)=>setName(e.target.value)} />
+                            <input className="w-full bg-slate-800 p-5 rounded-3xl text-sm border border-slate-700 outline-none text-white uppercase" placeholder="Ship Name" value={name} onChange={(e)=>setName(e.target.value)} />
                             {services.map(s => (
                                 <label key={s} className="flex items-center gap-4 bg-slate-800/40 p-4 rounded-2xl cursor-pointer">
                                     <input type="checkbox" onChange={(e) => e.target.checked ? setSel([...sel, s]) : setSel(sel.filter(i => i !== s))} className="w-5 h-5 accent-emerald-500" />
                                     <span className="text-xs font-bold text-slate-300 uppercase">{s}</span>
                                 </label>
                             ))}
-                            <button onClick={()=>onLaunch(name, sel)} className="w-full bg-emerald-600 py-5 rounded-3xl font-black uppercase text-[10px] tracking-widest shadow-xl">Launch Operational Hub</button>
+                            <button onClick={()=>onLaunch(name, sel)} className="w-full bg-emerald-600 py-5 rounded-3xl font-black uppercase text-[10px] tracking-widest">Launch Project</button>
                         </div>
                     ) : (
                         <div className="space-y-3">
                             {projects.map(p => (
-                                <div key={p.id} onClick={() => onSelect(p)} className="bg-slate-900 p-6 rounded-[30px] border border-slate-800 flex justify-between items-center cursor-pointer active:scale-95 transition-all hover:border-blue-500/50 group">
+                                <div key={p.id} onClick={() => onSelect(p)} className="bg-slate-900 p-6 rounded-[30px] border border-slate-800 flex justify-between items-center cursor-pointer active:scale-95 transition-all">
                                     <div>
                                         <h4 className="font-bold text-sm text-slate-200 uppercase">{p.name}</h4>
-                                        <p className="text-[8px] text-slate-500 font-black uppercase mt-1.5 italic tracking-widest">{p.services?.length || 0} Services Active • {p.date}</p>
+                                        <p className="text-[8px] text-slate-500 font-black uppercase mt-1.5">{p.services?.length || 0} Services</p>
                                     </div>
-                                    <i className="fa-solid fa-chevron-right text-slate-700 text-xs group-hover:text-blue-500"></i>
+                                    <i className="fa-solid fa-chevron-right text-slate-700 text-xs"></i>
                                 </div>
                             ))}
-                            {projects.length === 0 && <p className="text-center text-slate-600 text-xs py-10 uppercase italic">No active projects in fleet</p>}
                         </div>
                     )}
                 </div>
@@ -182,21 +169,21 @@
         function ToolsTab() {
             return (
                 <div className="space-y-6 animate-fadeIn">
-                    <h2 className="brand-font text-blue-500 text-xs border-l-4 border-blue-600 pl-3 uppercase italic tracking-widest">Smart Toolbox</h2>
-                    <div className="grid grid-cols-2 gap-4 text-center">
-                        <ToolBox icon="fa-weight-hanging" label="Iron Calc" />
-                        <ToolBox icon="fa-ruler-horizontal" label="In ↔ mm" />
-                        <ToolBox icon="fa-thermometer-half" label="F ↔ C" />
-                        <ToolBox icon="fa-coins" label="FX Rates" />
+                    <h2 className="brand-font text-blue-500 text-xs border-l-4 border-blue-600 pl-3 uppercase italic">Smart Toolbox</h2>
+                    <div className="grid grid-cols-2 gap-4">
+                        <ToolBox icon="fa-weight-hanging" label="Iron Calc" onClick={() => { const l=prompt("Mhkos(m):"); const w=prompt("Platos(m):"); const t=prompt("Pachos(mm):"); if(l) alert(l*w*t*7.85 + " kg"); }} />
+                        <ToolBox icon="fa-ruler-horizontal" label="In ↔ mm" onClick={() => { const i=prompt("Inches:"); if(i) alert(i*25.4 + " mm"); }} />
+                        <ToolBox icon="fa-thermometer-half" label="F ↔ C" onClick={() => { const f=prompt("Fahrenheit:"); if(f) alert((f-32)*5/9 + " C"); }} />
+                        <ToolBox icon="fa-coins" label="FX Rates" onClick={() => alert("Live API Sync...")} />
                     </div>
                 </div>
             );
         }
 
-        function ToolBox({ icon, label }) {
+        function ToolBox({ icon, label, onClick }) {
             return (
-                <div className="bg-slate-900 border border-slate-800 p-8 rounded-[40px] active:scale-95 transition-all shadow-lg hover:border-blue-500/30">
-                    <i className={`fa-solid ${icon} text-blue-500 text-xl mb-3 opacity-80`}></i>
+                <div onClick={onClick} className="bg-slate-900 border border-slate-800 p-8 rounded-[40px] active:scale-95 transition-all text-center">
+                    <i className={`fa-solid ${icon} text-blue-500 text-xl mb-3`}></i>
                     <span className="text-[10px] font-black uppercase block tracking-widest leading-none">{label}</span>
                 </div>
             );
@@ -205,10 +192,10 @@
         function IntelTab() {
             return (
                 <div className="space-y-6 animate-fadeIn">
-                    <h2 className="brand-font text-blue-500 text-xs border-l-4 border-blue-600 pl-3 uppercase">Deep Intel Status</h2>
+                    <h2 className="brand-font text-blue-500 text-xs border-l-4 border-blue-600 pl-3 uppercase">Deep Intel</h2>
                     <div className="bg-slate-900/50 p-10 rounded-[50px] border border-blue-500/10 text-center">
                         <i className="fa-solid fa-satellite-dish text-blue-500/40 text-3xl mb-4 animate-pulse"></i>
-                        <p className="text-[10px] text-slate-500 uppercase font-black tracking-widest italic leading-relaxed">Awaiting AI Briefing from Aida Tzavella...</p>
+                        <p className="text-[10px] text-slate-500 uppercase font-black italic">Awaiting AI 07:00 Deep Search Briefing...</p>
                     </div>
                 </div>
             );
@@ -218,7 +205,7 @@
             return (
                 <button onClick={onClick} className={`flex flex-col items-center gap-1.5 transition-all ${active ? 'text-blue-500 scale-110' : 'text-slate-600 opacity-60'}`}>
                     <i className={`fa-solid ${icon} text-lg`}></i>
-                    <span className="text-[8px] font-black uppercase tracking-tighter italic leading-none">{label}</span>
+                    <span className="text-[8px] font-black uppercase tracking-tighter leading-none">{label}</span>
                 </button>
             );
         }

@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="el"><head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SafeShip Pro V21 | SEPE Integrated</title>
+    <title>SafeShip Pro V22 | Master Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -12,34 +12,34 @@
         .brand { font-family: 'Orbitron', sans-serif; }
         .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.05); }
         .safe-btn:active { transform: scale(0.95); opacity: 0.8; }
-        .status-ok { background: #10b981 !important; }
-        .status-wait { background: #f59e0b !important; }
-        .status-block { background: #ef4444 !important; }
+        .status-signed { border-left: 8px solid #10b981 !important; background: rgba(16, 185, 129, 0.1) !important; }
     </style></head><body>
     <div id="root"></div>
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        const SEPE_DATA = {
+        // ΔΕΔΟΜΕΝΑ ΑΠΟ PDF ΣΕΠΕ ΜΑΡΤΙΟΣ 2026
+        const SEPE_SCHEDULE = {
             "FELIX": { time: "07:00", duration: "4", imo: "9464182" },
             "BADJI MOKHTAR III": { time: "11:00", duration: "2", imo: "9827889" },
             "ΑΡΙΑΔΝΗ": { time: "13:00", duration: "2", imo: "9135262" },
             "RIGEL III": { time: "15:00", duration: "2", imo: "7807744" }
         };
 
-        const SHIP_CONFIGS = {
+        const LOCATIONS_MAP = {
             "Tanker": ["Κατάστρωμα", "Μηχανοστάσιο", "Αντλιοστάσιο", "Δεξαμενές Φορτίου", "Ενδιαίτηση"],
-            "Ferry": ["Κατάστρωμα", "Μηχανοστάσιο", "Garage", "Ενδιαίτηση"],
+            "Ferry": ["Κατάστρωμα", "Μηχανοστάσιο", "Garage", "Ενδιαίτηση", "Χώροι Επιβατών"],
             "Cargo": ["Κατάστρωμα", "Μηχανοστάσιο", "Κύτη Φορτίου (Holds)", "Ενδιαίτηση"]
         };
 
         function SafeShipApp() {
             const [isAuth, setIsAuth] = useState(() => sessionStorage.getItem('ntg_auth') === 'true');
             const [view, setView] = useState('dashboard');
-            const [projects, setProjects] = useState(() => JSON.parse(localStorage.getItem('ntg_v21_projects')) || []);
+            const [projects, setProjects] = useState(() => JSON.parse(localStorage.getItem('ntg_v22_projects')) || []);
             const [activeId, setActiveId] = useState(null);
+            const [checkIn, setCheckIn] = useState(() => localStorage.getItem('ntg_checkin') || '--:--');
 
-            useEffect(() => { localStorage.setItem('ntg_v21_projects', JSON.stringify(projects)); }, [projects]);
+            useEffect(() => { localStorage.setItem('ntg_v22_projects', JSON.stringify(projects)); }, [projects]);
 
             const login = (e) => { e.preventDefault(); if(e.target.pass.value === 'NT2026') { sessionStorage.setItem('ntg_auth', 'true'); setIsAuth(true); } };
 
@@ -47,30 +47,29 @@
                 e.preventDefault();
                 const name = e.target.shipName.value.toUpperCase();
                 const type = e.target.shipType.value;
-                const sepe = SEPE_DATA[Object.keys(SEPE_DATA).find(k => name.includes(k))] || { time: "08:00", duration: "2" };
+                const port = e.target.port.value.toUpperCase();
+                const sepe = SEPE_SCHEDULE[Object.keys(SEPE_SCHEDULE).find(k => name.includes(k))] || { time: "08:00", duration: "2" };
                 
-                const newProj = {
+                const newP = {
                     id: Date.now(),
-                    name,
-                    type,
-                    locations: SHIP_CONFIGS[type],
+                    name, type, port,
                     startTime: sepe.time,
                     duration: sepe.duration,
-                    active: true,
-                    days: Array.from({length: 10}, (_, i) => ({ date: `2026-03-${22+i}`, active: true, signed: false })),
+                    locations: LOCATIONS_MAP[type],
+                    signed: false,
                     checks: {}
                 };
-                setProjects([newProj, ...projects]);
-                setActiveId(newProj.id);
+                setProjects([newP, ...projects]);
+                setActiveId(newP.id);
                 setView('daily');
             };
 
             if (!isAuth) return (
                 <div className="h-screen flex items-center justify-center p-6 bg-slate-950 italic">
                     <form onSubmit={login} className="glass p-10 rounded-[40px] w-full max-w-sm text-center">
-                        <h1 className="brand text-red-500 text-xl mb-8 uppercase">SafeShip V21</h1>
-                        <input name="pass" type="password" className="w-full bg-slate-900 p-5 rounded-3xl mb-4 text-center text-white outline-none" placeholder="••••" />
-                        <button className="w-full bg-red-600 p-5 rounded-3xl font-black uppercase text-xs">Enter Hub</button>
+                        <h1 className="brand text-red-500 text-xl mb-8 uppercase tracking-tighter">SafeShip V22</h1>
+                        <input name="pass" type="password" className="w-full bg-slate-900 p-5 rounded-3xl mb-4 text-center text-white outline-none" placeholder="ΚΩΔΙΚΟΣ ΑΣΦΑΛΕΙΑΣ" />
+                        <button className="w-full bg-red-600 p-5 rounded-3xl font-black uppercase text-xs">Establish Connection</button>
                     </form>
                 </div>
             );
@@ -81,20 +80,32 @@
                 <div className="max-w-xl mx-auto p-5 pb-32">
                     <header className="flex justify-between items-center py-6 mb-4 border-b border-slate-800">
                         <h1 className="brand text-xs font-black italic text-red-500 uppercase">SafeShip Manager</h1>
-                        <p className="text-xl font-bold text-white leading-none">04:22 μ.μ.</p>
+                        <div className="text-right">
+                            <p className="text-[10px] font-black uppercase text-slate-400">22 / 03 / 2026</p>
+                            <p className="text-xl font-bold text-white leading-none">04:30 μ.μ.</p>
+                        </div>
                     </header>
 
                     {view === 'dashboard' && (
-                        <div className="space-y-6">
-                            <button onClick={() => setView('new')} className="w-full bg-red-600 p-6 rounded-[35px] font-black text-xs uppercase safe-btn">+ New Ship Inspection</button>
+                        <div className="space-y-6 animate-fadeIn">
+                            <div className="glass p-6 rounded-[35px] border-l-4 border-emerald-500 flex justify-between items-center">
+                                <div><p className="text-[8px] text-slate-500 font-black uppercase mb-1">Check-in Time</p><p className="text-3xl font-black">{checkIn}</p></div>
+                                <button onClick={() => {const t=new Date().toLocaleTimeString('el-GR',{hour:'2-digit',minute:'2-digit'}); setCheckIn(t); localStorage.setItem('ntg_checkin', t)}} className="bg-emerald-600 px-6 py-4 rounded-2xl text-xs font-black uppercase safe-btn shadow-lg">Set In</button>
+                            </div>
+
+                            <button onClick={() => setView('new')} className="w-full bg-red-600 p-6 rounded-[35px] font-black text-xs uppercase safe-btn shadow-2xl">+ New Ship Inspection</button>
+
+                            <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2 italic">Active Fleet & Port Status</h3>
                             <div className="space-y-4">
                                 {projects.map(p => (
-                                    <div key={p.id} onClick={() => { setActiveId(p.id); setView('daily'); }} className="glass p-6 rounded-[35px] flex justify-between items-center border border-white/5">
+                                    <div key={p.id} onClick={() => { setActiveId(p.id); setView('daily'); }} className={`glass p-6 rounded-[35px] flex justify-between items-center safe-btn ${p.signed ? 'status-signed' : 'border border-white/5'}`}>
                                         <div>
                                             <h4 className="font-bold text-sm uppercase">{p.name}</h4>
-                                            <p className="text-[9px] text-slate-500 uppercase mt-1">{p.type} • {p.startTime} ({p.duration}h)</p>
+                                            <p className="text-[9px] text-slate-400 font-bold uppercase mt-1">
+                                                <i className="fa-solid fa-location-dot text-red-500 mr-1"></i> {p.port} • {p.startTime} ({p.duration}h)
+                                            </p>
                                         </div>
-                                        <div className={`w-3 h-3 rounded-full ${p.active ? 'bg-emerald-500 animate-pulse' : 'bg-slate-700'}`}></div>
+                                        {p.signed ? <i className="fa-solid fa-circle-check text-emerald-500 text-xl"></i> : <i className="fa-solid fa-chevron-right text-slate-800"></i>}
                                     </div>
                                 ))}
                             </div>
@@ -103,69 +114,55 @@
 
                     {view === 'new' && (
                         <form onSubmit={handleCreate} className="space-y-6 animate-fadeIn">
-                            <button onClick={() => setView('dashboard')} className="text-slate-500 text-[10px] font-black uppercase tracking-widest">← Back</button>
+                            <button onClick={() => setView('dashboard')} className="text-slate-500 text-[10px] font-black uppercase">← Back</button>
                             <h2 className="brand text-lg uppercase italic mb-4">Register Vessel</h2>
-                            <input name="shipName" required className="w-full bg-slate-900 p-6 rounded-[30px] font-bold text-xl uppercase" placeholder="SHIP NAME / IMO" />
+                            <input name="shipName" required className="w-full bg-slate-900 p-6 rounded-[30px] font-bold text-xl uppercase outline-none focus:ring-1 ring-red-500" placeholder="SHIP NAME / IMO" />
+                            <input name="port" required className="w-full bg-slate-900 p-6 rounded-[30px] font-bold text-sm uppercase outline-none" placeholder="ΛΙΜΑΝΙ / ΤΟΠΟΘΕΣΙΑ" />
                             <select name="shipType" className="w-full bg-slate-900 p-6 rounded-[30px] font-bold text-sm text-slate-400 outline-none">
                                 <option value="Tanker">Δεξαμενόπλοιο (Tanker)</option>
-                                <option value="Ferry">Επιβατηγό / Ro-Ro</option>
-                                <option value="Cargo">Φορτηγό (Bulk/Cargo)</option>
+                                <option value="Ferry">Επιβατηγό / Ro-Ro (Ferry)</option>
+                                <option value="Cargo">Φορτηγό (Cargo/Bulk)</option>
                             </select>
-                            <button type="submit" className="w-full bg-red-600 p-6 rounded-[30px] font-black uppercase text-xs tracking-widest shadow-2xl safe-btn">Initialize & Load SEPE Schedule</button>
+                            <button type="submit" className="w-full bg-red-600 p-6 rounded-[30px] font-black uppercase text-xs tracking-widest shadow-2xl safe-btn">Initialize Inspection</button>
                         </form>
                     )}
 
                     {view === 'daily' && activeP && (
                         <div className="animate-fadeIn space-y-8">
                             <div className="flex justify-between items-center">
-                                <button onClick={() => setView('dashboard')} className="text-slate-500 text-[10px] font-black uppercase">← Fleet</button>
-                                <button onClick={() => {
-                                    setProjects(projects.map(p => p.id === activeId ? {...p, active: !p.active} : p));
-                                }} className={`text-[10px] font-black uppercase ${activeP.active ? 'text-red-500' : 'text-emerald-500'}`}>
-                                    {activeP.active ? 'Close Project' : 'Re-open Project'}
-                                </button>
+                                <button onClick={() => setView('dashboard')} className="text-slate-500 text-[10px] font-black uppercase">← Dashboard</button>
+                                <button onClick={() => { if(confirm("Κλείσιμο έργου;")) setProjects(projects.filter(p => p.id !== activeId)); setView('dashboard'); }} className="text-red-500 text-[10px] font-black uppercase">Delete Project</button>
                             </div>
                             
                             <div className="glass p-8 rounded-[40px] border-l-4 border-red-600 text-center">
-                                <h2 className="brand text-2xl font-black uppercase">{activeP.name}</h2>
-                                <p className="text-[10px] text-slate-400 font-bold uppercase mt-1 italic">ΣΤΑΝΤΑΡ ΩΡΑΡΙΟ ΣΕΠΕ: {activeP.startTime} ({activeP.duration}h)</p>
+                                <h2 className="brand text-2xl font-black uppercase tracking-tighter">{activeP.name}</h2>
+                                <p className="text-[10px] text-slate-400 font-bold uppercase mt-1 italic tracking-widest">
+                                    {activeP.port} • ΩΡΑΡΙΟ ΣΕΠΕ: {activeP.startTime} ({activeP.duration}h)
+                                </p>
                             </div>
 
-                            <div className="space-y-6">
+                            <div className="space-y-10">
                                 {activeP.locations.map(loc => (
-                                    <div key={loc} className="glass p-6 rounded-[35px] border border-white/5">
+                                    <div key={loc} className="glass p-6 rounded-[40px] border border-white/5">
                                         <h4 className="text-[11px] font-black uppercase text-slate-400 mb-4">{loc}</h4>
-                                        <div className="grid grid-cols-3 gap-2">
-                                            <button className="bg-slate-800 p-4 rounded-xl text-[9px] font-black uppercase safe-btn active:status-ok">OK</button>
-                                            <button className="bg-slate-800 p-4 rounded-xl text-[9px] font-black uppercase safe-btn active:status-wait">Wait</button>
-                                            <button className="bg-slate-800 p-4 rounded-xl text-[9px] font-black uppercase safe-btn active:status-block">Block</button>
+                                        <div className="grid grid-cols-3 gap-2 mb-4">
+                                            <button className="bg-slate-800 p-4 rounded-xl text-[9px] font-black uppercase safe-btn active:bg-emerald-600">OK</button>
+                                            <button className="bg-slate-800 p-4 rounded-xl text-[9px] font-black uppercase safe-btn active:bg-amber-600">Wait</button>
+                                            <button className="bg-slate-800 p-4 rounded-xl text-[9px] font-black uppercase safe-btn active:bg-red-600">Block</button>
                                         </div>
+                                        <textarea className="w-full bg-slate-900/50 p-5 rounded-3xl text-[12px] h-28" placeholder="Observations..."></textarea>
                                     </div>
                                 ))}
                             </div>
 
-                            <div className="mt-8 border-t border-slate-800 pt-8">
-                                <h3 className="text-[10px] font-black text-slate-500 uppercase mb-4 ml-2">Ship Visit Schedule (MARCH)</h3>
-                                <div className="space-y-2">
-                                    {activeP.days.map((d, idx) => (
-                                        <div key={idx} className={`p-4 rounded-2xl flex justify-between items-center ${d.active ? 'bg-slate-900' : 'opacity-20 grayscale'}`}>
-                                            <span className="text-[10px] font-bold">{d.date}</span>
-                                            <div className="flex gap-4">
-                                                <button onClick={() => {
-                                                    const updatedDays = [...activeP.days];
-                                                    updatedDays[idx].active = !updatedDays[idx].active;
-                                                    setProjects(projects.map(p => p.id === activeId ? {...p, days: updatedDays} : p));
-                                                }} className="text-[8px] font-black uppercase text-slate-500">{d.active ? 'Remove' : 'Add'}</button>
-                                                <i className={`fa-solid fa-circle-check ${d.signed ? 'text-emerald-500' : 'text-slate-700'}`}></i>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                            
-                            <button onClick={() => alert("Daily Report Generated for " + activeP.name)} className="w-full bg-red-600 p-6 rounded-[35px] font-black uppercase text-xs safe-btn shadow-2xl">Generate Daily Report</button>
+                            <button onClick={() => { setProjects(projects.map(p => p.id === activeId ? {...p, signed: true} : p)); alert("Report Signed Offline"); setView('dashboard'); }} className="w-full bg-emerald-600 p-6 rounded-[35px] font-black uppercase text-xs tracking-widest shadow-xl safe-btn">Sign-off Today</button>
                         </div>
                     )}
+
+                    <footer className="fixed bottom-0 left-0 right-0 p-6 glass border-t border-slate-800 flex justify-around">
+                        <button onClick={() => setView('dashboard')} className="text-red-500"><i className="fa-solid fa-calendar-day text-lg"></i></button>
+                        <a href="index.html" className="text-slate-600"><i className="fa-solid fa-house-user text-lg"></i></a>
+                    </footer>
                 </div>
             );
         }

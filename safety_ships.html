@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="el"><head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NTG | SAFESHIP MANAGER V17.0</title>
+    <title>NTG | SAFESHIP MANAGER V17.1</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -14,7 +14,7 @@
         .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.05); }
         .safe-card { border-radius: 35px; border: 1px solid rgba(255,255,255,0.03); transition: all 0.2s; }
         .safe-btn:active { transform: scale(0.95); }
-        .tab-active { border-bottom: 2px solid #ef4444; color: #ef4444; }
+        input, textarea { background: rgba(15, 23, 42, 0.8) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: white !important; }
     </style></head><body>
     <div id="root"></div>
     <script type="text/babel">
@@ -24,15 +24,15 @@
         const SUPABASE_KEY = "sb_publishable_V-nfUDy5MxEG4SlXkisFBg_GBlD_4Y9"; 
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        const PD_MEASURES = {
-            "Θερμές Εργασίες": ["Πυροσβεστήρας στα 2μ", "Fire Watch παρών", "Απομάκρυνση εύφλεκτων", "Κάλυψη με πυρίμαχα"],
-            "Καθαρισμοί": ["Gas-Free σε ισχύ", "Αντιεκρηκτικός φωτισμός", "Εξαερισμός On"],
-            "Σκαλωσιές": ["Πιστοποιητικό ανέγερσης", "Προστατευτικές μπάρες", "Σωστή έδραση"]
-        };
+        const PD_CATEGORIES = [
+            "1. Καθαρισμοί & Gas-Free", "2. Θερμές Εργασίες (Hot Works)", "3. Ελασματουργικές / Σωληνουργικές",
+            "4. Μηχανολογικές Εργασίες", "5. Επιφανειακή Επεξεργασία", "6. Ηλεκτρολογικές Εργασίες", "7. Βοηθητικές / Σκαλωσιά"
+        ];
 
         function SafeShipApp() {
-            const [view, setView] = useState('dashboard'); // dashboard, project, tasks
+            const [view, setView] = useState('dashboard'); // dashboard, new, scope, daily_hub, tasks
             const [projects, setProjects] = useState([]);
+            const [activeId, setActiveId] = useState(null);
             const [attendance, setAttendance] = useState({ in: '--:--', out: '--:--' });
             const [loading, setLoading] = useState(true);
 
@@ -48,109 +48,133 @@
                 setLoading(false);
             }
 
-            const clockIn = () => {
-                const now = new Date().toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' });
-                const newAtt = { ...attendance, in: now };
-                setAttendance(newAtt);
-                localStorage.setItem('ntg_attendance', JSON.stringify(newAtt));
+            const activeP = projects.find(p => p.id === activeId);
+
+            const handleCreate = async (e) => {
+                e.preventDefault();
+                const name = e.target.ship.value.toUpperCase();
+                const newShip = { name, scope: [], created_at: new Date() };
+                const { data, error } = await _supabase.from('ntg_projects').insert([newShip]).select();
+                if (data) { 
+                    setProjects([data[0], ...projects]); 
+                    setActiveId(data[0].id); 
+                    setView('scope'); 
+                }
             };
 
-            const clockOut = () => {
-                const now = new Date().toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' });
-                const newAtt = { ...attendance, out: now };
-                setAttendance(newAtt);
-                localStorage.setItem('ntg_attendance', JSON.stringify(newAtt));
+            const toggleScope = async (cat) => {
+                const newScope = activeP.scope.includes(cat) 
+                    ? activeP.scope.filter(c => c !== cat) 
+                    : [...activeP.scope, cat];
+                const { error } = await _supabase.from('ntg_projects').update({ scope: newScope }).eq('id', activeId);
+                if (!error) fetchData();
             };
+
+            // --- RENDER SCREENS ---
 
             if (loading) return <div className="h-screen flex items-center justify-center brand animate-pulse uppercase">Booting Command Center...</div>;
 
-            return (
-                <div className="max-w-xl mx-auto p-5 pb-32">
-                    {/* TOP STATUS BAR */}
+            // 1. DASHBOARD
+            if (view === 'dashboard') return (
+                <div className="max-w-xl mx-auto p-5 pb-32 animate-fadeIn">
                     <header className="flex justify-between items-center py-6 mb-4 border-b border-slate-800">
-                        <div>
-                            <h1 className="brand text-sm font-black italic tracking-tighter uppercase">SafeShip Manager</h1>
-                            <p className="text-[8px] text-slate-500 font-bold uppercase tracking-[0.4em]">NTG Tactical Unit</p>
-                        </div>
+                        <h1 className="brand text-sm font-black italic tracking-tighter uppercase">SafeShip Manager</h1>
                         <a href="index.html" className="text-slate-600 text-xl"><i className="fa-solid fa-house-user"></i></a>
                     </header>
-
-                    {view === 'dashboard' && (
-                        <div className="space-y-6 animate-fadeIn">
-                            {/* ATTENDANCE CARD */}
-                            <div className="glass p-6 rounded-[35px] border-l-4 border-red-600 flex justify-between items-center">
-                                <div>
-                                    <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Ωράριο Παρουσίας</h3>
-                                    <div className="flex gap-4">
-                                        <div><p className="text-[8px] uppercase text-slate-500">In</p><p className="font-bold text-lg">{attendance.in}</p></div>
-                                        <div><p className="text-[8px] uppercase text-slate-500">Out</p><p className="font-bold text-lg">{attendance.out}</p></div>
-                                    </div>
-                                </div>
-                                <div className="flex flex-col gap-2">
-                                    <button onClick={clockIn} className="bg-emerald-600 px-4 py-2 rounded-xl text-[9px] font-black uppercase safe-btn">Check In</button>
-                                    <button onClick={clockOut} className="bg-red-700 px-4 py-2 rounded-xl text-[9px] font-black uppercase safe-btn">Check Out</button>
-                                </div>
-                            </div>
-
-                            {/* DAILY PROJECTS TABLE */}
-                            <div className="glass p-6 rounded-[40px]">
-                                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                                    <i className="fa-solid fa-anchor text-blue-500"></i> Έργα της Ημέρας
-                                </h3>
-                                <div className="space-y-3">
-                                    {projects.length === 0 ? <p className="text-center text-[10px] py-10 opacity-20 uppercase italic">No active deployments</p> : 
-                                    projects.map(p => (
-                                        <div key={p.id} className="bg-slate-900/50 p-4 rounded-2xl flex justify-between items-center border border-white/5 active:scale-95 transition-all cursor-pointer" onClick={() => alert("Άνοιγμα Project Log...")}>
-                                            <div>
-                                                <h4 className="font-bold text-xs text-white uppercase">{p.name}</h4>
-                                                <p className="text-[8px] text-slate-500 uppercase mt-0.5">Location: Πέραμα / G1</p>
-                                            </div>
-                                            <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* GLOBAL TASKS BUTTON */}
-                            <button onClick={() => setView('tasks')} className="w-full bg-red-600 p-8 rounded-[40px] flex justify-between items-center shadow-2xl shadow-red-900/30 safe-btn">
-                                <div className="text-left">
-                                    <h3 className="brand text-lg text-white font-black italic leading-none uppercase">Open Tasks</h3>
-                                    <p className="text-[9px] text-white/60 font-bold uppercase mt-1">Hazardous Issues Across Fleet</p>
-                                </div>
-                                <div className="bg-white/10 w-12 h-12 rounded-full flex items-center justify-center border border-white/20">
-                                    <i className="fa-solid fa-triangle-exclamation text-xl text-white"></i>
-                                </div>
-                            </button>
-                        </div>
-                    )}
-
-                    {view === 'tasks' && (
-                        <div className="animate-fadeIn space-y-6">
-                            <button onClick={() => setView('dashboard')} className="text-slate-500 text-[10px] font-black uppercase">← Επιστροφή στο Dashboard</button>
-                            <h2 className="brand text-xl uppercase italic">Global Task Registry</h2>
-                            <div className="glass p-10 rounded-[40px] text-center opacity-30">
-                                <i className="fa-solid fa-clipboard-check text-4xl mb-4"></i>
-                                <p className="text-[10px] font-black uppercase tracking-widest leading-relaxed">Όλα τα θέματα έχουν διευθετηθεί.<br/>Fleet status: SECURE.</p>
+                    <div className="glass p-6 rounded-[35px] border-l-4 border-red-600 flex justify-between items-center mb-8">
+                        <div>
+                            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Ωράριο Παρουσίας</h3>
+                            <div className="flex gap-4">
+                                <div><p className="text-[8px] uppercase text-slate-500">In</p><p className="font-bold text-lg">{attendance.in}</p></div>
+                                <div><p className="text-[8px] uppercase text-slate-500">Out</p><p className="font-bold text-lg">{attendance.out}</p></div>
                             </div>
                         </div>
-                    )}
-
-                    {/* FOOTER NAV (Fixed) */}
-                    <footer className="fixed bottom-0 left-0 right-0 p-6 glass border-t border-slate-800 flex justify-around">
-                        <NavBtn active={view==='dashboard'} icon="fa-chart-pie" label="Status" onClick={()=>setView('dashboard')} />
-                        <NavBtn active={false} icon="fa-plus-circle" label="New Ship" onClick={() => alert("Άνοιγμα Φόρμας...")} />
-                        <NavBtn active={view==='tasks'} icon="fa-list-check" label="Tasks" onClick={()=>setView('tasks')} />
-                    </footer>
+                        <div className="flex flex-col gap-2">
+                            <button onClick={() => {const t = new Date().toLocaleTimeString('el-GR',{hour:'2-digit',minute:'2-digit'}); setAttendance({...attendance, in:t}); localStorage.setItem('ntg_attendance', JSON.stringify({...attendance, in:t}))}} className="bg-emerald-600 px-4 py-2 rounded-xl text-[9px] font-black uppercase safe-btn">Check In</button>
+                            <button onClick={() => {const t = new Date().toLocaleTimeString('el-GR',{hour:'2-digit',minute:'2-digit'}); setAttendance({...attendance, out:t}); localStorage.setItem('ntg_attendance', JSON.stringify({...attendance, out:t}))}} className="bg-red-700 px-4 py-2 rounded-xl text-[9px] font-black uppercase safe-btn">Check Out</button>
+                        </div>
+                    </div>
+                    <button onClick={() => setView('new')} className="w-full bg-red-600 p-6 rounded-[35px] font-black text-xs uppercase tracking-widest shadow-2xl mb-8 safe-btn">+ Launch New Supervision</button>
+                    <div className="space-y-4">
+                        <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] ml-2 italic">Active Fleet</h3>
+                        {projects.map(p => (
+                            <div key={p.id} onClick={() => { setActiveId(p.id); setView('daily_hub'); }} className="glass p-6 rounded-[35px] flex justify-between items-center safe-btn">
+                                <div><h4 className="font-bold text-white uppercase text-sm">{p.name}</h4><p className="text-[9px] text-slate-500 uppercase mt-1">{p.scope?.length || 0} Jobs Active</p></div>
+                                <i className="fa-solid fa-chevron-right text-slate-800"></i>
+                            </div>
+                        ))}
+                    </div>
+                    <button onClick={() => setView('tasks')} className="fixed bottom-24 right-6 w-16 h-16 bg-red-600 rounded-full shadow-2xl flex items-center justify-center safe-btn border-4 border-slate-900"><i className="fa-solid fa-list-check text-xl"></i></button>
                 </div>
             );
-        }
 
-        function NavBtn({ active, icon, label, onClick }) {
-            return (
-                <button onClick={onClick} className={`flex flex-col items-center gap-1 ${active ? 'text-red-500' : 'text-slate-600'}`}>
-                    <i className={`fa-solid ${icon} text-lg`}></i>
-                    <span className="text-[8px] font-black uppercase tracking-tighter">{label}</span>
-                </button>
+            // 2. NEW PROJECT
+            if (view === 'new') return (
+                <div className="max-w-xl mx-auto p-5 animate-fadeIn">
+                    <button onClick={() => setView('dashboard')} className="text-slate-500 text-[10px] font-black uppercase mb-10">← Back</button>
+                    <h2 className="brand text-xl uppercase italic mb-8">Project Identity</h2>
+                    <form onSubmit={handleCreate} className="space-y-6">
+                        <input name="ship" required className="w-full p-6 rounded-3xl outline-none font-bold text-xl uppercase tracking-tighter" placeholder="Ship Name / IMO" />
+                        <button className="w-full bg-red-600 p-6 rounded-3xl font-black uppercase shadow-xl">Create & Define Scope</button>
+                    </form>
+                </div>
+            );
+
+            // 3. DEFINE SCOPE
+            if (view === 'scope') return (
+                <div className="max-w-xl mx-auto p-5 animate-fadeIn pb-32">
+                    <button onClick={() => setView('dashboard')} className="text-slate-500 text-[10px] font-black uppercase mb-6">← Fleet</button>
+                    <h2 className="brand text-sm text-red-500 uppercase italic mb-8">Work Scope: {activeP.name}</h2>
+                    <div className="space-y-3">
+                        {PD_CATEGORIES.map(cat => (
+                            <div key={cat} onClick={() => toggleScope(cat)} className={`glass p-5 rounded-[30px] flex justify-between items-center border-2 transition-all ${activeP.scope.includes(cat) ? 'border-red-600 bg-red-600/10' : 'border-transparent opacity-40'}`}>
+                                <span className="text-[11px] font-bold uppercase">{cat}</span>
+                                {activeP.scope.includes(cat) && <i className="fa-solid fa-check text-red-500"></i>}
+                            </div>
+                        ))}
+                    </div>
+                    <button onClick={() => setView('daily_hub')} className="fixed bottom-10 left-5 right-5 bg-emerald-600 p-6 rounded-[35px] font-black uppercase text-xs tracking-widest shadow-2xl">Confirm & Open Daily Log</button>
+                </div>
+            );
+
+            // 4. DAILY HUB
+            if (view === 'daily_hub') return (
+                <div className="max-w-xl mx-auto p-5 animate-fadeIn pb-32">
+                    <div className="flex justify-between items-center mb-6">
+                        <button onClick={() => setView('dashboard')} className="text-slate-500 text-[10px] font-black uppercase">← Dashboard</button>
+                        <button onClick={() => setView('scope')} className="text-blue-500 text-[10px] font-black uppercase">Edit Scope</button>
+                    </div>
+                    <div className="glass p-8 rounded-[40px] border-l-4 border-red-600 mb-8">
+                        <h2 className="brand text-2xl font-black uppercase tracking-tighter">{activeP.name}</h2>
+                        <p className="text-[10px] text-red-500 font-bold uppercase mt-1 tracking-widest italic">Daily Progress Report</p>
+                    </div>
+                    <div className="space-y-6">
+                        {activeP.scope.length === 0 ? <p className="text-center p-10 opacity-30 italic text-xs">No scope defined yet.</p> : 
+                        activeP.scope.map(cat => (
+                            <div key={cat} className="glass p-6 rounded-[35px] border border-white/5">
+                                <h4 className="text-[10px] font-black text-white uppercase mb-4 opacity-70 italic">{cat}</h4>
+                                <textarea className="w-full p-4 rounded-2xl text-[11px] h-24 outline-none focus:ring-1 ring-red-500" placeholder="Notes & observations..."></textarea>
+                                <div className="flex gap-2 mt-4">
+                                    <button className="flex-1 bg-slate-800 p-4 rounded-2xl text-[9px] font-black uppercase shadow-inner"><i className="fa-solid fa-camera mr-2 text-red-500"></i> Photo</button>
+                                    <button className="flex-1 bg-slate-800 p-4 rounded-2xl text-[9px] font-black uppercase shadow-inner"><i className="fa-solid fa-microphone mr-2 text-blue-500"></i> Voice</button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    <button className="fixed bottom-10 left-5 right-5 bg-red-600 p-6 rounded-[35px] font-black uppercase text-xs tracking-widest shadow-2xl">Finalize Daily PDF</button>
+                </div>
+            );
+
+            // 5. GLOBAL TASKS
+            if (view === 'tasks') return (
+                <div className="max-w-xl mx-auto p-5 animate-fadeIn">
+                    <button onClick={() => setView('dashboard')} className="text-slate-500 text-[10px] font-black uppercase mb-10">← Home</button>
+                    <h2 className="brand text-xl uppercase italic mb-8">Global Task Registry</h2>
+                    <div className="glass p-20 rounded-[40px] text-center opacity-30 border-2 border-dashed border-slate-800">
+                        <i className="fa-solid fa-clipboard-check text-4xl mb-4"></i>
+                        <p className="text-[10px] font-black uppercase tracking-widest">All issues resolved.</p>
+                    </div>
+                </div>
             );
         }
 

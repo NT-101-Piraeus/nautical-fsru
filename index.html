@@ -1,159 +1,43 @@
-<!DOCTYPE html>
-<html lang="el">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>X-INTEL STRATEGY HUB | Lainas Group</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; }
-        .tile-active:active { transform: scale(0.95); }
-    </style>
-</head>
-<body class="bg-slate-100">
-    <div id="root"></div>
+<script type="text/babel">
+    const { useState } = React;
 
-    <script type="text/babel">
-        const { useState, useEffect } = React;
+    function MainHub() {
+        const [activeApp, setActiveApp] = useState('home');
 
-        // --- Mock Data για Merchant Agent (Navaltech) ---
-        const MERCHANT_DATA = [
-            { id: 1, product: "Υφαλόχρωμα A+ Ultra", navaltech_price: "145.50€", status: "up" },
-            { id: 2, product: "Σχοινί Πρόσδεσης 20mm", navaltech_price: "88.00€", status: "down" },
-            { id: 3, product: "Ηλεκτρόδια 6013", navaltech_price: "12.20€", status: "stable" }
+        // Ορισμός των "Εφαρμογών" σου
+        const apps = [
+            { id: 'safety', name: 'Τεχνικός Ασφαλείας', icon: 'fa-user-shield', color: 'bg-emerald-600', group: 'MARINE' },
+            { id: 'utm', name: 'UTL / UTM Hull', icon: 'fa-ruler-combined', color: 'bg-blue-600', group: 'MARINE' },
+            { id: 'load_test', name: 'Load Testing', icon: 'fa-weight-hanging', color: 'bg-cyan-600', group: 'MARINE' },
+            { id: 'legal', name: 'Νομικές Υποθέσεις', icon: 'fa-gavel', color: 'bg-red-800', group: 'LEGAL' },
+            { id: 'intel', name: 'Ship & Yard Intel', icon: 'fa-tower-observation', color: 'bg-slate-800', group: 'INTEL' },
+            { id: 'airbnb', name: 'Airbnb Manager', icon: 'fa-bed', color: 'bg-pink-500', group: 'BUSINESS' },
+            { id: 'competitors', name: 'Competition Watch', icon: 'fa-eye', color: 'bg-orange-600', group: 'INTEL' }
         ];
 
-        // --- Main App Component ---
-        function App() {
-            const [view, setView] = useState('dashboard');
-            const [isLoggedIn, setIsLoggedIn] = useState(false);
-            const [passcode, setPasscode] = useState('');
-
-            // Login Logic
-            const handleLogin = (e) => {
-                e.preventDefault();
-                if (passcode === 'NT2026') setIsLoggedIn(true);
-                else alert("Λάθος Κωδικός!");
-            };
-
-            if (!isLoggedIn) {
-                return (
-                    <div className="h-screen flex items-center justify-center bg-slate-900 p-6">
-                        <div className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-sm text-center">
-                            <h1 className="text-2xl font-bold text-slate-800 mb-2">Nautical Tech V7.0</h1>
-                            <p className="text-slate-500 mb-6 text-sm">Lainas Group Intelligence</p>
-                            <form onSubmit={handleLogin}>
-                                <input 
-                                    type="password" 
-                                    className="w-full border-2 border-slate-200 p-3 rounded-xl mb-4 text-center focus:border-blue-500 outline-none"
-                                    placeholder="Κωδικός Πρόσβασης"
-                                    value={passcode}
-                                    onChange={(e) => setPasscode(e.target.value)}
-                                />
-                                <button className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold shadow-lg">Είσοδος</button>
-                            </form>
-                        </div>
-                    </div>
-                );
-            }
-
+        if (activeApp === 'home') {
             return (
-                <div className="min-h-screen flex flex-col">
-                    {/* Header */}
-                    <header className="bg-slate-900 text-white p-4 shadow-md sticky top-0 z-50">
-                        <div className="flex justify-between items-center max-w-4xl mx-auto">
-                            <div>
-                                <h2 className="font-bold text-lg leading-tight text-blue-400">LAINAS GROUP</h2>
-                                <p className="text-[10px] uppercase tracking-widest opacity-70">X-Intel Strategy Hub</p>
-                            </div>
-                            {view !== 'dashboard' && (
-                                <button 
-                                    onClick={() => setView('dashboard')}
-                                    className="bg-white/10 hover:bg-white/20 px-3 py-1 rounded-lg text-xs font-bold transition-all"
-                                >
-                                    <i className="fa-solid fa-arrow-left mr-1"></i> MENU
-                                </button>
-                            )}
-                        </div>
+                <div className="p-4 max-w-lg mx-auto">
+                    <header className="mb-8 text-center">
+                        <h1 className="text-3xl font-black text-slate-900">X-INTEL HUB</h1>
+                        <p className="text-slate-500 text-xs font-bold uppercase tracking-widest">Lainas Group Command Center</p>
                     </header>
 
-                    {/* Content */}
-                    <main className="flex-1 max-w-4xl mx-auto w-full p-4">
-                        {view === 'dashboard' && <Dashboard setView={setView} />}
-                        {view === 'safety' && <SafetyReport />}
-                        {view === 'merchant' && <MerchantReport title="eShop Research" />}
-                        {view === 'competition' && <MerchantReport title="Competition Watch" />}
-                        {['arrivals', 'legislation', 'market', 'tenders', 'weather'].includes(view) && (
-                            <div className="text-center p-20 text-slate-400 italic">
-                                <i className="fa-solid fa-gears text-4xl mb-4 block"></i>
-                                Η ενότητα {view.toUpperCase()} είναι υπό κατασκευή...
-                            </div>
-                        )}
-                    </main>
-
-                    {/* Footer / Offline Indicator */}
-                    <footer className="p-2 bg-slate-200 text-center text-[10px] text-slate-500 font-bold uppercase">
-                        System Status: <span className="text-green-600">Secure (ISO 19848)</span>
-                    </footer>
-                </div>
-            );
-        }
-
-        // --- Dashboard Component (8 Tiles) ---
-        function Dashboard({ setView }) {
-            const tiles = [
-                { id: 'arrivals', title: "Ship Arrivals", sub: "Hunter Agent", icon: "fa-ship", color: "bg-blue-600" },
-                { id: 'safety', title: "Safety Report", sub: "Π.Δ. 70/90", icon: "fa-shield-halved", color: "bg-emerald-600" },
-                { id: 'legislation', title: "Legislation", sub: "IMO/DNV News", icon: "fa-gavel", color: "bg-slate-700" },
-                { id: 'market', title: "Maritime Market", sub: "Ναύλοι & Τάσεις", icon: "fa-chart-line", color: "bg-indigo-600" },
-                { id: 'merchant', title: "eShop Research", sub: "Price Scanner", icon: "fa-cart-shopping", color: "bg-orange-600" },
-                { id: 'competition', title: "Competition", sub: "Navaltech Intel", icon: "fa-eye", color: "bg-red-600" },
-                { id: 'tenders', title: "Tenders/ΕΣΠΑ", sub: "Live Alerts", icon: "fa-file-contract", color: "bg-amber-600" },
-                { id: 'weather', title: "Port Weather", sub: "Lifting Safety", icon: "fa-cloud-sun", color: "bg-sky-500" },
-            ];
-
-            return (
-                <div className="grid grid-cols-2 gap-4 py-4">
-                    {tiles.map(t => (
-                        <div 
-                            key={t.id}
-                            onClick={() => setView(t.id)}
-                            className={`${t.color} p-5 rounded-2xl shadow-lg flex flex-col items-center justify-center text-white tile-active cursor-pointer transition-all hover:brightness-110 h-36`}
-                        >
-                            <i className={`fa-solid ${t.icon} text-3xl mb-2`}></i>
-                            <span className="text-[11px] font-bold uppercase tracking-tight">{t.title}</span>
-                            <span className="text-[9px] opacity-80 mt-1">{t.sub}</span>
-                        </div>
-                    ))}
-                </div>
-            );
-        }
-
-        // --- Merchant Report Component (Navaltech Integration) ---
-        function MerchantReport({ title }) {
-            return (
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                    <div className="bg-slate-50 p-4 border-b">
-                        <h3 className="font-bold text-slate-800">{title}</h3>
-                        <p className="text-xs text-slate-500">Πηγή: Navaltech.gr | Sync: 08:00 AM</p>
-                    </div>
-                    <div className="divide-y">
-                        {MERCHANT_DATA.map(item => (
-                            <div key={item.id} className="p-4 flex justify-between items-center">
-                                <div>
-                                    <p className="text-sm font-semibold">{item.product}</p>
-                                    <p className="text-[10px] text-slate-400">SKU: NT-00{item.id}</p>
-                                </div>
-                                <div className="text-right">
-                                    <p className="font-bold text-slate-800">{item.navaltech_price}</p>
-                                    <span className={`text-[9px] font-bold ${item.status === 'up' ? 'text-red-500' : 'text-green-500'}`}>
-                                        {item.status === 'up' ? '▲ ΑΥΞΗΣΗ' : '▼ ΜΕΙΩΣΗ'}
-                                    </span>
+                    <div className="space-y-6">
+                        {['MARINE', 'LEGAL', 'INTEL', 'BUSINESS'].map(group => (
+                            <div key={group}>
+                                <h3 className="text-[10px] font-black text-slate-400 mb-2 border-b border-slate-200 pb-1">{group}</h3>
+                                <div className="grid grid-cols-2 gap-3">
+                                    {apps.filter(a => a.group === group).map(app => (
+                                        <button 
+                                            key={app.id}
+                                            onClick={() => setActiveApp(app.id)}
+                                            className={`${app.color} p-4 rounded-2xl text-white shadow-lg active:scale-95 transition-all flex flex-col items-center justify-center h-28`}
+                                        >
+                                            <i className={`fa-solid ${app.icon} text-2xl mb-2`}></i>
+                                            <span className="text-[10px] font-bold uppercase text-center">{app.name}</span>
+                                        </button>
+                                    ))}
                                 </div>
                             </div>
                         ))}
@@ -162,34 +46,59 @@
             );
         }
 
-        // --- Safety Report Component (Αυτό που είχες) ---
-        function SafetyReport() {
-            return (
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                    <h3 className="font-bold text-slate-800 mb-4 border-b pb-2">Τεχνικός Ασφαλείας Πλοίων (Π.Δ. 70/90)</h3>
-                    <div className="space-y-4">
-                        <div>
-                            <label className="text-xs font-bold text-slate-500 uppercase">Όνομα Πλοίου</label>
-                            <input type="text" className="w-full border p-2 rounded-lg mt-1" placeholder="π.χ. Rigel III" />
-                        </div>
-                        <div>
-                            <label className="text-xs font-bold text-slate-500 uppercase">Ημερολόγιο & Παρατηρήσεις</label>
-                            <textarea className="w-full border p-2 rounded-lg mt-1 h-32" placeholder="Καταγραφή SIMOPS / Gas Free..."></textarea>
-                        </div>
-                        <div>
-                            <label className="text-xs font-bold text-slate-500 uppercase">Φωτογραφία Έργου</label>
-                            <input type="file" className="block w-full text-xs mt-2" />
-                        </div>
-                        <button className="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl mt-4">
-                            ΚΑΤΑΧΩΡΗΣΗ ΣΤΟ REPORT
-                        </button>
-                    </div>
+        // Εδώ είναι η λογική για το τι δείχνει κάθε App
+        return (
+            <div className="min-h-screen bg-white">
+                <header className="bg-slate-900 p-4 text-white flex justify-between items-center">
+                    <span className="font-bold text-xs uppercase">{apps.find(a => a.id === activeApp).name}</span>
+                    <button onClick={() => setActiveApp('home')} className="text-xs bg-white/20 px-3 py-1 rounded-full">ΚΛΕΙΣΙΜΟ</button>
+                </header>
+                
+                <div className="p-6">
+                    {activeApp === 'legal' && <LegalModule />}
+                    {activeApp === 'intel' && <IntelModule />}
+                    {activeApp === 'utm' && <UTMModule />}
+                    {/* Τα υπόλοιπα modules προστίθενται εδώ */}
                 </div>
-            );
-        }
+            </div>
+        );
+    }
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
-    </script>
-</body>
-</html>
+    // Παράδειγμα Module για Νομικά
+    function LegalModule() {
+        return (
+            <div className="space-y-4">
+                <div className="p-4 bg-red-50 border-l-4 border-red-800 rounded-r-xl">
+                    <h4 className="font-bold text-red-900">Υπόθεση Τερμέ</h4>
+                    <p className="text-xs text-red-700">Τελευταία ενημέρωση από δικηγόρο: "Αναμονή για κατάθεση υπομνήματος".</p>
+                </div>
+                <div className="p-4 bg-slate-50 border-l-4 border-slate-800 rounded-r-xl">
+                    <h4 className="font-bold text-slate-800">Σαμσούντα</h4>
+                    <p className="text-xs text-slate-600">Status: Active</p>
+                </div>
+            </div>
+        );
+    }
+
+    // Παράδειγμα Module για Intel (Ships & Yards)
+    function IntelModule() {
+        return (
+            <div className="space-y-4">
+                <div className="p-4 bg-blue-50 border rounded-xl">
+                    <h4 className="font-bold">🚢 NAFTOCEMENT IV</h4>
+                    <p className="text-xs text-blue-800">Εντοπίστηκε: Πέραμα (Ζώνη)</p>
+                    <span className="text-[10px] bg-blue-200 px-2 py-1 rounded mt-2 inline-block">LIVE TRACKING</span>
+                </div>
+                <div className="p-4 bg-orange-50 border rounded-xl">
+                    <h4 className="font-bold">🏭 Ναυπηγεία Τουρκίας</h4>
+                    <p className="text-xs text-orange-800">Αναφορές για αυξημένη κίνηση σε Bulk Carriers.</p>
+                </div>
+            </div>
+        );
+    }
+
+    function UTMModule() { return <div>UTM Reports & Hull Gauging Logic...</div>; }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<MainHub />);
+</script>

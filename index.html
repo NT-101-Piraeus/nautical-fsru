@@ -15,6 +15,8 @@
         .brand { font-family: 'Orbitron', sans-serif; }
         .glass { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); }
         .pin-input { letter-spacing: 1.2rem; text-align: center; font-size: 2rem; border: 2px solid #3b82f6; color: #3b82f6; }
+        .hazard-pulse { animation: pulse-red 2s infinite; cursor: pointer; }
+        @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.5); } 70% { box-shadow: 0 0 0 15px rgba(220, 38, 38, 0); } 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); } }
     </style>
 </head>
 <body>
@@ -23,10 +25,7 @@
     <script type="text/babel" src="divisions/M1_Safety.js"></script>
     <script type="text/babel" src="divisions/M2_Repairs.js"></script>
     <script type="text/babel" src="divisions/M3_Legal.js"></script>
-    <script type="text/babel" src="divisions/M5_Staff.js"></script>
-    <script type="text/babel" src="divisions/M6_CEOPulse.js"></script>
     <script type="text/babel" src="divisions/M7_XGR.js"></script>
-    <script type="text/babel" src="divisions/M8_Mykonos.js"></script>
     
     <script type="text/babel" src="main.js"></script>
 </body>

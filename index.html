@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NTG COMMAND | FULL OPERATIONAL</title>
+    <title>NTG COMMAND | FULL SYSTEM V2.5</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -12,10 +12,12 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Inter:wght@400;600;900&display=swap');
-        body { font-family: 'Inter', sans-serif; background: #020617; color: white; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Inter', sans-serif; background: #020617; color: white; -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
         .brand { font-family: 'Orbitron', sans-serif; }
-        .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); }
-        .active-btn { transform: scale(0.95); background: rgba(59, 130, 246, 0.2); }
+        .glass { background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); }
+        .tile-active { transform: scale(0.95); background: rgba(59, 130, 246, 0.2); }
+        .progress-bar { height: 6px; background: #1e293b; border-radius: 3px; overflow: hidden; }
+        .progress-fill { height: 100%; transition: width 0.8s ease-in-out; }
     </style>
 </head>
 <body>
@@ -24,177 +26,174 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        // ΣΥΝΔΕΣΗ SUPABASE (ΑΝΤΙΚΑΤΑΣΤΗΣΕ ΜΕ ΤΑ ΔΙΚΑ ΣΟΥ)
+        // --- ΣΥΝΔΕΣΗ SUPABASE (ΒΑΛΕ ΤΑ ΚΛΕΙΔΙΑ ΣΟΥ) ---
         const SUPABASE_URL = 'https://ovofreerowjofpvyqqre.supabase.co'; 
-        const SUPABASE_KEY = 'YOUR_ACTUAL_KEY_HERE'; 
+        const SUPABASE_KEY = 'YOUR_SUPABASE_KEY_HERE'; 
         const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         function App() {
             const [view, setView] = useState('HOME');
             const [mode, setMode] = useState('MARITIME');
-            const [search, setSearch] = useState('');
+            const [loading, setLoading] = useState(false);
 
-            // --- NAVIGATION ---
-            const manuals = [
-                { id: 'M1', title: 'SAFETY', icon: 'fa-shield-halved', color: 'text-blue-400' },
-                { id: 'M2', title: 'REPAIRS', icon: 'fa-ship', color: 'text-cyan-400' },
-                { id: 'M3', title: 'LEGAL', icon: 'fa-scale-balanced', color: 'text-red-500' },
-                { id: 'M5', title: 'WORKFORCE', icon: 'fa-user-clock', color: 'text-emerald-400' },
-                { id: 'M6', title: 'CEO PULSE', icon: 'fa-chart-line', color: 'text-purple-500' },
-                { id: 'M7', title: 'X-MERCHANT', icon: 'fa-cart-shopping', color: 'text-orange-500' },
-                { id: 'M8', title: 'AIRBNB', icon: 'fa-house-chimney-user', color: 'text-pink-500' },
-                { id: 'M4', title: 'TECH CORE', icon: 'fa-microchip', color: 'text-slate-500' }
+            // Mock Data for Manuals
+            const fleet = [
+                { name: 'NAFTOCEMENT IV', status: 'Repairing', progress: 75, days: 2, color: 'bg-cyan-500' },
+                { name: 'BLUE STAR I', status: 'Inbound', progress: 15, days: 12, color: 'bg-blue-500' }
+            ];
+
+            const inventory = [
+                { item: 'Gas Detector GX-2009', stock: 2, price: '€420', low: true },
+                { item: 'Safety Harness Pro', stock: 15, price: '€110', low: false }
             ];
 
             return (
-                <div className="min-h-screen pb-24 max-w-md mx-auto">
-                    {/* --- GLOBAL HEADER --- */}
+                <div className="min-h-screen flex flex-col max-w-md mx-auto relative shadow-2xl shadow-blue-500/10">
+                    
+                    {/* --- GLOBAL SYNC HEADER (Manual 01) --- */}
                     <header className="glass sticky top-0 z-50 p-4 flex justify-between items-center border-b border-blue-500/20">
                         <div onClick={() => setView('HOME')} className="cursor-pointer">
-                            <p className="text-[9px] font-black text-blue-500 tracking-[0.3em]">NTG COMMAND</p>
-                            <h1 className="font-bold text-sm tracking-tighter">M. SYKINIOTIS</h1>
+                            <p className="text-[9px] font-black text-blue-500 tracking-[0.3em] uppercase leading-none mb-1">NTG Command</p>
+                            <h1 className="font-black text-sm tracking-tighter italic">M. SYKINIOTIS</h1>
                         </div>
-                        <button onClick={() => setMode(mode === 'MARITIME' ? 'INDUSTRIAL' : 'MARITIME')} 
-                                className="text-[9px] font-black bg-blue-600/10 border border-blue-500/50 px-3 py-1 rounded-full text-blue-400">
-                            {mode}
-                        </button>
+                        <div className="text-right">
+                            <div className="flex items-center gap-2 justify-end">
+                                <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Cloud Active</span>
+                                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_#22c55e]"></div>
+                            </div>
+                            <button onClick={() => setMode(mode === 'MARITIME' ? 'INDUSTRIAL' : 'MARITIME')} className="mt-1 bg-slate-800 border border-slate-700 px-2 py-0.5 rounded text-[8px] font-black text-slate-400">
+                                MODE: {mode}
+                            </button>
+                        </div>
                     </header>
 
-                    <main className="p-4">
-                        {/* --- HOME HUB --- */}
+                    <main className="flex-1 p-5 overflow-y-auto">
+                        
+                        {/* --- HUB VIEW (The 8 Icons) --- */}
                         {view === 'HOME' && (
-                            <div className="grid grid-cols-2 gap-4 animate-in fade-in duration-300">
-                                {manuals.map(m => (
-                                    <button key={m.id} onClick={() => setView(m.id)} className="glass p-6 rounded-[2.5rem] flex flex-col items-center gap-2 border-b-2 border-transparent active:border-white/20">
-                                        <i className={`fa-solid ${m.icon} text-3xl ${m.color}`}></i>
-                                        <span className="text-[10px] font-black uppercase tracking-tighter">{m.title}</span>
-                                    </button>
+                            <div className="grid grid-cols-2 gap-4 animate-in fade-in zoom-in duration-300">
+                                <button onClick={() => setView('M1')} className="glass p-6 rounded-[2.5rem] flex flex-col items-center gap-2 border-b-4 border-blue-600">
+                                    <i className="fa-solid fa-shield-halved text-3xl text-blue-400"></i>
+                                    <span className="text-[10px] font-black uppercase tracking-tighter">Safety (M1)</span>
+                                </button>
+                                <button onClick={() => setView('M2')} className="glass p-6 rounded-[2.5rem] flex flex-col items-center gap-2 border-b-4 border-cyan-500">
+                                    <i className="fa-solid fa-ship text-3xl text-cyan-400"></i>
+                                    <span className="text-[10px] font-black uppercase tracking-tighter">Repairs (M2)</span>
+                                </button>
+                                <button onClick={() => setView('M3')} className="glass p-6 rounded-[2.5rem] flex flex-col items-center gap-2 border-b-4 border-red-600">
+                                    <i className="fa-solid fa-scale-balanced text-3xl text-red-500"></i>
+                                    <span className="text-[10px] font-black uppercase tracking-tighter">Legal (M3)</span>
+                                </button>
+                                <button onClick={() => setView('M5')} className="glass p-6 rounded-[2.5rem] flex flex-col items-center gap-2 border-b-4 border-emerald-500">
+                                    <i className="fa-solid fa-user-clock text-3xl text-emerald-500"></i>
+                                    <span className="text-[10px] font-black uppercase tracking-tighter">Workforce (M5)</span>
+                                </button>
+                                <button onClick={() => setView('M6')} className="glass p-6 rounded-[2.5rem] flex flex-col items-center gap-2 border-b-4 border-purple-600">
+                                    <i className="fa-solid fa-chart-line text-3xl text-purple-500"></i>
+                                    <span className="text-[10px] font-black uppercase tracking-tighter">CEO Pulse (M6)</span>
+                                </button>
+                                <button onClick={() => setView('M7')} className="glass p-6 rounded-[2.5rem] flex flex-col items-center gap-2 border-b-4 border-orange-500">
+                                    <i className="fa-solid fa-cart-shopping text-3xl text-orange-500"></i>
+                                    <span className="text-[10px] font-black uppercase tracking-tighter">Merchant (M7)</span>
+                                </button>
+                                <button onClick={() => setView('M8')} className="glass p-6 rounded-[2.5rem] flex flex-col items-center gap-2 border-b-4 border-pink-600">
+                                    <i className="fa-solid fa-house-chimney-user text-3xl text-pink-500"></i>
+                                    <span className="text-[10px] font-black uppercase tracking-tighter">Airbnb (M8)</span>
+                                </button>
+                                <button onClick={() => setView('M4')} className="glass p-6 rounded-[2.5rem] flex flex-col items-center gap-2 border-b-4 border-slate-500">
+                                    <i className="fa-solid fa-microchip text-3xl text-slate-500"></i>
+                                    <span className="text-[10px] font-black uppercase tracking-tighter">Tech (M4)</span>
+                                </button>
+                            </div>
+                        )}
+
+                        {/* --- M2: REPAIRS (Manual 02) --- */}
+                        {view === 'M2' && (
+                            <div className="space-y-4 animate-in slide-in-from-right">
+                                <div className="flex justify-between items-center mb-4">
+                                    <h2 className="brand text-cyan-400 text-xs tracking-widest italic uppercase underline decoration-cyan-500/50 underline-offset-8">Repair Controller</h2>
+                                    <button onClick={() => setView('HOME')} className="text-[10px] font-black text-slate-500 uppercase">Back</button>
+                                </div>
+                                <div className="relative mb-6">
+                                    <input type="text" placeholder="Search Fleet..." className="w-full bg-slate-900 border border-slate-700 p-4 rounded-2xl text-xs font-bold focus:border-cyan-500 outline-none" />
+                                    <i className="fa-solid fa-magnifying-glass absolute right-4 top-4 text-slate-600"></i>
+                                </div>
+                                {fleet.map(ship => (
+                                    <div key={ship.name} className="glass p-5 rounded-3xl border-l-4 border-cyan-500 space-y-3">
+                                        <div className="flex justify-between items-start">
+                                            <div>
+                                                <h3 className="font-black text-sm tracking-tighter uppercase">{ship.name}</h3>
+                                                <p className="text-[9px] text-slate-500 font-bold uppercase">{ship.status}</p>
+                                            </div>
+                                            <span className={`text-[8px] font-black px-2 py-1 rounded ${ship.days < 3 ? 'bg-red-600' : 'bg-slate-800'}`}>{ship.days} DAYS LEFT</span>
+                                        </div>
+                                        <div className="progress-bar"><div className={`progress-fill ${ship.color}`} style={{width: `${ship.progress}%`}}></div></div>
+                                    </div>
                                 ))}
                             </div>
                         )}
 
-                        {/* --- M1: SAFETY (INSPECTION ENGINE) --- */}
-                        {view === 'M1' && (
-                            <div className="space-y-4">
-                                <h2 className="brand text-blue-400 text-xs italic">M1 // SAFETY INSPECTOR</h2>
-                                <div className="glass p-5 rounded-3xl space-y-4">
-                                    <input type="text" placeholder="Project Name..." className="w-full bg-slate-900 border border-slate-700 p-4 rounded-xl text-xs" />
-                                    <select className="w-full bg-slate-900 border border-slate-700 p-4 rounded-xl text-xs">
-                                        <option>Deck Area</option><option>Engine Room</option><option>Hot Works Zone</option>
-                                    </select>
-                                    <button className="w-full bg-blue-600 p-4 rounded-xl font-black text-xs uppercase">Start Live Audit</button>
-                                </div>
-                                <button onClick={() => setView('HOME')} className="w-full text-center text-[10px] font-black text-slate-500 uppercase">Back to Hub</button>
-                            </div>
-                        )}
-
-                        {/* --- M2: REPAIRS (SEARCH & TIMELINE) --- */}
-                        {view === 'M2' && (
-                            <div className="space-y-4">
-                                <h2 className="brand text-cyan-400 text-xs italic">M2 // REPAIR CONTROLLER</h2>
-                                <input type="text" placeholder="Search Vessel Name..." className="w-full bg-slate-900 border border-slate-700 p-4 rounded-xl text-xs" />
-                                <div className="glass p-5 rounded-3xl border-l-4 border-cyan-500">
-                                    <div className="flex justify-between items-center mb-2">
-                                        <span className="text-[10px] font-black tracking-widest text-cyan-400">NAFTOCEMENT IV</span>
-                                        <span className="text-[8px] font-black bg-red-600 px-2 py-0.5 rounded text-white italic">2 DAYS LEFT</span>
-                                    </div>
-                                    <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
-                                        <div className="bg-cyan-500 h-full w-[75%]"></div>
-                                    </div>
-                                    <p className="text-[9px] text-slate-500 mt-2 font-bold uppercase tracking-widest text-center italic">Under Repair - 75% Complete</p>
-                                </div>
-                                <button onClick={() => setView('HOME')} className="w-full text-center text-[10px] font-black text-slate-500 uppercase">Back</button>
-                            </div>
-                        )}
-
-                        {/* --- M3: LEGAL (EVIDENCE) --- */}
-                        {view === 'M3' && (
-                            <div className="space-y-4">
-                                <h2 className="brand text-red-500 text-xs italic">M3 // LEGAL VAULT</h2>
-                                <div className="glass p-5 rounded-3xl border-l-4 border-red-600 space-y-2">
-                                    <p className="text-xs font-black uppercase tracking-tighter">Case A: Naftocement Vietnam</p>
-                                    <p className="text-[9px] text-slate-400 italic font-bold tracking-widest">STatus: Ship Escaped Nightly</p>
-                                    <button className="w-full bg-red-600/20 border border-red-600/50 py-2 rounded-lg text-[9px] font-black text-red-500 uppercase">Open Evidence File</button>
-                                </div>
-                                <button onClick={() => setView('HOME')} className="w-full text-center text-[10px] font-black text-slate-500 uppercase">Back</button>
-                            </div>
-                        )}
-
-                        {/* --- M5: WORKFORCE (ATTENDANCE) --- */}
-                        {view === 'M5' && (
-                            <div className="space-y-4 text-center">
-                                <h2 className="brand text-emerald-400 text-xs italic">M5 // WORKFORCE LOG</h2>
-                                <div className="glass p-10 rounded-full w-48 h-48 mx-auto flex flex-col items-center justify-center border-4 border-emerald-500 shadow-[0_0_30px_rgba(16,185,129,0.2)]">
-                                    <p className="text-[10px] font-black text-emerald-500 uppercase mb-2">System Ready</p>
-                                    <button className="bg-emerald-600 p-4 rounded-xl font-black text-xs uppercase tracking-widest active:scale-95">CLOCK IN</button>
-                                </div>
-                                <p className="text-[9px] text-slate-500 italic uppercase tracking-widest">GPS Verification: ACTIVE</p>
-                                <button onClick={() => setView('HOME')} className="w-full text-center text-[10px] font-black text-slate-500 uppercase mt-4">Back</button>
-                            </div>
-                        )}
-
-                        {/* --- M6: CEO (FINANCE) --- */}
+                        {/* --- M6: CEO PULSE (Manual 06) --- */}
                         {view === 'M6' && (
-                            <div className="space-y-4">
-                                <h2 className="brand text-purple-500 text-xs italic">M6 // CEO MASTER PULSE</h2>
-                                <div className="glass p-6 rounded-[2.5rem] bg-purple-950/5 border-purple-500/20">
-                                    <p className="text-[8px] font-black text-emerald-500 uppercase tracking-widest">Annual Profitability</p>
-                                    <h3 className="text-3xl font-black text-white tracking-tighter">+32.4%</h3>
-                                    <div className="mt-4 grid grid-cols-2 gap-2">
-                                        <div className="p-3 bg-slate-900 rounded-2xl border border-slate-800 text-center text-[10px] font-black uppercase italic tracking-tighter italic">Fleet Health: 84%</div>
-                                        <div className="p-3 bg-slate-900 rounded-2xl border border-slate-800 text-center text-[10px] font-black uppercase italic tracking-tighter italic">Burn Rate: 4.2k</div>
+                            <div className="space-y-6 animate-in zoom-in">
+                                <div className="flex justify-between items-center">
+                                    <h2 className="brand text-purple-500 text-xs tracking-widest italic">MASTER PULSE</h2>
+                                    <button onClick={() => setView('HOME')} className="text-[10px] font-black text-slate-500 uppercase">Back</button>
+                                </div>
+                                <div className="glass p-8 rounded-[3rem] bg-purple-900/5 border-purple-500/20 text-center">
+                                    <p className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.3em] mb-2">Net Profitability</p>
+                                    <h3 className="text-4xl font-black text-white tracking-tighter underline decoration-emerald-500/30">+32.4%</h3>
+                                    <div className="grid grid-cols-2 gap-3 mt-8">
+                                        <div className="p-3 bg-slate-900 rounded-2xl border border-slate-800"><p className="text-[8px] text-slate-500 font-bold mb-1 uppercase">Fleet Health</p><p className="text-xs font-black">84%</p></div>
+                                        <div className="p-3 bg-slate-900 rounded-2xl border border-slate-800"><p className="text-[8px] text-slate-500 font-bold mb-1 uppercase">Burn Rate</p><p className="text-xs font-black">€4.2k/d</p></div>
                                     </div>
                                 </div>
-                                <button onClick={() => setView('HOME')} className="w-full text-center text-[10px] font-black text-slate-500 uppercase">Back</button>
                             </div>
                         )}
 
-                        {/* --- M7: MERCHANT (E-SHOP) --- */}
-                        {view === 'M7' && (
-                            <div className="space-y-4">
-                                <h2 className="brand text-orange-500 text-xs italic">M7 // X-MERCHANT</h2>
-                                <div className="space-y-2">
-                                    <div className="glass p-4 rounded-2xl flex justify-between items-center border-slate-800">
-                                        <span className="text-[10px] font-black uppercase tracking-tighter">Gas Detector GX-2009</span>
-                                        <span className="text-[10px] font-black text-orange-500 tracking-tighter">€420</span>
-                                    </div>
-                                    <div className="glass p-4 rounded-2xl flex justify-between items-center border-slate-800 border-l-4 border-red-600">
-                                        <span className="text-[10px] font-black uppercase tracking-tighter">Oil Filter Marine-X</span>
-                                        <span className="text-[10px] font-black text-red-500 tracking-tighter italic uppercase italic italic italic italic italic">Low Stock</span>
-                                    </div>
-                                </div>
-                                <button onClick={() => setView('HOME')} className="w-full text-center text-[10px] font-black text-slate-500 uppercase">Back</button>
-                            </div>
-                        )}
-
-                        {/* --- M8: AIRBNB (ΥΠΑΡΧΟΝ) --- */}
+                        {/* --- M8: AIRBNB (Manual 08) --- */}
                         {view === 'M8' && (
-                            <div className="space-y-4 animate-in slide-in-from-right duration-300">
-                                <h2 className="brand text-pink-500 text-xs italic uppercase tracking-widest">Crew Housing</h2>
-                                <div className="glass p-5 rounded-[2rem] border-l-4 border-pink-600">
-                                    <div className="flex justify-between items-start mb-4">
-                                        <div><h3 className="text-sm font-black uppercase tracking-tighter">Syros Loft A</h3><p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest italic">Ερμούπολη</p></div>
-                                        <span className="text-[8px] font-black px-2 py-1 rounded bg-emerald-950 text-emerald-500 uppercase">ACTIVE</span>
-                                    </div>
+                            <div className="space-y-4 animate-in slide-in-from-bottom">
+                                <div className="flex justify-between items-center">
+                                    <h2 className="brand text-pink-500 text-xs tracking-widest italic uppercase">Crew Accommodation</h2>
+                                    <button onClick={() => setView('HOME')} className="text-[10px] font-black text-slate-500 uppercase">Back</button>
+                                </div>
+                                <div className="glass p-5 rounded-[2.5rem] border-l-4 border-pink-500 relative overflow-hidden">
+                                    <div className="absolute top-0 right-0 p-4 opacity-10"><i className="fa-solid fa-bed text-5xl"></i></div>
+                                    <h3 className="text-sm font-black uppercase mb-1 tracking-tighter">Syros Loft A</h3>
+                                    <p className="text-[9px] font-bold text-slate-500 uppercase mb-4 tracking-widest">Ερμούπολη // Active</p>
                                     <div className="flex justify-between items-center border-t border-slate-800 pt-4">
                                         <div className="flex gap-4">
-                                            <div className="text-center text-[10px] font-black uppercase">Capacity: 4</div>
-                                            <div className="text-center text-[10px] font-black text-emerald-500 uppercase italic pl-4 border-l border-slate-800">Occ: 3</div>
+                                            <div className="text-center"><p className="text-[8px] font-black text-slate-500 uppercase leading-none mb-1">Beds</p><p className="text-xs font-black">4</p></div>
+                                            <div className="text-center border-l border-slate-800 pl-4"><p className="text-[8px] font-black text-slate-500 uppercase leading-none mb-1">Occ</p><p className="text-xs font-black text-pink-500 tracking-tighter italic italic tracking-tighter italic">3/4</p></div>
                                         </div>
-                                        <p className="text-[10px] font-black text-pink-500 tracking-widest tracking-widest tracking-widest tracking-widest tracking-widest italic">€65/day</p>
+                                        <p className="text-xs font-black text-white italic">€65 / day</p>
                                     </div>
                                 </div>
-                                <button onClick={() => setView('HOME')} className="w-full text-center text-[10px] font-black text-slate-500 uppercase">Back</button>
                             </div>
                         )}
+
+                        {/* --- M1-M3-M4-M5-M7 PLACEHOLDERS --- */}
+                        {['M1','M3','M4','M5','M7'].includes(view) && (
+                            <div className="flex flex-col items-center justify-center py-20 animate-in fade-in">
+                                <i className="fa-solid fa-screwdriver-wrench text-5xl mb-4 text-slate-700"></i>
+                                <p className="brand text-[10px] text-slate-500 uppercase italic tracking-widest">Manual {view} Logic Loaded</p>
+                                <button onClick={() => setView('HOME')} className="mt-8 bg-slate-800 px-6 py-2 rounded-xl text-[10px] font-black text-slate-300 uppercase">Return to Hub</button>
+                            </div>
+                        )}
+
                     </main>
 
                     {/* --- GLOBAL SMART CAPTURE [🔵] --- */}
-                    <footer className="fixed bottom-6 left-0 right-0 flex justify-center pointer-events-none z-50">
+                    <div className="fixed bottom-6 left-0 right-0 flex justify-center pointer-events-none z-50">
                         <label className="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(37,99,235,0.4)] border-4 border-slate-950 pointer-events-auto active:scale-90 transition-all cursor-pointer">
                             <i className="fa-solid fa-camera text-2xl text-white"></i>
                             <input type="file" accept="image/*" capture="environment" className="hidden" />
                         </label>
+                    </div>
+
+                    <footer className="fixed bottom-2 w-full text-center">
+                        <p className="brand text-[7px] text-slate-700 font-black tracking-[0.5em] uppercase">NTG Command • Version 2.5 Operational</p>
                     </footer>
                 </div>
             );

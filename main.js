@@ -1,14 +1,13 @@
 const { useState, useEffect } = React;
 
 function App() {
-    // PIN Lock Logic (Master Manual 04) [cite: 286]
     const [isLocked, setIsLocked] = useState(true);
     const [view, setView] = useState('HOME');
     const [selectedShip, setSelectedShip] = useState(null);
-    const USER_ID = "M. SYKINIOTIS"; 
+    const USER_ID = "M. SYKINIOTIS"; // [cite: 10, 289]
 
     const handleUnlock = (val) => {
-        if (val === '1234') setIsLocked(false);
+        if (val === '1234') setIsLocked(false); // [cite: 286]
     };
 
     if (isLocked) {
@@ -27,7 +26,7 @@ function App() {
         <div className="min-h-screen pb-24 max-w-md mx-auto relative flex flex-col">
             <header className="glass sticky top-0 z-50 p-4 flex justify-between items-center border-b border-blue-500/30">
                 <div onClick={() => setView('HOME')} className="cursor-pointer">
-                    <p className="text-[10px] font-black text-blue-500 tracking-[0.2em] mb-1 uppercase leading-none">NTG COMMAND V2</p>
+                    <p className="text-[10px] font-black text-blue-500 tracking-[0.2em] mb-1 uppercase leading-none">NTG COMMAND HUB</p>
                     <h1 className="font-bold text-sm tracking-tighter uppercase italic">{USER_ID}</h1>
                 </div>
                 <button onClick={() => setIsLocked(true)}><i className="fa-solid fa-power-off text-slate-600"></i></button>
@@ -36,14 +35,14 @@ function App() {
             <main className="p-4 flex-1 overflow-y-auto">
                 {view === 'HOME' && <HomeMenu setView={setView} />}
                 
-                {/* Router: Φορτώνει τα components από τα .js αρχεία του φακέλου /divisions/ [cite: 280] */}
+                {/* Router Logic για τα Modular Divisions [cite: 253] */}
                 {view.startsWith('M1') && <window.M1_Safety view={view} setView={setView} selectedShip={selectedShip} setSelectedShip={setSelectedShip} />}
                 {view.startsWith('M2') && <window.M2_Repairs view={view} setView={setView} />}
                 {view === 'M3' && <window.M3_Legal setView={setView} />}
                 {view === 'M7' && <window.M7_XGR setView={setView} />}
             </main>
 
-            {/* Global Smart Capture [cite: 334-336] */}
+            {/* Smart Capture [cite: 23, 334] */}
             <div className="fixed bottom-6 left-0 right-0 flex justify-center pointer-events-none z-50">
                 <label className="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center shadow-[0_0_40px_rgba(37,99,235,0.4)] border-4 border-slate-950 pointer-events-auto active:scale-90 transition-all cursor-pointer">
                     <i className="fa-solid fa-camera text-3xl text-white"></i>

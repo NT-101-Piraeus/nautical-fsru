@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="el"><head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NTG COMMAND | V56 SMART HUB</title>
+    <title>NTG COMMAND | V56 FULL SUITE</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -8,82 +8,99 @@
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Inter:wght@400;900&display=swap');
-        body { font-family: 'Inter', sans-serif; background: #020617; color: white; margin: 0; padding: 0; }
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Inter:wght@400;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background: #020617; color: white; margin-bottom: 80px; }
         .brand { font-family: 'Orbitron', sans-serif; }
-        .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.05); }
-        select { background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; padding: 12px; color: white; width: 100%; outline: none; }
-        .capture-btn { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); }
+        .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.05); }
+        .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 10px; color: #64748b; }
+        .nav-item.active { color: #3b82f6; }
     </style></head><body>
     <div id="root"></div>
     <script type="text/babel">
-        const { useState } = React;
-
-        // --- ΣΥΝΔΕΣΗ ΜΕ ΤΟ ΔΙΚΟ ΣΟΥ SUPABASE ---
+        const { useState, useEffect } = React;
         const SB_URL = "https://omdarjncczohpfzrqqhr.supabase.co";
         const SB_KEY = "sb_publishable_V-nfUDy5MxEG4SlXkisFBg_GBlD_4Y9";
-        const supabaseClient = window.supabase.createClient(SB_URL, SB_KEY);
+        const supabase = window.supabase.createClient(SB_URL, SB_KEY);
 
         function App() {
-            const [uploading, setUploading] = useState(false);
-            const [meta, setMeta] = useState({ project: 'NAFTOCEMENT IV', area: 'Deck', risk: 'Low' });
+            const [view, setView] = useState('capture'); // 'capture', 'logbook', 'gallery'
+            const [logs, setLogs] = useState([]);
 
-            const handleCapture = async (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-                setUploading(true);
-
-                const fileExt = file.name.split('.').pop();
-                const filePath = `${meta.project}/${meta.area}/${meta.risk}_${Date.now()}.${fileExt}`;
-
-                try {
-                    const { error: uploadError } = await supabaseClient.storage
-                        .from('ship-photos')
-                        .upload(filePath, file);
-
-                    if (uploadError) throw uploadError;
-
-                    await supabaseClient.table('ntg_logbook').insert({
-                        ship: meta.project,
-                        status: meta.risk,
-                        issue: `Inspection at ${meta.area}`,
-                        photo_url: filePath
-                    });
-
-                    alert('✅ Επιτυχής Καταχώρηση!');
-                } catch (err) { alert('❌ Σφάλμα: ' + err.message); }
-                finally { setUploading(false); }
-            };
+            // Φόρτωση δεδομένων για το Logbook
+            useEffect(() => {
+                const fetchData = async () => {
+                    const { data } = await supabase.from('ntg_logbook').select('*').order('created_at', { ascending: false });
+                    setLogs(data || []);
+                };
+                if (view !== 'capture') fetchData();
+            }, [view]);
 
             return (
-                <div className="p-5 max-w-md mx-auto min-h-screen flex flex-col space-y-6">
-                    <header className="flex justify-between items-center py-4 border-b border-slate-800">
-                        <h1 className="brand text-blue-500 text-lg italic">NTG COMMAND V56</h1>
-                        <span className="text-[10px] font-bold text-green-500 animate-pulse">● ONLINE</span>
+                <div className="min-h-screen flex flex-col p-5">
+                    <header className="flex justify-between items-center py-4">
+                        <h1 className="brand text-blue-500 text-lg italic uppercase tracking-tighter">NTG V56</h1>
+                        <span className="text-[10px] bg-blue-900/50 px-3 py-1 rounded-full border border-blue-500/30 font-bold uppercase">{view}</span>
                     </header>
 
-                    <section className="glass p-6 rounded-[32px] space-y-5 shadow-2xl">
-                        <div>
-                            <label className="text-[10px] uppercase font-black text-slate-500 mb-2 block ml-1">Project</label>
-                            <select value={meta.project} onChange={(e) => setMeta({...meta, project: e.target.value})}>
-                                <option>NAFTOCEMENT IV</option>
-                                <option>FSRU ALEXANDROUPOLI</option>
-                            </select>
+                    {/* --- ΟΘΟΝΗ 1: CAPTURE --- */}
+                    {view === 'capture' && (
+                        <div className="animate-fadeIn space-y-6">
+                            <div className="glass p-8 rounded-[40px] text-center border-t border-blue-500/30 shadow-2xl">
+                                <i className="fa-solid fa-camera-retro text-4xl text-blue-500 mb-6"></i>
+                                <h2 className="brand text-[10px] tracking-widest text-slate-400 mb-8 uppercase italic">Ready for Inspection</h2>
+                                <label className="w-full h-32 bg-blue-600 rounded-3xl flex items-center justify-center cursor-pointer active:scale-95 transition-all shadow-xl">
+                                    <span className="font-black uppercase tracking-widest">Take Photo</span>
+                                    <input type="file" accept="image/*" capture="environment" className="hidden" />
+                                </label>
+                            </div>
                         </div>
-                        <div>
-                            <label className="text-[10px] uppercase font-black text-slate-500 mb-2 block ml-1">Work Area</label>
-                            <select value={meta.area} onChange={(e) => setMeta({...meta, area: e.target.value})}>
-                                <option>Deck</option><option>Engine Room</option><option>Pump Room</option><option>Bridge</option>
-                            </select>
+                    )}
+
+                    {/* --- ΟΘΟΝΗ 2: LOGBOOK --- */}
+                    {view === 'logbook' && (
+                        <div className="space-y-4">
+                            <h2 className="brand text-xs uppercase text-slate-500 mb-4">Inspection History</h2>
+                            {logs.map(log => (
+                                <div key={log.id} className="glass p-4 rounded-2xl flex justify-between items-center border-l-4 border-blue-500">
+                                    <div>
+                                        <div className="text-[10px] font-black uppercase text-blue-400">{log.ship}</div>
+                                        <div className="text-xs font-bold">{log.issue}</div>
+                                        <div className="text-[9px] text-slate-500">{new Date(log.created_at).toLocaleString()}</div>
+                                    </div>
+                                    <div className={`text-[10px] font-black p-1 rounded ${log.status === 'High' ? 'bg-red-900 text-red-200' : 'bg-green-900 text-green-200'}`}>
+                                        {log.status}
+                                    </div>
+                                </div>
+                            ))}
                         </div>
-                        <label className={`w-full h-24 rounded-3xl flex flex-col items-center justify-center gap-1 cursor-pointer capture-btn shadow-lg ${uploading ? 'opacity-50' : ''}`}>
-                            <i className={`fa-solid ${uploading ? 'fa-spinner fa-spin' : 'fa-camera-retro'} text-3xl text-white`}></i>
-                            <span className="text-[11px] font-black uppercase text-white">
-                                {uploading ? 'Uploading...' : 'Capture Deficiency'}
-                            </span>
-                            <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handleCapture} disabled={uploading} />
-                        </label>
-                    </section>
+                    )}
+
+                    {/* --- ΟΘΟΝΗ 3: GALLERY --- */}
+                    {view === 'gallery' && (
+                        <div className="grid grid-cols-2 gap-3">
+                            {logs.map(log => (
+                                <div key={log.id} className="glass rounded-xl overflow-hidden aspect-square border border-slate-800">
+                                    <img src={`${SB_URL}/storage/v1/object/public/ship-photos/${log.photo_url}`} className="w-full h-full object-cover opacity-80" />
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* --- NAVIGATION MENU (ΣΤΑΘΕΡΟ ΣΤΟ ΚΑΤΩ ΜΕΡΟΣ) --- */}
+                    <nav className="fixed bottom-0 left-0 right-0 glass h-20 flex justify-around items-center border-t border-slate-800 px-6">
+                        <button onClick={() => setView('capture')} className={`nav-item ${view === 'capture' ? 'active' : ''}`}>
+                            <i className="fa-solid fa-camera text-xl mb-1"></i>
+                            <span>Capture</span>
+                        </button>
+                        <button onClick={() => setView('logbook')} className={`nav-item ${view === 'logbook' ? 'active' : ''}`}>
+                            <i className="fa-solid fa-list-check text-xl mb-1"></i>
+                            <span>Logbook</span>
+                        </button>
+                        <button onClick={() => setView('gallery')} className={`nav-item ${view === 'gallery' ? 'active' : ''}`}>
+                            <i className="fa-solid fa-images text-xl mb-1"></i>
+                            <span>Gallery</span>
+                        </button>
+                    </nav>
                 </div>
             );
         }

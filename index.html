@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NTG COMMAND | V3.1 REPAIRS HUB</title>
+    <title>NTG COMMAND | V4.0 MASTER HUB</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -11,143 +11,153 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Inter:wght@400;600;900&display=swap');
-        body { font-family: 'Inter', sans-serif; background: #020617; color: white; -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
+        body { font-family: 'Inter', sans-serif; background: #020617; color: white; -webkit-tap-highlight-color: transparent; }
         .brand { font-family: 'Orbitron', sans-serif; }
-        .glass { background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); }
-        .repair-card { border-left: 4px solid #06b6d4; transition: all 0.2s; }
-        .repair-card:active { transform: scale(0.98); background: rgba(6, 182, 212, 0.1); }
-        .progress-bar { height: 6px; background: #1e293b; border-radius: 3px; overflow: hidden; }
+        .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); }
+        .pin-input { letter-spacing: 1.5rem; text-align: center; font-size: 2rem; }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState } = React;
+        const { useState, useEffect } = React;
 
         function App() {
-            const [view, setView] = useState('HOME');
-            const [search, setSearch] = useState('');
+            const [isLocked, setIsLocked] = useState(true);
+            const [view, setView] = useState('HOME'); // HOME, M1_HUB, M1_INSPECTION, M2_LIST
+            const [pin, setPin] = useState('');
             const [selectedShip, setSelectedShip] = useState(null);
+            const [selectedZone, setSelectedZone] = useState(null);
 
-            // ΔΕΔΟΜΕΝΑ ΑΠΟ ΣΕΠΕ & USER PROGRAM
+            // DATA FROM SEPE APRIL 2026
             const repairsData = [
-                { name: 'FELIX', imo: '9464182', location: 'DRAPETSONA', status: 'UNDER REPAIR', progress: 45, end_date: '2026-04-05' },
-                { name: 'BADJI MOKHTAR III', imo: '9827889', location: 'ELEFSINA', status: 'MOORED', progress: 10, end_date: '2026-04-30' },
-                { name: 'RIGEL III', imo: '7807744', location: 'PERAMA', status: 'INBOUND', progress: 5, end_date: '2026-04-15' },
-                { name: 'ARIADNI', imo: '9135262', location: 'PIRAEUS', status: 'REPAIRING', progress: 85, end_date: '2026-03-28' }
+                { name: 'FELIX', imo: '9464182', location: 'DRAPETSONA', end_date: '2026-04-05' },
+                { name: 'BADJI MOKHTAR III', imo: '9827889', location: 'ELEFSINA', end_date: '2026-04-30' },
+                { name: 'ARIADNI', imo: '9135262', location: 'PIRAEUS', end_date: '2026-03-28' },
+                { name: 'RIGEL III', imo: '7807744', location: 'PERAMA', end_date: '2026-04-15' }
             ];
 
-            const calculateDays = (dateStr) => {
-                const diff = new Date(dateStr) - new Date();
-                const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
-                return days > 0 ? days : 0;
+            const zones = ["Engine Room", "Main Deck", "Pump Room", "Bridge", "Accommodation"];
+
+            const handlePin = (val) => {
+                if (val === '1234') { // PIN ΕΚΤΑΚΤΗΣ ΑΝΑΓΚΗΣ
+                    setIsLocked(false);
+                }
+                setPin(val);
             };
 
-            const filteredRepairs = repairsData.filter(ship => 
-                ship.name.toLowerCase().includes(search.toLowerCase()) || 
-                ship.location.toLowerCase().includes(search.toLowerCase())
-            );
+            if (isLocked) {
+                return (
+                    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-slate-950">
+                        <i className="fa-solid fa-lock text-4xl text-blue-500 mb-6"></i>
+                        <h2 className="brand text-sm mb-4 tracking-widest uppercase">Security Access</h2>
+                        <input 
+                            type="password" 
+                            maxLength="4"
+                            onChange={(e) => handlePin(e.target.value)}
+                            className="w-48 bg-slate-900 border border-blue-500/50 p-4 rounded-2xl pin-input outline-none focus:shadow-[0_0_15px_rgba(59,130,246,0.3)]"
+                        />
+                        <p className="mt-4 text-[10px] text-slate-500 font-bold uppercase tracking-widest italic tracking-widest">Enter Admin PIN</p>
+                    </div>
+                );
+            }
 
             return (
-                <div className="min-h-screen flex flex-col max-w-md mx-auto relative shadow-2xl shadow-blue-500/10">
-                    
+                <div className="min-h-screen pb-24 max-w-md mx-auto relative">
                     {/* --- HEADER --- */}
-                    <header className="glass sticky top-0 z-50 p-4 flex justify-between items-center border-b border-cyan-500/20">
+                    <header className="glass sticky top-0 z-50 p-4 flex justify-between items-center border-b border-blue-500/20">
                         <div onClick={() => setView('HOME')} className="cursor-pointer">
-                            <p className="text-[9px] font-black text-cyan-500 tracking-[0.3em] uppercase leading-none mb-1">NTG COMMAND Hub</p>
-                            <h1 className="font-black text-sm tracking-tighter italic uppercase">M. SYKINIOTIS</h1>
+                            <p className="text-[9px] font-black text-blue-500 tracking-[0.3em] uppercase">NTG COMMAND</p>
+                            <h1 className="font-bold text-sm tracking-tighter uppercase italic">M. SYKINIOTIS</h1>
                         </div>
-                        <i className="fa-solid fa-tower-observation text-cyan-500"></i>
+                        <button onClick={() => setIsLocked(true)}><i className="fa-solid fa-power-off text-slate-600"></i></button>
                     </header>
 
-                    <main className="flex-1 p-5 overflow-y-auto">
-                        
-                        {/* --- HOME HUB --- */}
+                    <main className="p-4">
+                        {/* --- HOME VIEW (The 8 Divisions) --- */}
                         {view === 'HOME' && (
                             <div className="grid grid-cols-2 gap-4 animate-in fade-in duration-300">
-                                <button onClick={() => setView('M1')} className="glass p-6 rounded-[2.5rem] flex flex-col items-center gap-2 border-b-2 border-blue-600">
+                                <button onClick={() => setView('M1_HUB')} className="glass p-6 rounded-[2rem] flex flex-col items-center gap-2 border-b-2 border-blue-500">
                                     <i className="fa-solid fa-shield-halved text-3xl text-blue-400"></i>
                                     <span className="text-[10px] font-black uppercase">Safety (M1)</span>
                                 </button>
-                                <button onClick={() => setView('M2')} className="glass p-6 rounded-[2.5rem] flex flex-col items-center gap-2 border-b-4 border-cyan-500">
+                                <button onClick={() => setView('M2_LIST')} className="glass p-6 rounded-[2rem] flex flex-col items-center gap-2 border-b-2 border-cyan-500">
                                     <i className="fa-solid fa-ship text-3xl text-cyan-400"></i>
                                     <span className="text-[10px] font-black uppercase tracking-tighter">Repairs (M2)</span>
                                 </button>
-                                {/* ... ΥΠΟΛΟΙΠΑ TILES ΟΠΩΣ ΠΡΙΝ ... */}
-                                <button onClick={() => setView('M8')} className="glass p-6 rounded-[2.5rem] flex flex-col items-center gap-2 border-b-2 border-pink-600 opacity-60">
-                                    <i className="fa-solid fa-house-chimney-user text-3xl text-pink-500"></i>
-                                    <span className="text-[10px] font-black uppercase tracking-tighter">Airbnb (M8)</span>
-                                </button>
+                                {/* ... Others M3, M5, M6, M7, M8, M4 ... */}
                             </div>
                         )}
 
-                        {/* --- M2: REPAIRS HUB (Manual 02 Activated) --- */}
-                        {view === 'M2' && !selectedShip && (
-                            <div className="space-y-4 animate-in slide-in-from-right">
-                                <div className="flex justify-between items-center mb-4">
-                                    <h2 className="brand text-cyan-400 text-xs italic uppercase underline decoration-cyan-500/50 underline-offset-8">Repairs Controller</h2>
+                        {/* --- M1: SAFETY TACTICAL HUB (The Tactical Tiles) --- */}
+                        {view === 'M1_HUB' && (
+                            <div className="space-y-6 animate-in slide-in-from-right">
+                                <div className="flex justify-between items-center">
+                                    <h2 className="brand text-blue-400 text-xs italic">SAFETY TACTICAL</h2>
                                     <button onClick={() => setView('HOME')} className="text-[10px] font-black text-slate-500 uppercase">Back</button>
                                 </div>
-                                
-                                {/* 1. Search Engine */}
-                                <div className="relative mb-6">
-                                    <input 
-                                        type="text" 
-                                        placeholder="Αναζήτηση Πλοίου ή Λιμανιού..." 
-                                        className="w-full bg-slate-900 border border-slate-700 p-4 rounded-2xl text-xs font-bold focus:border-cyan-500 outline-none transition-all"
-                                        onChange={(e) => setSearch(e.target.value)}
-                                    />
-                                    <i className="fa-solid fa-magnifying-glass absolute right-4 top-4 text-slate-600"></i>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <button onClick={() => setView('M1_INSPECTION')} className="glass p-6 rounded-3xl flex flex-col items-center gap-2 border-b-2 border-blue-500">
+                                        <i className="fa-solid fa-rocket text-2xl text-blue-500"></i>
+                                        <span className="text-[9px] font-black uppercase tracking-tighter">Inspection</span>
+                                    </button>
+                                    <button className="glass p-6 rounded-3xl flex flex-col items-center gap-2 border-b-2 border-orange-500">
+                                        <i className="fa-solid fa-radiation text-2xl text-orange-500 animate-pulse"></i>
+                                        <span className="text-[9px] font-black uppercase tracking-tighter">Hazard Radar</span>
+                                    </button>
+                                    <button className="glass p-6 rounded-3xl flex flex-col items-center gap-2">
+                                        <i className="fa-solid fa-book text-2xl text-emerald-500"></i>
+                                        <span className="text-[9px] font-black uppercase tracking-tighter">Logbook</span>
+                                    </button>
+                                    <button className="glass p-6 rounded-3xl flex flex-col items-center gap-2 opacity-60">
+                                        <i className="fa-solid fa-wallet text-2xl text-yellow-500"></i>
+                                        <span className="text-[9px] font-black uppercase tracking-tighter italic">Project Wallet</span>
+                                    </button>
                                 </div>
-
-                                {/* 2. Repair Watchlist */}
-                                <div className="space-y-3">
-                                    {filteredRepairs.map(ship => {
-                                        const daysLeft = calculateDays(ship.end_date);
-                                        const isDelayRisk = daysLeft < 2 && ship.progress < 80;
-                                        
-                                        return (
-                                            <div key={ship.name} onClick={() => setSelectedShip(ship)} className={`repair-card glass p-5 rounded-3xl space-y-3 ${isDelayRisk ? 'border-red-600' : 'border-cyan-600'}`}>
-                                                <div className="flex justify-between items-start">
-                                                    <div>
-                                                        <h3 className="font-black text-sm tracking-tighter uppercase">{ship.name}</h3>
-                                                        <p className="text-[8px] text-slate-500 font-bold uppercase">{ship.location} // IMO: {ship.imo}</p>
-                                                    </div>
-                                                    <div className="text-right">
-                                                        <span className={`text-[8px] font-black px-2 py-1 rounded ${daysLeft < 3 ? 'bg-red-600' : 'bg-slate-800'}`}>{daysLeft} DAYS LEFT</span>
-                                                        {isDelayRisk && <p className="text-[7px] text-red-500 font-black mt-1 animate-pulse">!! DELAY RISK !!</p>}
-                                                    </div>
-                                                </div>
-                                                <div className="progress-bar"><div className="progress-fill bg-cyan-500" style={{width: `${ship.progress}%`}}></div></div>
-                                            </div>
-                                        );
-                                    })}
+                                <div className="glass p-4 rounded-3xl flex justify-between items-center border border-yellow-500/20">
+                                    <p className="text-[9px] font-black text-yellow-500 uppercase italic tracking-widest"><i className="fa-solid fa-bolt mr-2"></i>IoT: Gas Detector GD-01</p>
+                                    <span className="text-[8px] font-black bg-yellow-900/50 px-2 py-0.5 rounded text-yellow-400">NEEDS CALIBRATION</span>
                                 </div>
                             </div>
                         )}
 
-                        {/* --- M2: SHIP READINESS CHECKLIST --- */}
-                        {view === 'M2' && selectedShip && (
-                            <div className="space-y-6 animate-in zoom-in">
-                                <div className="flex justify-between items-center">
-                                    <button onClick={() => setSelectedShip(null)} className="text-slate-500"><i className="fa-solid fa-arrow-left"></i></button>
-                                    <h2 className="brand text-cyan-400 text-xs tracking-widest italic">{selectedShip.name}</h2>
-                                    <div className="w-4"></div>
+                        {/* --- M1: INSPECTION ENGINE (Zone Selection) --- */}
+                        {view === 'M1_INSPECTION' && (
+                            <div className="space-y-4 animate-in zoom-in">
+                                <div className="flex justify-between items-center px-2 mb-4">
+                                    <h2 className="brand text-blue-400 text-xs tracking-widest italic uppercase">Zone Selection</h2>
+                                    <button onClick={() => setView('M1_HUB')} className="text-[10px] font-black text-slate-500 uppercase">Back</button>
                                 </div>
-
-                                <div className="glass p-6 rounded-[2.5rem] space-y-5">
-                                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest text-center">Logistics Readiness Checklist</p>
-                                    <div className="space-y-3">
-                                        {["Gas Free Certificate", "Access Safety (Gangway)", "Port Permits", "PPE Availability"].map(item => (
-                                            <div key={item} className="flex items-center justify-between p-4 bg-slate-900/50 rounded-2xl border border-slate-800">
-                                                <span className="text-xs font-bold text-slate-300 tracking-tight">{item}</span>
-                                                <input type="checkbox" className="w-5 h-5 accent-cyan-500" />
-                                            </div>
-                                        ))}
+                                <div className="space-y-2">
+                                    {zones.map(z => (
+                                        <button key={z} className="w-full glass p-5 rounded-2xl text-left flex justify-between items-center active:bg-blue-600/10">
+                                            <span className="text-sm font-black tracking-tighter uppercase">{z}</span>
+                                            <i className="fa-solid fa-chevron-right text-slate-700"></i>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                        
+                        {/* --- M2: REPAIRS LIST (From SEPE April 2026) --- */}
+                        {view === 'M2_LIST' && (
+                            <div className="space-y-4 animate-in slide-in-from-bottom">
+                                <div className="flex justify-between items-center mb-4 px-2">
+                                    <h2 className="brand text-cyan-400 text-xs italic">REPAIRS CONTROLLER</h2>
+                                    <button onClick={() => setView('HOME')} className="text-[10px] font-black text-slate-500 uppercase">Back</button>
+                                </div>
+                                {repairsData.map(ship => (
+                                    <div key={ship.name} className="glass p-5 rounded-3xl border-l-4 border-cyan-500 flex justify-between items-center active:scale-95 transition-all">
+                                        <div>
+                                            <h3 className="font-black text-sm tracking-tighter uppercase">{ship.name}</h3>
+                                            <p className="text-[9px] text-slate-500 font-bold uppercase italic tracking-widest">{ship.location} // IMO: {ship.imo}</p>
+                                        </div>
+                                        <div className="text-right">
+                                            <span className="text-[8px] font-black bg-slate-800 px-2 py-1 rounded">2026-04</span>
+                                        </div>
                                     </div>
-                                    <button className="w-full bg-cyan-600 p-4 rounded-xl font-black text-xs uppercase shadow-lg shadow-cyan-900/30">Confirm & Board Vessel</button>
-                                </div>
+                                ))}
                             </div>
                         )}
 
@@ -155,15 +165,11 @@
 
                     {/* --- GLOBAL SMART CAPTURE [🔵] --- */}
                     <div className="fixed bottom-6 left-0 right-0 flex justify-center pointer-events-none z-50">
-                        <label className="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(37,99,235,0.4)] border-4 border-slate-950 pointer-events-auto active:scale-90 transition-all cursor-pointer">
+                        <label className="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center shadow-[0_0_40px_rgba(37,99,235,0.4)] border-4 border-slate-950 pointer-events-auto active:scale-90 transition-all cursor-pointer">
                             <i className="fa-solid fa-camera text-2xl text-white"></i>
                             <input type="file" accept="image/*" capture="environment" className="hidden" />
                         </label>
                     </div>
-
-                    <footer className="fixed bottom-2 w-full text-center">
-                        <p className="brand text-[7px] text-slate-700 font-black tracking-[0.5em] uppercase">NTG Command Hub • V3.1 Repairs Activated</p>
-                    </footer>
                 </div>
             );
         }

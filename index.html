@@ -14,11 +14,12 @@
         .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.05); }
         .nav-item { font-size: 9px; font-weight: 800; color: #475569; transition: 0.3s; display: flex; flex-direction: column; align-items: center; }
         .nav-item.active { color: #3b82f6; }
-        select { background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; padding: 10px; color: white; width: 100%; outline: none; margin-bottom: 10px; }
+        select { background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; padding: 12px; color: white; width: 100%; outline: none; margin-bottom: 10px; }
     </style></head><body>
     <div id="root"></div>
     <script type="text/babel">
         const { useState, useEffect } = React;
+        // ΤΑ ΔΙΚΑ ΣΟΥ ΚΛΕΙΔΙΑ ΠΕΡΑΣΜΕΝΑ
         const SB_URL = "https://omdarjncczohpfzrqqhr.supabase.co";
         const SB_KEY = "sb_publishable_V-nfUDy5MxEG4SlXkisFBg_GBlD_4Y9";
         const supabase = window.supabase.createClient(SB_URL, SB_KEY);
@@ -48,70 +49,95 @@
                 try {
                     await supabase.storage.from('ship-photos').upload(filePath, file);
                     await supabase.from('ntg_logbook').insert({ ship: meta.project, status: meta.risk, issue: `Inspection: ${meta.area}`, photo_url: filePath });
-                    await supabase.from('user_audit_logs').insert({ user_id: 'CAPTAIN', action_type: 'CAPTURE', description: `Entry: ${meta.project} (${meta.risk})` });
+                    await supabase.from('user_audit_logs').insert({ user_id: 'CAPTAIN', action_type: 'CAPTURE', description: `New Photo: ${meta.project} (${meta.risk})` });
                     alert('✅ Επιτυχής Καταχώρηση!');
                     fetchData();
-                } catch (err) { alert('❌ Σφάλμα Σύνδεσης'); }
+                } catch (err) { alert('❌ Σφάλμα'); }
                 finally { setUploading(false); }
             };
 
             return (
                 <div className="p-4 max-w-lg mx-auto">
-                    <header className="py-6"><h1 className="brand text-blue-500 text-xl italic uppercase">NTG COMMAND</h1></header>
+                    <header className="py-6 border-b border-slate-800 mb-6">
+                        <h1 className="brand text-blue-500 text-xl italic uppercase tracking-tighter">NTG COMMAND V56</h1>
+                    </header>
 
+                    {/* --- 1. CAPTURE --- */}
                     {view === 'capture' && (
-                        <div className="space-y-4 glass p-6 rounded-[30px] border-t border-blue-500/20 shadow-2xl">
-                            <select onChange={(e) => setMeta({...meta, project: e.target.value})}><option>NAFTOCEMENT IV</option><option>FSRU ALEXANDROUPOLI</option></select>
-                            <select onChange={(e) => setMeta({...meta, area: e.target.value})}><option>Deck</option><option>Engine Room</option><option>Pump Room</option></select>
-                            <div className="flex gap-2 mb-4">{['Low', 'Medium', 'High'].map(r => (
-                                <button key={r} onClick={() => setMeta({...meta, risk: r})} className={`flex-1 py-2 rounded-xl text-[10px] font-bold border transition-all ${meta.risk === r ? 'bg-blue-600 border-blue-400' : 'bg-slate-900 border-slate-700'}`}>{r}</button>
-                            ))}</div>
-                            <label className="w-full h-24 bg-blue-600 rounded-2xl flex flex-col items-center justify-center cursor-pointer active:scale-95 transition-all">
-                                <i className={`fa-solid ${uploading ? 'fa-spinner fa-spin' : 'fa-camera-retro'} text-3xl text-white`}></i>
-                                <span className="text-[10px] font-black uppercase text-white mt-2">{uploading ? 'Transmitting...' : 'Capture'}</span>
+                        <div className="space-y-4 glass p-6 rounded-[30px] border-t border-blue-500/20">
+                            <label className="text-[10px] font-bold text-slate-500 uppercase ml-2">Ship Selection</label>
+                            <select onChange={(e) => setMeta({...meta, project: e.target.value})}>
+                                <option>NAFTOCEMENT IV</option>
+                                <option>FSRU ALEXANDROUPOLI</option>
+                            </select>
+                            <label className="text-[10px] font-bold text-slate-500 uppercase ml-2">Location</label>
+                            <select onChange={(e) => setMeta({...meta, area: e.target.value})}>
+                                <option>Deck</option><option>Engine Room</option><option>Pump Room</option>
+                            </select>
+                            <div className="flex gap-2 mb-4">
+                                {['Low', 'Medium', 'High'].map(r => (
+                                    <button key={r} onClick={() => setMeta({...meta, risk: r})} className={`flex-1 py-2 rounded-xl text-[10px] font-black border transition-all ${meta.risk === r ? 'bg-blue-600 border-blue-400 text-white' : 'bg-slate-900 border-slate-700 text-slate-500'}`}>{r}</button>
+                                ))}
+                            </div>
+                            <label className="w-full h-28 bg-blue-600 rounded-[2rem] flex flex-col items-center justify-center cursor-pointer active:scale-95 transition-all shadow-2xl">
+                                <i className={`fa-solid ${uploading ? 'fa-spinner fa-spin' : 'fa-camera-retro'} text-3xl mb-1 text-white`}></i>
+                                <span className="text-[10px] font-black uppercase tracking-widest text-white">{uploading ? 'Transmitting...' : 'Capture Deficiency'}</span>
                                 <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handleCapture} />
                             </label>
                         </div>
                     )}
 
+                    {/* --- 2. SAFETY (TECHNICAL) --- */}
                     {view === 'safety' && (
                         <div className="space-y-3">
-                            <h2 className="brand text-[10px] text-red-500 uppercase italic mb-4">Safety Alerts (High Risk Only)</h2>
+                            <h2 className="brand text-[10px] text-red-500 uppercase italic mb-4 tracking-widest">Safety Technician Alerts</h2>
+                            {logs.filter(l => l.status === 'High').length === 0 ? <p className="text-slate-600 text-xs italic">No critical issues found.</p> : null}
                             {logs.filter(l => l.status === 'High').map(log => (
-                                <div key={log.id} className="glass p-4 rounded-xl border-l-4 border-red-500 flex gap-3">
-                                    <div className="w-12 h-12 bg-slate-800 rounded overflow-hidden shrink-0">
+                                <div key={log.id} className="glass p-4 rounded-xl border-l-4 border-red-500 flex gap-4">
+                                    <div className="w-16 h-16 bg-slate-800 rounded-lg overflow-hidden shrink-0">
                                         <img src={`${SB_URL}/storage/v1/object/public/ship-photos/${log.photo_url}`} className="w-full h-full object-cover" />
                                     </div>
-                                    <div><div className="text-[10px] font-black uppercase text-red-400">{log.ship}</div><div className="text-xs font-bold leading-tight">{log.issue}</div></div>
+                                    <div>
+                                        <div className="text-[10px] font-black uppercase text-red-400">{log.ship}</div>
+                                        <div className="text-xs font-bold leading-tight">{log.issue}</div>
+                                        <div className="text-[9px] text-slate-500 mt-1 italic">{new Date(log.created_at).toLocaleDateString()}</div>
+                                    </div>
                                 </div>
                             ))}
                         </div>
                     )}
 
+                    {/* --- 3. FLEET LOG (MANAGEMENT) --- */}
                     {view === 'logbook' && (
                         <div className="space-y-2">
-                            <h2 className="brand text-[10px] text-slate-500 uppercase mb-4 tracking-widest italic">Fleet Logbook</h2>
+                            <h2 className="brand text-[10px] text-slate-500 uppercase mb-4 tracking-widest italic font-bold">Fleet Activity Log</h2>
                             {logs.map(log => (
                                 <div key={log.id} className="glass p-3 rounded-xl flex justify-between items-center border-l-2 border-slate-700">
-                                    <div><div className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">{log.ship}</div><div className="text-xs font-bold leading-tight">{log.issue}</div></div>
-                                    <div className={`text-[8px] font-black px-2 py-1 rounded ${log.status === 'High' ? 'bg-red-900' : 'bg-green-900'}`}>{log.status}</div>
+                                    <div>
+                                        <div className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">{log.ship}</div>
+                                        <div className="text-xs font-bold">{log.issue}</div>
+                                    </div>
+                                    <div className={`text-[8px] font-black px-2 py-1 rounded ${log.status === 'High' ? 'bg-red-900 text-red-100' : 'bg-green-900 text-green-100'}`}>{log.status}</div>
                                 </div>
                             ))}
                         </div>
                     )}
 
+                    {/* --- 4. LEGAL (AUDIT) --- */}
                     {view === 'legal' && (
-                        <div className="glass p-4 rounded-xl max-h-[60vh] overflow-y-auto font-mono text-[9px]">
-                            <h2 className="brand text-slate-500 mb-4 italic uppercase">Audit Trail (Legal)</h2>
+                        <div className="glass p-4 rounded-xl max-h-[60vh] overflow-y-auto font-mono text-[9px] border border-slate-800">
+                            <h2 className="brand text-slate-500 mb-4 italic uppercase tracking-widest">Digital Audit Trail</h2>
                             {audit.map(a => (
-                                <div key={a.id} className="border-b border-slate-800 py-1">
-                                    <span className="text-blue-500">[{new Date(a.created_at).toLocaleTimeString()}]</span> <span className="text-green-500">{a.user_id}</span>: {a.action_type} - {a.description}
+                                <div key={a.id} className="border-b border-slate-800 py-1.5 flex gap-2">
+                                    <span className="text-blue-500">[{new Date(a.created_at).toLocaleTimeString()}]</span>
+                                    <span className="text-slate-300 italic">{a.action_type}: {a.description}</span>
                                 </div>
                             ))}
                         </div>
                     )}
 
-                    <nav className="fixed bottom-0 left-0 right-0 glass h-20 flex justify-around items-center border-t border-slate-800 px-2 z-50">
+                    {/* --- NAVIGATION MENU --- */}
+                    <nav className="fixed bottom-0 left-0 right-0 glass h-22 flex justify-around items-center border-t border-slate-800 px-2 py-3 z-50">
                         <button onClick={() => setView('capture')} className={`nav-item ${view === 'capture' ? 'active' : ''}`}><i className="fa-solid fa-camera text-xl mb-1"></i><span>Capture</span></button>
                         <button onClick={() => setView('safety')} className={`nav-item ${view === 'safety' ? 'active' : ''}`}><i className="fa-solid fa-hard-hat text-xl mb-1"></i><span>Safety</span></button>
                         <button onClick={() => setView('logbook')} className={`nav-item ${view === 'logbook' ? 'active' : ''}`}><i className="fa-solid fa-ship text-xl mb-1"></i><span>Fleet</span></button>

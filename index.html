@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NTG COMMAND | V56 TECH CORE</title>
+    <title>NTG COMMAND | V56 WORKFORCE</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -14,9 +14,9 @@
         body { font-family: 'Inter', sans-serif; background: #020617; color: white; -webkit-tap-highlight-color: transparent; }
         .brand { font-family: 'Orbitron', sans-serif; }
         .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); }
-        .tech-glow { box-shadow: 0 0 15px rgba(100, 116, 139, 0.2); }
-        .progress-bg { background: rgba(255,255,255,0.05); height: 8px; border-radius: 4px; overflow: hidden; }
-        .progress-fill { height: 100%; background: linear-gradient(90deg, #3b82f6, #60a5fa); width: 12%; }
+        .status-on { color: #22c55e; text-shadow: 0 0 10px rgba(34, 197, 94, 0.4); }
+        .user-card { transition: all 0.2s; border-left: 4px solid transparent; }
+        .user-card:active { background: rgba(255,255,255,0.05); scale: 0.98; }
     </style>
 </head>
 <body>
@@ -27,18 +27,28 @@
 
         function App() {
             const [view, setView] = useState('HOME');
+            const [myStatus, setMyStatus] = useState('OFF DUTY');
+
+            const team = [
+                { id: 1, name: "N. GEORGIOU", role: "SAFETY TECH", status: "ON DUTY", location: "NAFTOCEMENT IV" },
+                { id: 2, name: "S. PAPADOPOULOS", role: "WELDER", status: "ON DUTY", location: "TERME YARD" },
+                { id: 3, name: "A. MARINOU", role: "SURVEYOR", status: "OFF DUTY", location: "-" },
+                { id: 4, name: "D. KONTOS", role: "LOGISTICS", status: "ON DUTY", location: "PIRAEUS PORT" }
+            ];
 
             return (
                 <div className="min-h-screen pb-20">
                     {/* --- HEADER --- */}
-                    <header className="glass sticky top-0 z-50 p-4 flex justify-between items-center border-b border-slate-700/50">
+                    <header className="glass sticky top-0 z-50 p-4 flex justify-between items-center border-b border-emerald-500/20">
                         <div onClick={() => setView('HOME')} className="cursor-pointer">
-                            <p className="text-[9px] font-black text-slate-500 tracking-[0.3em]">NTG TECH CORE</p>
-                            <h1 className="font-bold text-sm uppercase">M. SYKINIOTIS</h1>
+                            <p className="text-[9px] font-black text-emerald-500 tracking-[0.3em]">NTG WORKFORCE</p>
+                            <h1 className="font-bold text-sm uppercase italic">M. SYKINIOTIS</h1>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <span className="text-[8px] font-bold text-blue-500">ENGINE v1.6</span>
-                            <i className="fa-solid fa-microchip text-blue-500"></i>
+                        <div className="flex flex-col items-end">
+                            <span className={`text-[8px] font-black tracking-widest ${myStatus === 'ON DUTY' ? 'status-on' : 'text-slate-500'}`}>
+                                ● {myStatus}
+                            </span>
+                            <i className="fa-solid fa-users-gear text-emerald-500 mt-1"></i>
                         </div>
                     </header>
 
@@ -54,87 +64,69 @@
                                     <i className="fa-solid fa-ship text-2xl"></i>
                                     <span className="text-[10px] font-black uppercase">Repairs</span>
                                 </button>
-                                <button onClick={() => setView('M3')} className="glass p-6 rounded-[2rem] flex flex-col items-center gap-2 opacity-40">
-                                    <i className="fa-solid fa-scale-balanced text-2xl"></i>
-                                    <span className="text-[10px] font-black uppercase">Legal</span>
-                                </button>
-                                <button onClick={() => setView('M4')} className="glass p-6 rounded-[2rem] flex flex-col items-center gap-2 border-b-4 border-slate-400 tech-glow">
-                                    <i className="fa-solid fa-microchip text-2xl text-slate-400"></i>
-                                    <span className="text-[10px] font-black uppercase">Technical</span>
+                                <button onClick={() => setView('M5')} className="glass p-8 rounded-[2.5rem] flex flex-col items-center gap-3 col-span-2 border-b-4 border-emerald-500 shadow-[0_10px_30px_rgba(16,185,129,0.1)]">
+                                    <i className="fa-solid fa-user-clock text-4xl text-emerald-500"></i>
+                                    <span className="text-xs font-black uppercase tracking-widest">Personnel & Shifts</span>
                                 </button>
                             </div>
                         )}
 
-                        {/* --- MANUAL 04: TECH HUB --- */}
-                        {view === 'M4' && (
-                            <div className="space-y-4 animate-in slide-in-from-top duration-300">
+                        {/* --- MANUAL 05: WORKFORCE HUB --- */}
+                        {view === 'M5' && (
+                            <div className="space-y-6 animate-in slide-in-from-right duration-300">
                                 <div className="flex justify-between items-center px-2">
-                                    <h2 className="brand text-slate-400 text-sm italic underline underline-offset-8">SYSTEM ENGINE</h2>
+                                    <h2 className="brand text-emerald-500 text-xs italic underline underline-offset-8 uppercase">Shift Management</h2>
                                     <button onClick={() => setView('HOME')} className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Back</button>
                                 </div>
 
-                                {/* Drive Capacity Tracker */}
-                                <div className="glass p-5 rounded-3xl space-y-3">
+                                {/* My Personal Shift Control */}
+                                <div className="glass p-6 rounded-[2.5rem] bg-emerald-950/5 border-emerald-500/20">
+                                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">Your Active Session</p>
                                     <div className="flex justify-between items-center">
-                                        <p className="text-[10px] font-black text-blue-400 uppercase">Google Drive Storage (2TB)</p>
-                                        <span className="text-[10px] font-bold text-slate-500">240 GB / 2 TB</span>
-                                    </div>
-                                    <div className="progress-bg"><div className="progress-fill"></div></div>
-                                    <p className="text-[8px] text-slate-500 font-bold italic italic tracking-wider uppercase">Triple Redundancy Active: Supabase -> Drive -> Local</p>
-                                </div>
-
-                                {/* Intel Agent Monitor */}
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div className="glass p-4 rounded-2xl flex flex-col items-center gap-2 border-l-2 border-green-500">
-                                        <i className="fa-solid fa-robot text-green-500 text-xl"></i>
-                                        <p className="text-[9px] font-black uppercase">Intel Agent</p>
-                                        <p className="text-[8px] text-green-500 font-bold">STABLE</p>
-                                    </div>
-                                    <div className="glass p-4 rounded-2xl flex flex-col items-center gap-2 border-l-2 border-blue-500">
-                                        <i className="fa-solid fa-cloud-arrow-up text-blue-500 text-xl"></i>
-                                        <p className="text-[9px] font-black uppercase">Backup Sync</p>
-                                        <p className="text-[8px] text-blue-500 font-bold">12m AGO</p>
+                                        <div>
+                                            <h3 className="text-lg font-black tracking-tighter uppercase">{myStatus}</h3>
+                                            <p className="text-[9px] text-slate-500 font-bold uppercase italic tracking-wider">GPS Verification: Active</p>
+                                        </div>
+                                        <button 
+                                            onClick={() => setMyStatus(myStatus === 'ON DUTY' ? 'OFF DUTY' : 'ON DUTY')}
+                                            className={`px-6 py-3 rounded-2xl font-black text-[10px] uppercase transition-all ${myStatus === 'ON DUTY' ? 'bg-red-600 shadow-lg shadow-red-900/20' : 'bg-emerald-600 shadow-lg shadow-emerald-900/20'}`}
+                                        >
+                                            {myStatus === 'ON DUTY' ? 'Clock Out' : 'Clock In'}
+                                        </button>
                                     </div>
                                 </div>
 
-                                {/* API Status Table */}
-                                <div className="glass p-4 rounded-3xl overflow-hidden">
-                                    <table className="w-full text-left">
-                                        <thead>
-                                            <tr className="border-b border-slate-800">
-                                                <th className="pb-2 text-[9px] font-black text-slate-500 uppercase">Service</th>
-                                                <th className="pb-2 text-[9px] font-black text-slate-500 uppercase text-right">Latency</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="text-[10px] font-bold">
-                                            <tr>
-                                                <td className="py-2 text-slate-300">Supabase API</td>
-                                                <td className="py-2 text-right text-green-500">42ms</td>
-                                            </tr>
-                                            <tr>
-                                                <td className="py-2 text-slate-300">GitHub Deployment</td>
-                                                <td className="py-2 text-right text-blue-500">v1.6-LIVE</td>
-                                            </tr>
-                                            <tr>
-                                                <td className="py-2 text-slate-300">Auth & PIN Hash</td>
-                                                <td className="py-2 text-right text-green-500">OK</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
+                                {/* Team Status List */}
+                                <div className="space-y-3">
+                                    <p className="text-[10px] font-black text-slate-500 uppercase ml-2 tracking-widest">Team Overview</p>
+                                    {team.map(user => (
+                                        <div key={user.id} className="user-card glass p-4 rounded-3xl flex items-center justify-between border-slate-800">
+                                            <div className="flex items-center gap-4">
+                                                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-xs ${user.status === 'ON DUTY' ? 'bg-emerald-500/20 text-emerald-500' : 'bg-slate-800 text-slate-600'}`}>
+                                                    {user.name.charAt(0)}
+                                                </div>
+                                                <div>
+                                                    <h4 className="text-xs font-black tracking-tighter uppercase">{user.name}</h4>
+                                                    <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">{user.role}</p>
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className={`text-[8px] font-black uppercase ${user.status === 'ON DUTY' ? 'text-emerald-500' : 'text-slate-600'}`}>
+                                                    {user.status}
+                                                </p>
+                                                <p className="text-[7px] text-slate-500 font-bold italic tracking-tighter uppercase mt-1">{user.location}</p>
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
-
-                                <button className="w-full bg-slate-800 p-4 rounded-2xl flex items-center justify-center gap-3 active:bg-slate-700 transition-all">
-                                    <i className="fa-solid fa-terminal text-slate-500 text-xs"></i>
-                                    <span className="text-[10px] font-black uppercase tracking-widest">Run Full Diagnostics</span>
-                                </button>
                             </div>
                         )}
                     </main>
 
                     {/* Navigation Mini-Status */}
                     <div className="fixed bottom-4 w-full text-center">
-                        <p className="text-[7px] text-slate-700 font-black tracking-[0.5em] uppercase animate-pulse">
-                            Secure Core Connection Established
+                        <p className="text-[7px] text-slate-700 font-black tracking-[0.4em] uppercase">
+                            Workforce Management Active • v1.7
                         </p>
                     </div>
                 </div>

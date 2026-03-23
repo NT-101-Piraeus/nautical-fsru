@@ -6,7 +6,7 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseUpload
 
-# 1. Σύνδεση με Supabase (Secrets)
+# 1. Σύνδεση με Supabase
 url = os.environ.get("SUPABASE_URL")
 key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
 supabase: Client = create_client(url, key)
@@ -56,13 +56,11 @@ def archive_photo_to_drive(file_content, file_name, folder_id):
         print(f"❌ Drive Upload Error: {e}")
         return None
 
-# --- Κεντρική Ροή Πράκτορα (Main Logic) ---
+# --- Κεντρική Ροή Πράκτορα ---
 if __name__ == "__main__":
-    # Καταγραφή έναρξης συστήματος
     log_user_action(
         "SYSTEM_BOT", 
         "AGENT_START", 
         "Intel Agent V56 is live with Hybrid Storage (Supabase + Drive)"
     )
-    
     print("🚀 NTG Intel Agent is running...")

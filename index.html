@@ -1,6 +1,9 @@
-<!DOCTYPE html><html lang="el"><head>
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NTG COMMAND | TACTICAL SUITE</title>
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NTG COMMAND | V56 PRO</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -8,77 +11,197 @@
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Inter:wght@400;700;900&display=swap');
-        body { font-family: 'Inter', sans-serif; background: #020617; color: white; overflow-x: hidden; }
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Inter:wght@400;600;900&display=swap');
+        body { font-family: 'Inter', sans-serif; background: #020617; color: white; -webkit-tap-highlight-color: transparent; }
         .brand { font-family: 'Orbitron', sans-serif; }
         .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
-        .tile { transition: all 0.2s; border-top: 1px solid rgba(255,255,255,0.1); }
-        .tile:active { scale: 0.95; background: rgba(59, 130, 246, 0.2); }
-    </style></head><body>
+        .tile { transition: transform 0.1s; }
+        .tile:active { transform: scale(0.95); }
+        .safe-area-bottom { padding-bottom: env(safe-area-inset-bottom); }
+        select { appearance: none; -webkit-appearance: none; }
+    </style>
+</head>
+<body>
     <div id="root"></div>
+
     <script type="text/babel">
-        const { useState } = React;
+        const { useState, useEffect } = React;
+
+        // --- ΣΥΝΔΕΣΗ SUPABASE ΜΕ ΤΑ ΚΛΕΙΔΙΑ ΣΟΥ ---
+        const SUPABASE_URL = 'https://ovofreerowjofpvyqqre.supabase.co'; 
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'; // Το κλειδί σου
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         function App() {
+            const [view, setView] = useState('MENU'); 
             const [mode, setMode] = useState('MARITIME');
+            const [selectedProject, setSelectedProject] = useState('');
+            const [selectedZone, setSelectedZone] = useState('');
+            const [loading, setLoading] = useState(false);
+
+            // Manual 01: Project Lists
+            const projects = mode === 'MARITIME' 
+                ? ['NAFTOCEMENT IV', 'BLUE STAR I', 'TERME YARD 1'] 
+                : ['FACTORY A', 'WAREHOUSE X', 'CONSTRUCTION SITE 7'];
+
+            const zones = mode === 'MARITIME'
+                ? ['Deck', 'Engine Room', 'Bridge', 'Ballast Tanks']
+                : ['Production Line', 'Storage', 'Offices', 'Loading Dock'];
+
+            const handleCapture = async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                if (!selectedProject || !selectedZone) {
+                    alert("⚠️ Captain, πρέπει να επιλέξεις Project και Zone πρώτα!");
+                    return;
+                }
+                
+                setLoading(true);
+                const fileName = `inspection/${Date.now()}_${file.name}`;
+                
+                try {
+                    // 1. Upload στο Storage (Bucket: ntg_photos)
+                    const { data: uploadData, error: uploadError } = await supabaseClient.storage
+                        .from('ntg_photos')
+                        .upload(fileName, file);
+
+                    if (uploadError) throw uploadError;
+
+                    // 2. Εγγραφή στο Database (Manual 01: Audit Trail)
+                    const { error: dbError } = await supabaseClient
+                        .from('ntg_photos')
+                        .insert([{
+                            project_id: selectedProject,
+                            zone: selectedZone,
+                            url: fileName,
+                            user_id: 'M. SYKINIOTIS',
+                            mode: mode,
+                            timestamp: new Date().toISOString()
+                        }]);
+
+                    if (dbError) throw dbError;
+
+                    alert("✅ Η καταγραφή ολοκληρώθηκε και συγχρονίστηκε!");
+                } catch (err) {
+                    alert("❌ Error: " + err.message);
+                } finally {
+                    setLoading(false);
+                }
+            };
 
             return (
-                <div className="min-h-screen pb-24">
+                <div className="min-h-screen flex flex-col max-w-md mx-auto">
                     {/* --- MANUAL 01: SYNC BAR --- */}
                     <header className="glass sticky top-0 z-50 p-4 flex justify-between items-center border-b border-blue-500/30">
-                        <div className="flex flex-col">
-                            <span className="text-[10px] font-black text-blue-500 uppercase tracking-widest leading-none">User ID</span>
-                            <span className="font-bold text-sm tracking-tighter">M. SYKINIOTIS</span>
+                        <div>
+                            <p className="text-[10px] font-black text-blue-500 uppercase tracking-widest">User ID</p>
+                            <h1 className="font-bold text-sm tracking-tighter">M. SYKINIOTIS</h1>
                         </div>
-                        <div className="flex flex-col items-end">
-                            <div className="flex items-center gap-2">
-                                <span className="text-[9px] font-bold text-slate-400">CLOUD STATUS</span>
-                                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_#22c55e]"></div>
+                        <div className="text-right">
+                            <div className="flex items-center gap-2 justify-end">
+                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Cloud Status</span>
+                                <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_10px_#22c55e]"></div>
                             </div>
-                            <button onClick={() => setMode(mode === 'MARITIME' ? 'INDUSTRIAL' : 'MARITIME')} className="mt-1 bg-slate-800 px-3 py-1 rounded-full text-[9px] font-black border border-slate-700">
+                            <button onClick={() => setMode(mode === 'MARITIME' ? 'INDUSTRIAL' : 'MARITIME')} 
+                                    className="mt-1 bg-blue-600/20 px-3 py-1 rounded-full text-[9px] font-black border border-blue-500/50 text-blue-400">
                                 MODE: {mode}
                             </button>
                         </div>
                     </header>
 
-                    {/* --- MANUAL 01: TACTICAL TILES --- */}
-                    <main className="p-4 grid grid-cols-2 gap-4 mt-4">
-                        <button className="tile glass p-6 rounded-[2rem] flex flex-col items-center gap-3">
-                            <i className="fa-solid fa-rocket text-3xl text-blue-500"></i>
-                            <span className="text-[10px] font-black uppercase tracking-widest text-center">Inspection Engine</span>
-                        </button>
-                        <button className="tile glass p-6 rounded-[2rem] flex flex-col items-center gap-3">
-                            <i className="fa-solid fa-radiation text-3xl text-orange-500"></i>
-                            <span className="text-[10px] font-black uppercase tracking-widest text-center">Hazard Radar</span>
-                        </button>
-                        <button className="tile glass p-6 rounded-[2rem] flex flex-col items-center gap-3">
-                            <i className="fa-solid fa-book text-3xl text-emerald-500"></i>
-                            <span className="text-[10px] font-black uppercase tracking-widest text-center">Digital Logbook</span>
-                        </button>
-                        <button className="tile glass p-6 rounded-[2rem] flex flex-col items-center gap-3">
-                            <i className="fa-solid fa-file-invoice text-3xl text-purple-500"></i>
-                            <span className="text-[10px] font-black uppercase tracking-widest text-center">Executive Reports</span>
-                        </button>
-                        <button className="tile glass p-6 rounded-[2rem] flex flex-col items-center gap-3 col-span-2">
-                            <i className="fa-solid fa-wallet text-3xl text-yellow-500"></i>
-                            <span className="text-[10px] font-black uppercase tracking-widest">Project Wallet & Profit Margin</span>
-                        </button>
+                    {/* --- MAIN HUB --- */}
+                    <main className="flex-1 p-5">
+                        {view === 'MENU' ? (
+                            <div className="grid grid-cols-2 gap-4">
+                                {/* TILE 1: INSPECTION */}
+                                <button onClick={() => setView('INSPECTION')} className="tile glass p-6 rounded-[2.5rem] flex flex-col items-center gap-3 border-b-4 border-blue-600">
+                                    <i className="fa-solid fa-rocket text-3xl text-blue-400"></i>
+                                    <span className="text-[10px] font-black uppercase text-center tracking-tighter">Inspection Engine</span>
+                                </button>
+                                
+                                {/* TILE 2: HAZARD (Manual 01) */}
+                                <button className="tile glass p-6 rounded-[2.5rem] flex flex-col items-center gap-3 opacity-60">
+                                    <i className="fa-solid fa-radiation text-3xl text-orange-500"></i>
+                                    <span className="text-[10px] font-black uppercase text-center tracking-tighter">Hazard Radar</span>
+                                </button>
+
+                                {/* TILE 3: LOGBOOK */}
+                                <button className="tile glass p-6 rounded-[2.5rem] flex flex-col items-center gap-3 opacity-60">
+                                    <i className="fa-solid fa-book-maritime text-3xl text-emerald-500"></i>
+                                    <span className="text-[10px] font-black uppercase text-center tracking-tighter">Digital Logbook</span>
+                                </button>
+
+                                {/* TILE 4: REPORTS */}
+                                <button className="tile glass p-6 rounded-[2.5rem] flex flex-col items-center gap-3 opacity-60">
+                                    <i className="fa-solid fa-file-signature text-3xl text-purple-500"></i>
+                                    <span className="text-[10px] font-black uppercase text-center tracking-tighter">Reports V45</span>
+                                </button>
+
+                                {/* TILE 5: WALLET */}
+                                <button className="tile glass p-6 rounded-[2.5rem] flex flex-col items-center gap-3 col-span-2 border-yellow-500/30">
+                                    <div className="flex items-center gap-3">
+                                        <i className="fa-solid fa-wallet text-2xl text-yellow-500"></i>
+                                        <span className="text-[10px] font-black uppercase tracking-widest italic">Project Wallet & Profit Margin</span>
+                                        <i className="fa-solid fa-lock text-[10px] text-slate-500"></i>
+                                    </div>
+                                </button>
+                            </div>
+                        ) : (
+                            /* --- INSPECTION ENGINE VIEW --- */
+                            <div className="glass p-6 rounded-[2.5rem] space-y-6 border-blue-500/20">
+                                <div className="flex justify-between items-center">
+                                    <h2 className="brand text-blue-400 text-sm italic tracking-widest underline decoration-blue-500/50 underline-offset-8">Tactical Inspection</h2>
+                                    <button onClick={() => setView('MENU')} className="bg-slate-800 p-2 px-4 rounded-xl text-[10px] font-black text-slate-400 uppercase">Back</button>
+                                </div>
+
+                                <div className="space-y-5">
+                                    <div className="relative">
+                                        <label className="text-[10px] font-black text-slate-500 uppercase ml-2 mb-1 block">Project Selection</label>
+                                        <select onChange={(e) => setSelectedProject(e.target.value)} 
+                                                className="w-full bg-slate-900 border border-slate-700 p-4 rounded-2xl text-sm font-bold focus:border-blue-500 outline-none">
+                                            <option value="">-- SELECT {mode} --</option>
+                                            {projects.map(p => <option key={p} value={p}>{p}</option>)}
+                                        </select>
+                                    </div>
+
+                                    <div className="relative">
+                                        <label className="text-[10px] font-black text-slate-500 uppercase ml-2 mb-1 block">Area / Zone</label>
+                                        <select onChange={(e) => setSelectedZone(e.target.value)} 
+                                                className="w-full bg-slate-900 border border-slate-700 p-4 rounded-2xl text-sm font-bold focus:border-blue-500 outline-none">
+                                            <option value="">-- SELECT ZONE --</option>
+                                            {zones.map(z => <option key={z} value={z}>{z}</option>)}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                {selectedProject && selectedZone && (
+                                    <div className="p-4 bg-blue-500/5 border border-blue-500/20 rounded-2xl flex items-center gap-4">
+                                        <i className="fa-solid fa-circle-check text-blue-500"></i>
+                                        <div>
+                                            <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest leading-none">Status</p>
+                                            <p className="text-xs font-bold text-slate-300 mt-1 uppercase">Ready for Capture</p>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </main>
 
-                    {/* --- MANUAL 01: SMART CAPTURE [🔵] --- */}
-                    <div className="fixed bottom-6 left-0 right-0 flex justify-center z-50">
-                        <label className="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center shadow-[0_0_25px_rgba(37,99,235,0.5)] active:scale-90 transition-all cursor-pointer border-4 border-slate-900">
-                            <i className="fa-solid fa-camera text-2xl text-white"></i>
-                            <input type="file" accept="image/*" capture="environment" className="hidden" />
+                    {/* --- SMART CAPTURE BUTTON [🔵] --- */}
+                    <footer className="fixed bottom-8 left-0 right-0 flex justify-center items-center pointer-events-none">
+                        <label className={`w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center shadow-[0_0_40px_rgba(37,99,235,0.4)] border-4 border-slate-950 pointer-events-auto active:scale-90 transition-all cursor-pointer ${loading ? 'opacity-50' : ''}`}>
+                            {loading ? <i className="fa-solid fa-spinner fa-spin text-3xl text-white"></i> : <i className="fa-solid fa-camera text-3xl text-white"></i>}
+                            <input type="file" accept="image/*" capture="environment" onChange={handleCapture} className="hidden" disabled={loading} />
                         </label>
-                    </div>
-
-                    {/* NAVIGATION TEXTS */}
-                    <div className="fixed bottom-2 w-full text-center">
-                        <span className="brand text-[9px] text-slate-600 uppercase tracking-widest italic">NTG COMMAND V56 PRO</span>
+                    </footer>
+                    
+                    <div className="fixed bottom-3 w-full text-center safe-area-bottom">
+                         <p className="brand text-[8px] text-slate-600 uppercase tracking-[0.3em] font-bold">NTG COMMAND V56 • M. SYKINIOTIS</p>
                     </div>
                 </div>
             );
         }
         ReactDOM.createRoot(document.getElementById('root')).render(<App />);
-    </script></body></html>
+    </script>
+</body>
+</html>

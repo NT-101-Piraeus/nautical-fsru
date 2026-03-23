@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NTG COMMAND | V56 CEO PULSE</title>
+    <title>NTG COMMAND | V56 X-MERCHANT</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -14,8 +14,9 @@
         body { font-family: 'Inter', sans-serif; background: #020617; color: white; -webkit-tap-highlight-color: transparent; }
         .brand { font-family: 'Orbitron', sans-serif; }
         .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); }
-        .pulse-card { transition: all 0.3s; border-top: 2px solid transparent; }
-        .money-text { font-family: 'Orbitron', sans-serif; color: #10b981; }
+        .merchant-card { border-bottom: 2px solid transparent; transition: all 0.2s; }
+        .merchant-card:active { background: rgba(249, 115, 22, 0.1); scale: 0.98; }
+        .badge-low { background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
     </style>
 </head>
 <body>
@@ -26,113 +27,117 @@
 
         function App() {
             const [view, setView] = useState('HOME');
-            const [showFinances, setShowFinances] = useState(false);
+            const [tab, setTab] = useState('CATALOG'); // CATALOG, ORDERS
+
+            const inventory = [
+                { id: 1, name: "Gas Detector GX-2009", cat: "PPE", stock: 2, price: "€420", low: true },
+                { id: 2, name: "Oil Filter Marine-X", cat: "MECH", stock: 15, price: "€85", low: false },
+                { id: 3, name: "Safety Harness Pro", cat: "PPE", stock: 24, price: "€110", low: false },
+                { id: 4, name: "Control Board v4", cat: "ELEC", stock: 1, price: "€1,200", low: true }
+            ];
+
+            const orders = [
+                { id: "ORD-992", ship: "NAFTOCEMENT IV", status: "IN TRANSIT", date: "23/03" },
+                { id: "ORD-990", ship: "BLUE STAR I", status: "DELIVERED", date: "21/03" }
+            ];
 
             return (
                 <div className="min-h-screen pb-20">
                     {/* --- HEADER --- */}
-                    <header className="glass sticky top-0 z-50 p-4 flex justify-between items-center border-b border-purple-500/20">
+                    <header className="glass sticky top-0 z-50 p-4 flex justify-between items-center border-b border-orange-500/20">
                         <div onClick={() => setView('HOME')} className="cursor-pointer">
-                            <p className="text-[9px] font-black text-purple-500 tracking-[0.3em]">NTG CEO MASTER PULSE</p>
-                            <h1 className="font-bold text-sm uppercase italic">COMMAND CENTER</h1>
+                            <p className="text-[9px] font-black text-orange-500 tracking-[0.3em]">NTG X-MERCHANT</p>
+                            <h1 className="font-bold text-sm uppercase">M. SYKINIOTIS</h1>
                         </div>
-                        <i className="fa-solid fa-crown text-purple-500 animate-bounce"></i>
+                        <i className="fa-solid fa-cart-flatbed text-orange-500"></i>
                     </header>
 
                     <main className="p-4">
                         {/* --- HOME HUB --- */}
                         {view === 'HOME' && (
                             <div className="grid grid-cols-2 gap-4 animate-in fade-in duration-300">
-                                <button onClick={() => setView('M1')} className="glass p-6 rounded-[2rem] flex flex-col items-center gap-2 opacity-40">
+                                <button onClick={() => setView('M1')} className="glass p-6 rounded-[2rem] opacity-40 flex flex-col items-center gap-2">
                                     <i className="fa-solid fa-shield-halved text-2xl"></i>
-                                    <span className="text-[10px] font-black uppercase tracking-tighter">Safety</span>
+                                    <span className="text-[10px] font-black uppercase">Safety</span>
                                 </button>
-                                <button onClick={() => setView('M2')} className="glass p-6 rounded-[2rem] flex flex-col items-center gap-2 opacity-40">
-                                    <i className="fa-solid fa-ship text-2xl"></i>
-                                    <span className="text-[10px] font-black uppercase tracking-tighter">Repairs</span>
+                                <button onClick={() => setView('M6')} className="glass p-6 rounded-[2rem] opacity-40 flex flex-col items-center gap-2">
+                                    <i className="fa-solid fa-chart-line text-2xl"></i>
+                                    <span className="text-[10px] font-black uppercase">CEO</span>
                                 </button>
-                                <button onClick={() => setView('M6')} className="glass p-8 rounded-[2.5rem] flex flex-col items-center gap-3 col-span-2 border-t-4 border-purple-600 shadow-[0_0_30px_rgba(168,85,247,0.15)] pulse-card">
-                                    <i className="fa-solid fa-chart-line text-4xl text-purple-500"></i>
-                                    <span className="text-xs font-black uppercase tracking-[0.2em]">CEO Master Pulse</span>
+                                <button onClick={() => setView('M7')} className="glass p-8 rounded-[2.5rem] flex flex-col items-center gap-3 col-span-2 border-b-4 border-orange-500 shadow-[0_10px_30px_rgba(249,115,22,0.1)]">
+                                    <i className="fa-solid fa-cart-shopping text-4xl text-orange-500"></i>
+                                    <span className="text-xs font-black uppercase tracking-widest">E-shop & Supply Chain</span>
                                 </button>
                             </div>
                         )}
 
-                        {/* --- MANUAL 06: CEO DASHBOARD --- */}
-                        {view === 'M6' && (
-                            <div className="space-y-6 animate-in zoom-in duration-300">
+                        {/* --- MANUAL 07: MERCHANT HUB --- */}
+                        {view === 'M7' && (
+                            <div className="space-y-6 animate-in slide-in-from-bottom duration-300">
                                 <div className="flex justify-between items-center px-2">
-                                    <h2 className="brand text-purple-500 text-xs italic underline underline-offset-8 uppercase tracking-widest">Global Overview</h2>
-                                    <button onClick={() => setView('HOME')} className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Close</button>
+                                    <div className="flex gap-4">
+                                        <button onClick={() => setTab('CATALOG')} className={`brand text-xs uppercase italic tracking-widest ${tab === 'CATALOG' ? 'text-orange-500 underline underline-offset-8' : 'text-slate-500'}`}>Catalog</button>
+                                        <button onClick={() => setTab('ORDERS')} className={`brand text-xs uppercase italic tracking-widest ${tab === 'ORDERS' ? 'text-orange-500 underline underline-offset-8' : 'text-slate-500'}`}>Orders</button>
+                                    </div>
+                                    <button onClick={() => setView('HOME')} className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Back</button>
                                 </div>
 
-                                {/* Fleet Health Stats */}
-                                <div className="grid grid-cols-3 gap-3">
-                                    <div className="glass p-4 rounded-2xl flex flex-col items-center border-b-2 border-emerald-500">
-                                        <span className="text-[18px] font-black text-emerald-500 tracking-tighter">12</span>
-                                        <span className="text-[8px] font-black text-slate-500 uppercase">Active</span>
+                                {tab === 'CATALOG' ? (
+                                    <div className="space-y-4">
+                                        <div className="relative">
+                                            <input type="text" placeholder="SEARCH PARTS..." className="w-full bg-slate-900 border border-slate-800 p-4 rounded-2xl text-xs font-bold focus:border-orange-500 outline-none" />
+                                            <i className="fa-solid fa-magnifying-glass absolute right-4 top-4 text-slate-600"></i>
+                                        </div>
+                                        <div className="grid grid-cols-1 gap-3">
+                                            {inventory.map(item => (
+                                                <div key={item.id} className="merchant-card glass p-4 rounded-3xl flex justify-between items-center border-slate-800">
+                                                    <div className="flex items-center gap-4">
+                                                        <div className="w-10 h-10 bg-slate-800 rounded-xl flex items-center justify-center">
+                                                            <i className={`fa-solid ${item.cat === 'PPE' ? 'fa-mask-ventilator text-blue-400' : 'fa-gears text-slate-500'} text-lg`}></i>
+                                                        </div>
+                                                        <div>
+                                                            <h4 className="text-xs font-black tracking-tighter uppercase">{item.name}</h4>
+                                                            <p className="text-[8px] font-black text-slate-500 uppercase">{item.cat} // STOCK: {item.stock}</p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <p className="text-xs font-black text-orange-500">{item.price}</p>
+                                                        {item.low && <span className="badge-low text-[7px] font-black px-1.5 py-0.5 rounded uppercase mt-1 inline-block">Low Stock</span>}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
-                                    <div className="glass p-4 rounded-2xl flex flex-col items-center border-b-2 border-red-500">
-                                        <span className="text-[18px] font-black text-red-500 tracking-tighter">3</span>
-                                        <span className="text-[8px] font-black text-slate-500 uppercase">Alerts</span>
-                                    </div>
-                                    <div className="glass p-4 rounded-2xl flex flex-col items-center border-b-2 border-blue-500">
-                                        <span className="text-[18px] font-black text-blue-500 tracking-tighter">84%</span>
-                                        <span className="text-[8px] font-black text-slate-500 uppercase">Health</span>
-                                    </div>
-                                </div>
-
-                                {/* Financial Pulse */}
-                                <div className="glass p-6 rounded-[2.5rem] bg-purple-950/5 border-purple-500/20">
-                                    <div className="flex justify-between items-center mb-4">
-                                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Financial Pulse</p>
-                                        <button onClick={() => setShowFinances(!showFinances)} className="text-[10px] font-black text-purple-500">
-                                            {showFinances ? 'HIDE' : 'SHOW PIN'}
-                                        </button>
-                                    </div>
-                                    <div className={`space-y-4 transition-all ${showFinances ? 'blur-0' : 'blur-md'}`}>
-                                        <div className="flex justify-between items-end">
-                                            <div>
-                                                <p className="text-[8px] font-black text-emerald-500 uppercase">Total Profitability</p>
-                                                <h3 className="money-text text-2xl">+32.4%</h3>
+                                ) : (
+                                    <div className="space-y-3">
+                                        {orders.map(order => (
+                                            <div key={order.id} className="glass p-5 rounded-3xl border-l-4 border-orange-500">
+                                                <div className="flex justify-between items-start mb-3">
+                                                    <div>
+                                                        <p className="text-[10px] font-black text-orange-500 uppercase tracking-tighter">{order.id}</p>
+                                                        <h3 className="text-sm font-black uppercase tracking-tighter">{order.ship}</h3>
+                                                    </div>
+                                                    <span className="text-[8px] font-black text-slate-500">{order.date}</span>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <div className={`text-[8px] font-black px-2 py-1 rounded-md uppercase ${order.status === 'IN TRANSIT' ? 'bg-blue-500/20 text-blue-400' : 'bg-emerald-500/20 text-emerald-400'}`}>
+                                                        {order.status}
+                                                    </div>
+                                                    <div className="flex-1 h-[1px] bg-slate-800"></div>
+                                                    <i className="fa-solid fa-truck-fast text-slate-700 text-[10px]"></i>
+                                                </div>
                                             </div>
-                                            <div className="text-right">
-                                                <p className="text-[8px] font-black text-red-500 uppercase">Burn Rate</p>
-                                                <h3 className="text-sm font-black text-red-400">€4.2K / DAY</h3>
-                                            </div>
-                                        </div>
-                                        <div className="h-1 bg-slate-800 rounded-full overflow-hidden">
-                                            <div className="h-full bg-emerald-500" style={{width: '72%'}}></div>
-                                        </div>
+                                        ))}
                                     </div>
-                                </div>
-
-                                {/* Risk Intelligence List */}
-                                <div className="space-y-3">
-                                    <p className="text-[10px] font-black text-slate-500 uppercase ml-2 tracking-widest">Executive Risk Alerts</p>
-                                    <div className="glass p-4 rounded-3xl flex items-center gap-4 border-l-4 border-red-600">
-                                        <i className="fa-solid fa-triangle-exclamation text-red-600"></i>
-                                        <div>
-                                            <p className="text-[10px] font-black text-red-500">LEGAL: NAFTOCEMENT VIETNAM</p>
-                                            <p className="text-xs font-bold text-slate-300 tracking-tighter">High probability of court action in 48h.</p>
-                                        </div>
-                                    </div>
-                                    <div className="glass p-4 rounded-3xl flex items-center gap-4 border-l-4 border-orange-500 opacity-80">
-                                        <i className="fa-solid fa-clock-rotate-left text-orange-500"></i>
-                                        <div>
-                                            <p className="text-[10px] font-black text-orange-500">DELAY: TERME YARD 1</p>
-                                            <p className="text-xs font-bold text-slate-300 tracking-tighter">Welding team behind schedule (-15%).</p>
-                                        </div>
-                                    </div>
-                                </div>
+                                )}
                             </div>
                         )}
                     </main>
 
                     {/* Navigation Mini-Status */}
                     <div className="fixed bottom-4 w-full text-center">
-                        <p className="text-[7px] text-slate-700 font-black tracking-[0.5em] uppercase">
-                            Executive Authority Active • NTG Command
+                        <p className="text-[7px] text-slate-700 font-black tracking-[0.4em] uppercase">
+                            X-Merchant Commercial Engine • v1.9
                         </p>
                     </div>
                 </div>

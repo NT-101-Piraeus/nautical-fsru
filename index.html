@@ -1,148 +1,92 @@
-<!DOCTYPE html>
-<html lang="el">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NTG COMMAND | V56 HYBRID STORAGE</title>
+<!DOCTYPE html><html lang="el"><head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NTG COMMAND | V56 LIVE CAMERA</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Inter:wght@400;700;900&display=swap');
-        body { font-family: 'Inter', sans-serif; background: #020617; color: white; margin: 0; }
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Inter:wght@400;900&display=swap');
+        body { font-family: 'Inter', sans-serif; background: #020617; color: white; }
         .brand { font-family: 'Orbitron', sans-serif; }
-        .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.05); }
-        .critical-pulse { animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); } 100% { box-shadow: 0 0 0 15px rgba(220, 38, 38, 0); } }
-        .animate-fadeIn { animation: fadeIn 0.5s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    </style>
-</head>
-<body>
+        .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.05); }
+    </style></head><body>
     <div id="root"></div>
     <script type="text/babel">
         const { useState, useEffect } = React;
+        
+        // Σύνδεση με Supabase (Αντικατάστησε με τα δικά σου αν δεν τα τραβάει αυτόματα)
+        const supabase = supabase.createClient('YOUR_SUPABASE_URL', 'YOUR_SUPABASE_ANON_KEY');
 
         function App() {
-            const [view, setView] = useState('DASHBOARD');
-            const [user, setUser] = useState({ id: 'CAPTAIN_01', name: 'M. Sykiniotis' });
-            const [logs, setLogs] = useState([
-                { id: 1, ship: 'NAFTOCEMENT IV', type: 'TANKER', status: 'BLOCK', issue: 'EXPOSED WIRING', cat: 'FINDING' },
-                { id: 2, ship: 'RIGEL III', type: 'FERRY', status: 'OK', issue: 'SECURED HATCH', cat: 'GOOD_PRACTICE' }
-            ]);
+            const [uploading, setUploading] = useState(false);
+            const [user] = useState({ id: 'CAPTAIN_01', name: 'M. Sykiniotis' });
 
-            // Logic: Scoring (-25 for BLOCK, -10 for WAIT)
-            const blocks = logs.filter(l => l.status === 'BLOCK').length;
-            const waits = logs.filter(l => l.status === 'WAIT').length;
-            const safetyScore = Math.max(0, 100 - (blocks * 25) - (waits * 10));
+            const handleCapture = async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                setUploading(true);
+                const fileName = `${Date.now()}_${file.name}`;
+                
+                try {
+                    const { data, error } = await supabase.storage
+                        .from('ship-photos')
+                        .upload(fileName, file);
 
-            const Dashboard = () => (
-                <div className="max-w-xl mx-auto p-6 pb-24 animate-fadeIn">
-                    {/* Header with Safety Score */}
-                    <div className="flex justify-between items-center mb-10">
-                        <div>
-                            <h1 className="brand text-blue-500 text-xl italic tracking-tighter">NTG HUB V56</h1>
-                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Audit Mode: {user.name}</p>
-                        </div>
-                        <div className="text-right">
-                            <div className={`text-4xl font-black ${safetyScore > 70 ? 'text-green-400' : 'text-red-500'}`}>{safetyScore}%</div>
-                            <div className="text-[9px] uppercase font-black text-slate-500">Fleet Safety Index</div>
-                        </div>
-                    </div>
-
-                    {/* Hazard Radar */}
-                    <h3 className="brand text-[10px] uppercase text-slate-400 mb-4 tracking-widest">Live Hazard Radar</h3>
-                    <div className="space-y-4 mb-10">
-                        {logs.map(log => (
-                            <div key={log.id} className={`glass p-5 rounded-[32px] flex items-center justify-between border-l-4 ${log.status === 'BLOCK' ? 'border-red-600 critical-pulse' : 'border-green-500'}`}>
-                                <div>
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <span className="text-[9px] bg-slate-900 px-2 py-0.5 rounded font-black text-blue-400">{log.type}</span>
-                                        <h4 className="font-black text-sm uppercase italic">{log.ship}</h4>
-                                    </div>
-                                    <p className="text-[10px] text-slate-400 uppercase font-bold">{log.issue}</p>
-                                </div>
-                                <div className={`text-[10px] font-black px-3 py-1 rounded-full ${log.status === 'BLOCK' ? 'bg-red-600/20 text-red-500' : 'bg-green-600/20 text-green-500'}`}>
-                                    {log.status}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-
-                    {/* Photo Upload & Library Section */}
-                    <div className="glass p-8 rounded-[40px] border border-blue-500/10 mb-8">
-                        <h3 className="brand text-[10px] uppercase text-blue-400 mb-6">Camera & Knowledge Base</h3>
-                        
-                        <div className="space-y-4">
-                            <div>
-                                <label className="text-[9px] font-black uppercase text-slate-500 ml-2">Photo Category</label>
-                                <select id="photo_cat" className="w-full bg-slate-900 border border-white/5 p-4 rounded-2xl text-xs mt-2 focus:border-blue-500 outline-none transition-all">
-                                    <option value="FINDING">🔴 Finding / Hazard (For Report)</option>
-                                    <option value="GOOD_PRACTICE">🟢 Good Practice (For Presentation)</option>
-                                    <option value="REFERENCE">🔵 General Reference</option>
-                                </select>
-                            </div>
-
-                            <button className="w-full bg-blue-600 hover:bg-blue-500 py-5 rounded-2xl flex items-center justify-center gap-3 transition-all shadow-xl active:scale-95">
-                                <i className="fa-solid fa-camera text-xl"></i>
-                                <span className="text-xs font-black uppercase tracking-widest">Capture & Sync to Drive</span>
-                            </button>
-                        </div>
-                        <p className="text-[9px] text-slate-500 text-center mt-4 italic leading-relaxed">Photos are temporary cached in Supabase and permanently archived in Google Drive Knowledge Base.</p>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="grid grid-cols-2 gap-4">
-                        <button onClick={() => setView('REPORT')} className="bg-slate-800 py-5 rounded-3xl text-[10px] font-black uppercase tracking-widest border border-white/5 hover:bg-slate-700 transition-all shadow-lg">Executive Report</button>
-                        <button className="bg-slate-800 py-5 rounded-3xl text-[10px] font-black uppercase tracking-widest border border-white/5 hover:bg-slate-700 transition-all shadow-lg">Fleet Map</button>
-                    </div>
-                </div>
-            );
-
-            const ExecutiveReport = () => (
-                <div className="max-w-2xl mx-auto bg-white text-slate-900 min-h-screen p-10 animate-fadeIn shadow-2xl">
-                    <button onClick={() => setView('DASHBOARD')} className="text-[10px] font-black uppercase text-slate-400 mb-12 hover:text-slate-900 transition-all">← Back to Command</button>
+                    if (error) throw error;
+                    alert('✅ Φωτογραφία Ανέβηκε Επιτυχώς!');
                     
-                    <header className="border-b-[6px] border-slate-900 pb-8 mb-10 flex justify-between items-end">
-                        <div>
-                            <h1 className="brand text-3xl font-black italic uppercase leading-none text-slate-900">Safety Audit</h1>
-                            <p className="text-[10px] font-black uppercase mt-3 tracking-widest text-slate-500">Nautical Technology Group | {new Date().toLocaleDateString()}</p>
-                        </div>
-                        <div className="text-right">
-                            <div className="text-6xl font-black leading-none">{safetyScore}%</div>
-                            <p className="text-[9px] font-black uppercase text-slate-400">Compliance Score</p>
-                        </div>
-                    </header>
+                    // Καταγραφή στο Logbook
+                    await supabase.table('ntg_logbook').insert({
+                        ship: 'NAFTOCEMENT IV', // Παράδειγμα
+                        status: 'OK',
+                        issue: 'Photo Uploaded',
+                        photo_url: fileName,
+                        user_id: user.id
+                    });
 
-                    <section className="mb-12">
-                        <h2 className="text-[11px] font-black uppercase bg-slate-100 p-3 mb-6 italic tracking-widest border-l-4 border-red-600">Critical Findings (BLOCK Status)</h2>
-                        <div className="space-y-6">
-                            {logs.filter(l => l.status === 'BLOCK').map(l => (
-                                <div key={l.id} className="border-b border-slate-100 pb-6">
-                                    <div className="flex justify-between items-start">
-                                        <h3 className="text-sm font-black uppercase italic">{l.ship}</h3>
-                                        <span className="text-[9px] bg-red-100 text-red-600 px-2 py-1 rounded font-black uppercase">Immediate Action</span>
-                                    </div>
-                                    <p className="text-xs text-slate-600 mt-2 font-bold uppercase leading-relaxed">{l.issue}</p>
-                                    <p className="text-[9px] text-slate-400 mt-2 italic">Inspector: {user.name} | Audit Hash: {Math.random().toString(36).substring(7).toUpperCase()}</p>
-                                </div>
-                            ))}
-                        </div>
-                    </section>
+                } catch (err) { alert('❌ Σφάλμα: ' + err.message); }
+                finally { setUploading(false); }
+            };
 
-                    <footer className="mt-20 border-t-2 border-slate-100 pt-8 flex justify-between items-center text-[9px] font-black uppercase text-slate-400 tracking-tighter">
-                        <div className="italic">Auth Code: NTG-V56-SECURED-{user.id}</div>
-                        <div className="text-right">Verified by NTG Intel Agent 24/7</div>
-                    </footer>
+            return (
+                <div className="p-6 max-w-xl mx-auto space-y-8 animate-fadeIn">
+                    <div className="flex justify-between items-center mb-10">
+                        <h1 className="brand text-blue-500 text-xl italic">NTG COMMAND V56</h1>
+                        <div className="text-right text-[10px] uppercase font-bold text-slate-500 italic">Hybrid Sync: Active</div>
+                    </div>
+
+                    <div className="glass p-8 rounded-[40px] text-center border border-blue-500/20">
+                        <i className="fa-solid fa-shield-halved text-4xl text-blue-600 mb-4"></i>
+                        <h2 className="brand text-xs uppercase mb-6 tracking-widest">Inspection Live Capture</h2>
+                        
+                        <label className={`w-full ${uploading ? 'bg-slate-700' : 'bg-blue-600'} py-6 rounded-3xl flex items-center justify-center gap-4 cursor-pointer transition-all shadow-2xl active:scale-95`}>
+                            <i className={`fa-solid ${uploading ? 'fa-spinner fa-spin' : 'fa-camera'} text-2xl`}></i>
+                            <span className="font-black uppercase text-sm tracking-widest">
+                                {uploading ? 'Uploading...' : 'Take Photo / Upload'}
+                            </span>
+                            <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handleCapture} disabled={uploading} />
+                        </label>
+                        
+                        <p className="text-[10px] text-slate-500 mt-6 italic">Η φωτογραφία αποθηκεύεται αυτόματα στο Supabase Bucket "ship-photos"</p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 mt-10">
+                        <div className="glass p-4 rounded-2xl text-center">
+                            <div className="text-xl font-black text-blue-400 italic">1GB</div>
+                            <div className="text-[9px] uppercase font-bold text-slate-500">Free Storage</div>
+                        </div>
+                        <div className="glass p-4 rounded-2xl text-center">
+                            <div className="text-xl font-black text-green-400 italic">LIVE</div>
+                            <div className="text-[9px] uppercase font-bold text-slate-500">Sync Status</div>
+                        </div>
+                    </div>
                 </div>
             );
-
-            return view === 'DASHBOARD' ? <Dashboard /> : <ExecutiveReport />;
         }
 
         ReactDOM.createRoot(document.getElementById('root')).render(<App />);
-    </script>
-</body>
-</html>
+    </script></body></html>

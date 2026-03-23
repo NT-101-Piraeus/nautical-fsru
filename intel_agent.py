@@ -1,17 +1,15 @@
 import os
 import feedparser
 import requests
-import time
 from supabase import create_client
 
-# --- SETTINGS ---
-# Τα κλειδιά διαβάζονται αυτόματα από τα GitHub Secrets
+# --- CONFIGURATION (Ανάγνωση από GitHub Secrets) ---
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN")
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
 
-# Στόχοι και Λέξεις-Κλειδιά
+# Keywords για αναζήτηση
 KEYWORDS = ["REPAIR", "DOCKING", "SYROS", "PERAMA", "PIRAEUS", "ΕΠΙΣΚΕΥΗ", "ΔΕΞΑΜΕΝΙΣΜΟΣ", "HAI PHONG"]
 TARGET_IMO = "7355349" 
 
@@ -34,30 +32,32 @@ def scan_news():
     ]
     
     for url in feeds:
-        feed = feedparser.parse(url)
-        for entry in feed.entries:
-            if any(key.upper() in entry.title.upper() for key in KEYWORDS):
-                # Έλεγχος αν το lead υπάρχει ήδη
-                exists = supabase.table("ntg_intel_leads").select("*").eq("link", entry.link).execute()
-                if not exists.data:
-                    data = {
-                        "source": "Shipping Intel",
-                        "title": entry.title,
-                        "link": entry.link,
-                        "intel_type": "REPAIR",
-                        "priority": "HIGH"
-                    }
-                    supabase.table("ntg_intel_leads").insert(data).execute()
-                    send_alert(f"ΝΕΑ ΕΥΚΑΙΡΙΑ ΕΠΙΣΚΕΥΗΣ:\n{entry.title}\n{entry.link}")
+        try:
+            feed = feedparser.parse(url)
+            for entry in feed.entries:
+                if any(key.upper() in entry.title.upper() for key in KEYWORDS):
+                    # Έλεγχος αν υπάρχει ήδη στη βάση ntg_intel_leads
+                    exists = supabase.table("ntg_intel_leads").select("*").eq("link", entry.link).execute()
+                    if not exists.data:
+                        data = {
+                            "source": "Shipping News",
+                            "title": entry.title,
+                            "link": entry.link,
+                            "intel_type": "REPAIR",
+                            "priority": "HIGH"
+                        }
+                        supabase.table("ntg_intel_leads").insert(data).execute()
+                        send_alert(f"ΝΕΑ ΕΥΚΑΙΡΙΑ ΕΠΙΣΚΕΥΗΣ:\n{entry.title}\n{entry.link}")
+        except Exception as e:
+            print(f"Error scanning feed {url}: {e}")
 
-def track_target_vessel():
-    print(f"📡 Checking status for IMO {TARGET_IMO}...")
-    # Εδώ ο Agent θα μπορούσε να χτυπήσει ένα δωρεάν AIS API αν είχαμε κλειδί
-    # Προς το παρόν καταγράφουμε την πρόοδο του Tracker
+def track_vessel():
+    print(f"📡 AIS Monitoring Active for IMO {TARGET_IMO}")
+    # Εδώ θα προστεθεί το logic για το MarineTraffic API στο μέλλον
     pass
 
 if __name__ == "__main__":
-    print("🚀 Intel Agent Mission Started.")
+    print("🚀 Intel Agent Task Started.")
     scan_news()
-    track_target_vessel()
-    print("🏁 Mission accomplished. Going to sleep.")
+    track_vessel()
+    print("🏁 Task Completed. Script exiting.")

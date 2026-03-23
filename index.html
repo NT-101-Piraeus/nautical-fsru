@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="el"><head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NTG COMMAND | V56 FULL SUITE</title>
+    <title>NTG COMMAND | PRO V56</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -8,12 +8,15 @@
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Inter:wght@400;700&display=swap');
-        body { font-family: 'Inter', sans-serif; background: #020617; color: white; margin-bottom: 80px; }
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Inter:wght@400;700;900&display=swap');
+        body { font-family: 'Inter', sans-serif; background: #020617; color: white; margin-bottom: 90px; }
         .brand { font-family: 'Orbitron', sans-serif; }
         .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.05); }
-        .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 10px; color: #64748b; }
+        .nav-item { font-size: 9px; font-weight: 800; color: #475569; transition: 0.3s; }
         .nav-item.active { color: #3b82f6; }
+        .risk-high { border-left: 4px solid #ef4444; }
+        .risk-med { border-left: 4px solid #f59e0b; }
+        .risk-low { border-left: 4px solid #10b981; }
     </style></head><body>
     <div id="root"></div>
     <script type="text/babel">
@@ -23,82 +26,114 @@
         const supabase = window.supabase.createClient(SB_URL, SB_KEY);
 
         function App() {
-            const [view, setView] = useState('capture'); // 'capture', 'logbook', 'gallery'
+            const [view, setView] = useState('capture');
             const [logs, setLogs] = useState([]);
+            const [audit, setAudit] = useState([]);
 
-            // Φόρτωση δεδομένων για το Logbook
             useEffect(() => {
-                const fetchData = async () => {
-                    const { data } = await supabase.from('ntg_logbook').select('*').order('created_at', { ascending: false });
-                    setLogs(data || []);
-                };
-                if (view !== 'capture') fetchData();
+                fetchData();
             }, [view]);
 
+            const fetchData = async () => {
+                if (view === 'logbook' || view === 'safety') {
+                    const { data } = await supabase.from('ntg_logbook').select('*').order('created_at', { ascending: false });
+                    setLogs(data || []);
+                }
+                if (view === 'legal') {
+                    const { data } = await supabase.from('user_audit_logs').select('*').order('created_at', { ascending: false });
+                    setAudit(data || []);
+                }
+            };
+
             return (
-                <div className="min-h-screen flex flex-col p-5">
-                    <header className="flex justify-between items-center py-4">
-                        <h1 className="brand text-blue-500 text-lg italic uppercase tracking-tighter">NTG V56</h1>
-                        <span className="text-[10px] bg-blue-900/50 px-3 py-1 rounded-full border border-blue-500/30 font-bold uppercase">{view}</span>
+                <div className="p-4 max-w-lg mx-auto">
+                    <header className="flex justify-between items-center py-6">
+                        <div>
+                            <h1 className="brand text-blue-500 text-xl italic leading-none">NTG COMMAND</h1>
+                            <p className="text-[9px] font-bold text-slate-500 tracking-[0.2em] uppercase">Security Level: Captain</p>
+                        </div>
+                        <div className="glass p-2 rounded-xl border-blue-500/20"><i className="fa-solid fa-tower-broadcast text-blue-400 animate-pulse"></i></div>
                     </header>
 
-                    {/* --- ΟΘΟΝΗ 1: CAPTURE --- */}
+                    {/* --- VIEW: CAPTURE (ΥΠΑΛΛΗΛΟΣ/ΤΕΧΝΙΚΟΣ) --- */}
                     {view === 'capture' && (
-                        <div className="animate-fadeIn space-y-6">
-                            <div className="glass p-8 rounded-[40px] text-center border-t border-blue-500/30 shadow-2xl">
-                                <i className="fa-solid fa-camera-retro text-4xl text-blue-500 mb-6"></i>
-                                <h2 className="brand text-[10px] tracking-widest text-slate-400 mb-8 uppercase italic">Ready for Inspection</h2>
-                                <label className="w-full h-32 bg-blue-600 rounded-3xl flex items-center justify-center cursor-pointer active:scale-95 transition-all shadow-xl">
-                                    <span className="font-black uppercase tracking-widest">Take Photo</span>
+                        <div className="space-y-6 animate-fadeIn">
+                            <div className="glass p-8 rounded-[40px] border-t border-blue-500/30 text-center shadow-2xl">
+                                <i className="fa-solid fa-camera-retro text-5xl text-blue-600 mb-6 shadow-blue-500/20"></i>
+                                <h2 className="brand text-[10px] tracking-widest text-slate-500 mb-8 italic uppercase">Initial Inspection Hub</h2>
+                                <label className="w-full h-32 bg-blue-600 rounded-[30px] flex items-center justify-center cursor-pointer shadow-xl active:scale-95 transition-all">
+                                    <span className="font-black text-sm uppercase tracking-widest">Start Capture</span>
                                     <input type="file" accept="image/*" capture="environment" className="hidden" />
                                 </label>
                             </div>
                         </div>
                     )}
 
-                    {/* --- ΟΘΟΝΗ 2: LOGBOOK --- */}
-                    {view === 'logbook' && (
+                    {/* --- VIEW: SAFETY TECH (ΦΙΛΤΡΟ ΚΙΝΔΥΝΟΥ) --- */}
+                    {view === 'safety' && (
                         <div className="space-y-4">
-                            <h2 className="brand text-xs uppercase text-slate-500 mb-4">Inspection History</h2>
-                            {logs.map(log => (
-                                <div key={log.id} className="glass p-4 rounded-2xl flex justify-between items-center border-l-4 border-blue-500">
+                            <h2 className="brand text-xs text-orange-500 uppercase italic">Safety Advisor Dashboard</h2>
+                            {logs.filter(l => l.status === 'High').map(log => (
+                                <div key={log.id} className="glass p-4 rounded-2xl risk-high flex gap-4">
+                                    <div className="w-16 h-16 bg-slate-800 rounded-lg overflow-hidden shrink-0">
+                                        <img src={`${SB_URL}/storage/v1/object/public/ship-photos/${log.photo_url}`} className="w-full h-full object-cover" />
+                                    </div>
                                     <div>
-                                        <div className="text-[10px] font-black uppercase text-blue-400">{log.ship}</div>
-                                        <div className="text-xs font-bold">{log.issue}</div>
-                                        <div className="text-[9px] text-slate-500">{new Date(log.created_at).toLocaleString()}</div>
-                                    </div>
-                                    <div className={`text-[10px] font-black p-1 rounded ${log.status === 'High' ? 'bg-red-900 text-red-200' : 'bg-green-900 text-green-200'}`}>
-                                        {log.status}
+                                        <div className="text-[10px] font-black text-red-500 uppercase tracking-tighter italic">Critical Action Required</div>
+                                        <div className="text-xs font-bold leading-tight">{log.issue}</div>
+                                        <div className="text-[9px] text-slate-500 mt-1">{log.ship} | {new Date(log.created_at).toLocaleDateString()}</div>
                                     </div>
                                 </div>
                             ))}
                         </div>
                     )}
 
-                    {/* --- ΟΘΟΝΗ 3: GALLERY --- */}
-                    {view === 'gallery' && (
-                        <div className="grid grid-cols-2 gap-3">
+                    {/* --- VIEW: LEGAL (AUDIT TRAIL) --- */}
+                    {view === 'legal' && (
+                        <div className="space-y-2">
+                            <h2 className="brand text-xs text-slate-500 uppercase">Legal Audit Trail (Immutable)</h2>
+                            <div className="glass rounded-2xl p-4 text-[10px] font-mono leading-relaxed max-h-[60vh] overflow-y-auto">
+                                {audit.map(a => (
+                                    <div key={a.id} className="border-b border-slate-800 py-2">
+                                        <span className="text-blue-500">[{new Date(a.created_at).toLocaleTimeString()}]</span> <span className="text-green-500">{a.user_id}</span>: {a.action_type} - {a.description}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* --- VIEW: MANAGER LOG --- */}
+                    {view === 'logbook' && (
+                        <div className="space-y-3">
+                            <h2 className="brand text-xs text-slate-500 uppercase">Fleet Manager Log</h2>
                             {logs.map(log => (
-                                <div key={log.id} className="glass rounded-xl overflow-hidden aspect-square border border-slate-800">
-                                    <img src={`${SB_URL}/storage/v1/object/public/ship-photos/${log.photo_url}`} className="w-full h-full object-cover opacity-80" />
+                                <div key={log.id} className={`glass p-4 rounded-2xl flex justify-between items-center ${log.status === 'High' ? 'risk-high' : log.status === 'Medium' ? 'risk-med' : 'risk-low'}`}>
+                                    <div className="flex items-center gap-3">
+                                        <div className="text-xl">{log.status === 'High' ? '🔴' : '🟢'}</div>
+                                        <div>
+                                            <div className="text-[10px] font-black uppercase tracking-widest text-slate-500">{log.ship}</div>
+                                            <div className="text-xs font-bold">{log.issue}</div>
+                                        </div>
+                                    </div>
+                                    <i className="fa-solid fa-chevron-right text-slate-700"></i>
                                 </div>
                             ))}
                         </div>
                     )}
 
-                    {/* --- NAVIGATION MENU (ΣΤΑΘΕΡΟ ΣΤΟ ΚΑΤΩ ΜΕΡΟΣ) --- */}
-                    <nav className="fixed bottom-0 left-0 right-0 glass h-20 flex justify-around items-center border-t border-slate-800 px-6">
+                    {/* --- BOTTOM NAVIGATION BAR --- */}
+                    <nav className="fixed bottom-0 left-0 right-0 glass h-22 flex justify-around items-center border-t border-slate-800 px-2 py-4 shadow-2xl z-50">
                         <button onClick={() => setView('capture')} className={`nav-item ${view === 'capture' ? 'active' : ''}`}>
-                            <i className="fa-solid fa-camera text-xl mb-1"></i>
-                            <span>Capture</span>
+                            <i className="fa-solid fa-camera text-xl mb-1"></i><span>Capture</span>
+                        </button>
+                        <button onClick={() => setView('safety')} className={`nav-item ${view === 'safety' ? 'active' : ''}`}>
+                            <i className="fa-solid fa-hard-hat text-xl mb-1"></i><span>Safety</span>
                         </button>
                         <button onClick={() => setView('logbook')} className={`nav-item ${view === 'logbook' ? 'active' : ''}`}>
-                            <i className="fa-solid fa-list-check text-xl mb-1"></i>
-                            <span>Logbook</span>
+                            <i className="fa-solid fa-clipboard-list text-xl mb-1"></i><span>Fleet Log</span>
                         </button>
-                        <button onClick={() => setView('gallery')} className={`nav-item ${view === 'gallery' ? 'active' : ''}`}>
-                            <i className="fa-solid fa-images text-xl mb-1"></i>
-                            <span>Gallery</span>
+                        <button onClick={() => setView('legal')} className={`nav-item ${view === 'legal' ? 'active' : ''}`}>
+                            <i className="fa-solid fa-scale-balanced text-xl mb-1"></i><span>Legal</span>
                         </button>
                     </nav>
                 </div>

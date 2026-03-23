@@ -11,7 +11,5 @@ def log_user_action(user_id, action, description):
     except Exception as e:
         print(f"Audit Error: {e}")
 
-# Παράδειγμα χρήσης κατά το Sign-Off
 if __name__ == "__main__":
-    # ... logic ...
     log_user_action("CAPTAIN_MAIN", "SYSTEM_START", "Intel Agent V55 initiated with Ship-Type Priority logic.")

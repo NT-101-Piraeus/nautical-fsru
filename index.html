@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="el"><head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NTG COMMAND | V56 LIVE CAMERA</title>
+    <title>NTG COMMAND | V56 SMART HUB</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -9,84 +9,83 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Inter:wght@400;900&display=swap');
-        body { font-family: 'Inter', sans-serif; background: #020617; color: white; }
+        body { font-family: 'Inter', sans-serif; background: #020617; color: white; margin: 0; padding: 0; }
         .brand { font-family: 'Orbitron', sans-serif; }
         .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.05); }
+        select { background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; padding: 12px; color: white; width: 100%; outline: none; }
+        .capture-btn { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); }
     </style></head><body>
     <div id="root"></div>
     <script type="text/babel">
-        const { useState, useEffect } = React;
-        
-        // Σύνδεση με Supabase (Αντικατάστησε με τα δικά σου αν δεν τα τραβάει αυτόματα)
-        const supabase = supabase.createClient('YOUR_SUPABASE_URL', 'YOUR_SUPABASE_ANON_KEY');
+        const { useState } = React;
+
+        // --- ΣΥΝΔΕΣΗ ΜΕ ΤΟ ΔΙΚΟ ΣΟΥ SUPABASE ---
+        const SB_URL = "https://omdarjncczohpfzrqqhr.supabase.co";
+        const SB_KEY = "sb_publishable_V-nfUDy5MxEG4SlXkisFBg_GBlD_4Y9";
+        const supabaseClient = window.supabase.createClient(SB_URL, SB_KEY);
 
         function App() {
             const [uploading, setUploading] = useState(false);
-            const [user] = useState({ id: 'CAPTAIN_01', name: 'M. Sykiniotis' });
+            const [meta, setMeta] = useState({ project: 'NAFTOCEMENT IV', area: 'Deck', risk: 'Low' });
 
             const handleCapture = async (e) => {
                 const file = e.target.files[0];
                 if (!file) return;
-                
                 setUploading(true);
-                const fileName = `${Date.now()}_${file.name}`;
-                
-                try {
-                    const { data, error } = await supabase.storage
-                        .from('ship-photos')
-                        .upload(fileName, file);
 
-                    if (error) throw error;
-                    alert('✅ Φωτογραφία Ανέβηκε Επιτυχώς!');
-                    
-                    // Καταγραφή στο Logbook
-                    await supabase.table('ntg_logbook').insert({
-                        ship: 'NAFTOCEMENT IV', // Παράδειγμα
-                        status: 'OK',
-                        issue: 'Photo Uploaded',
-                        photo_url: fileName,
-                        user_id: user.id
+                const fileExt = file.name.split('.').pop();
+                const filePath = `${meta.project}/${meta.area}/${meta.risk}_${Date.now()}.${fileExt}`;
+
+                try {
+                    const { error: uploadError } = await supabaseClient.storage
+                        .from('ship-photos')
+                        .upload(filePath, file);
+
+                    if (uploadError) throw uploadError;
+
+                    await supabaseClient.table('ntg_logbook').insert({
+                        ship: meta.project,
+                        status: meta.risk,
+                        issue: `Inspection at ${meta.area}`,
+                        photo_url: filePath
                     });
 
+                    alert('✅ Επιτυχής Καταχώρηση!');
                 } catch (err) { alert('❌ Σφάλμα: ' + err.message); }
                 finally { setUploading(false); }
             };
 
             return (
-                <div className="p-6 max-w-xl mx-auto space-y-8 animate-fadeIn">
-                    <div className="flex justify-between items-center mb-10">
-                        <h1 className="brand text-blue-500 text-xl italic">NTG COMMAND V56</h1>
-                        <div className="text-right text-[10px] uppercase font-bold text-slate-500 italic">Hybrid Sync: Active</div>
-                    </div>
+                <div className="p-5 max-w-md mx-auto min-h-screen flex flex-col space-y-6">
+                    <header className="flex justify-between items-center py-4 border-b border-slate-800">
+                        <h1 className="brand text-blue-500 text-lg italic">NTG COMMAND V56</h1>
+                        <span className="text-[10px] font-bold text-green-500 animate-pulse">● ONLINE</span>
+                    </header>
 
-                    <div className="glass p-8 rounded-[40px] text-center border border-blue-500/20">
-                        <i className="fa-solid fa-shield-halved text-4xl text-blue-600 mb-4"></i>
-                        <h2 className="brand text-xs uppercase mb-6 tracking-widest">Inspection Live Capture</h2>
-                        
-                        <label className={`w-full ${uploading ? 'bg-slate-700' : 'bg-blue-600'} py-6 rounded-3xl flex items-center justify-center gap-4 cursor-pointer transition-all shadow-2xl active:scale-95`}>
-                            <i className={`fa-solid ${uploading ? 'fa-spinner fa-spin' : 'fa-camera'} text-2xl`}></i>
-                            <span className="font-black uppercase text-sm tracking-widest">
-                                {uploading ? 'Uploading...' : 'Take Photo / Upload'}
+                    <section className="glass p-6 rounded-[32px] space-y-5 shadow-2xl">
+                        <div>
+                            <label className="text-[10px] uppercase font-black text-slate-500 mb-2 block ml-1">Project</label>
+                            <select value={meta.project} onChange={(e) => setMeta({...meta, project: e.target.value})}>
+                                <option>NAFTOCEMENT IV</option>
+                                <option>FSRU ALEXANDROUPOLI</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="text-[10px] uppercase font-black text-slate-500 mb-2 block ml-1">Work Area</label>
+                            <select value={meta.area} onChange={(e) => setMeta({...meta, area: e.target.value})}>
+                                <option>Deck</option><option>Engine Room</option><option>Pump Room</option><option>Bridge</option>
+                            </select>
+                        </div>
+                        <label className={`w-full h-24 rounded-3xl flex flex-col items-center justify-center gap-1 cursor-pointer capture-btn shadow-lg ${uploading ? 'opacity-50' : ''}`}>
+                            <i className={`fa-solid ${uploading ? 'fa-spinner fa-spin' : 'fa-camera-retro'} text-3xl text-white`}></i>
+                            <span className="text-[11px] font-black uppercase text-white">
+                                {uploading ? 'Uploading...' : 'Capture Deficiency'}
                             </span>
                             <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handleCapture} disabled={uploading} />
                         </label>
-                        
-                        <p className="text-[10px] text-slate-500 mt-6 italic">Η φωτογραφία αποθηκεύεται αυτόματα στο Supabase Bucket "ship-photos"</p>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4 mt-10">
-                        <div className="glass p-4 rounded-2xl text-center">
-                            <div className="text-xl font-black text-blue-400 italic">1GB</div>
-                            <div className="text-[9px] uppercase font-bold text-slate-500">Free Storage</div>
-                        </div>
-                        <div className="glass p-4 rounded-2xl text-center">
-                            <div className="text-xl font-black text-green-400 italic">LIVE</div>
-                            <div className="text-[9px] uppercase font-bold text-slate-500">Sync Status</div>
-                        </div>
-                    </div>
+                    </section>
                 </div>
             );
         }
-
         ReactDOM.createRoot(document.getElementById('root')).render(<App />);
     </script></body></html>

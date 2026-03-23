@@ -3,158 +3,145 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NTG COMMAND | V56 SAFETY ACTIVATED</title>
+    <title>NTG COMMAND | V56 LEGAL VAULT</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Inter:wght@400;700;900&display=swap');
         body { font-family: 'Inter', sans-serif; background: #020617; color: white; -webkit-tap-highlight-color: transparent; }
         .brand { font-family: 'Orbitron', sans-serif; }
         .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); }
-        .btn-active { transform: scale(0.95); background: rgba(59, 130, 246, 0.3); }
+        .legal-glow { box-shadow: 0 0 20px rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.3); }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect } = React;
-
-        // ΣΥΝΔΕΣΗ SUPABASE (ΚΡΑΤΑ ΤΑ ΔΙΚΑ ΣΟΥ ΚΛΕΙΔΙΑ)
-        const SUPABASE_URL = 'https://ovofreerowjofpvyqqre.supabase.co'; 
-        const SUPABASE_KEY = 'YOUR_KEY_HERE'; 
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const { useState } = React;
 
         function App() {
-            const [view, setView] = useState('HOME'); // HOME, M1_MENU, M1_INSPECTION, M1_RADAR
-            const [mode, setMode] = useState('MARITIME');
-            const [hazards, setHazards] = useState([]);
-            
-            // Mock Data για το Checklist
-            const checklistItems = [
-                { id: 1, task: "Hot Works Permit", status: null },
-                { id: 2, task: "Fire Watcher Present", status: null },
-                { id: 3, task: "Gas Free Certificate", status: null },
-                { id: 4, task: "PPE Compliance", status: null }
+            const [view, setView] = useState('HOME'); // HOME, M1, M2, M3_MENU, M3_CASE
+            const [selectedCase, setSelectedCase] = useState(null);
+
+            const cases = [
+                { 
+                    id: 'A', 
+                    title: "NAFTOCEMENT IV", 
+                    subtitle: "Ship vs Yard Conflict", 
+                    status: "URGENT", 
+                    desc: "Υπόθεση διαφυγής πλοίου προς Βιετνάμ. Απαιτείται τεκμηρίωση ζημιών και επικοινωνίας.",
+                    color: "text-red-500"
+                },
+                { 
+                    id: 'B', 
+                    title: "TERME SHIPYARD", 
+                    subtitle: "Investor vs Board", 
+                    status: "ONGOING", 
+                    desc: "Διαμάχη μετόχων. Απαιτούνται πιστοποιημένες αναφορές προόδου εργασιών.",
+                    color: "text-orange-500"
+                }
             ];
 
             return (
                 <div className="min-h-screen pb-20">
                     {/* --- HEADER --- */}
-                    <header className="glass sticky top-0 z-50 p-4 flex justify-between items-center border-b border-blue-500/20">
+                    <header className="glass sticky top-0 z-50 p-4 flex justify-between items-center border-b border-red-500/20">
                         <div onClick={() => setView('HOME')} className="cursor-pointer">
-                            <p className="text-[9px] font-black text-blue-500 tracking-[0.3em]">NTG COMMAND</p>
-                            <h1 className="font-bold text-sm tracking-tighter uppercase">M. SYKINIOTIS</h1>
+                            <p className="text-[9px] font-black text-red-500 tracking-[0.3em]">NTG LEGAL VAULT</p>
+                            <h1 className="font-bold text-sm uppercase italic">M. SYKINIOTIS</h1>
                         </div>
-                        <button onClick={() => setMode(mode === 'MARITIME' ? 'INDUSTRIAL' : 'MARITIME')} className="text-[9px] font-black bg-slate-800 px-3 py-1 rounded-full border border-slate-700">
-                            {mode}
-                        </button>
+                        <i className="fa-solid fa-gavel text-red-500"></i>
                     </header>
 
                     <main className="p-4">
                         {/* --- HOME HUB --- */}
                         {view === 'HOME' && (
                             <div className="grid grid-cols-2 gap-4 animate-in fade-in duration-300">
-                                <button onClick={() => setView('M1_MENU')} className="glass p-8 rounded-[2.5rem] flex flex-col items-center gap-3 border-b-4 border-blue-600">
-                                    <i className="fa-solid fa-shield-halved text-4xl text-blue-400"></i>
-                                    <span className="text-xs font-black uppercase">Safety</span>
+                                <button onClick={() => setView('M1')} className="glass p-8 rounded-[2.5rem] flex flex-col items-center gap-3 opacity-40">
+                                    <i className="fa-solid fa-shield-halved text-4xl"></i>
+                                    <span className="text-[10px] font-black uppercase">Safety</span>
                                 </button>
-                                <button className="glass p-8 rounded-[2.5rem] flex flex-col items-center gap-3 opacity-50">
-                                    <i className="fa-solid fa-ship text-4xl text-cyan-400"></i>
-                                    <span className="text-xs font-black uppercase tracking-tighter">Repairs</span>
+                                <button onClick={() => setView('M2')} className="glass p-8 rounded-[2.5rem] flex flex-col items-center gap-3 opacity-40">
+                                    <i className="fa-solid fa-ship text-4xl"></i>
+                                    <span className="text-[10px] font-black uppercase">Repairs</span>
                                 </button>
-                                <div className="col-span-2 text-center py-4">
-                                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.5em]">Other Manuals Locked</p>
-                                </div>
+                                <button onClick={() => setView('M3_MENU')} className="glass p-8 rounded-[2.5rem] flex flex-col items-center gap-3 border-b-4 border-red-600 col-span-2 legal-glow">
+                                    <i className="fa-solid fa-scale-balanced text-4xl text-red-500"></i>
+                                    <span className="text-xs font-black uppercase tracking-widest">Legal & Conflicts</span>
+                                </button>
                             </div>
                         )}
 
-                        {/* --- MANUAL 01: SAFETY MENU --- */}
-                        {view === 'M1_MENU' && (
-                            <div className="space-y-4 animate-in slide-in-from-bottom duration-300">
+                        {/* --- MANUAL 03: LEGAL MENU --- */}
+                        {view === 'M3_MENU' && (
+                            <div className="space-y-4 animate-in slide-in-from-bottom">
                                 <div className="flex justify-between items-center px-2">
-                                    <h2 className="brand text-blue-400 text-sm italic underline underline-offset-8">SAFETY TACTICAL</h2>
+                                    <h2 className="brand text-red-500 text-sm italic underline underline-offset-8">CONFLICT FILES</h2>
                                     <button onClick={() => setView('HOME')} className="text-[10px] font-black text-slate-500 uppercase">Back</button>
                                 </div>
-                                <div className="grid grid-cols-1 gap-4">
-                                    <button onClick={() => setView('M1_INSPECTION')} className="glass p-6 rounded-3xl flex items-center justify-between border-l-4 border-blue-500">
-                                        <div className="flex items-center gap-4">
-                                            <i className="fa-solid fa-rocket text-2xl text-blue-500"></i>
-                                            <div className="text-left">
-                                                <p className="text-xs font-black uppercase">Inspection Engine</p>
-                                                <p className="text-[9px] text-slate-400">Start new vessel check</p>
-                                            </div>
+                                
+                                {cases.map(c => (
+                                    <button key={c.id} onClick={() => { setSelectedCase(c); setView('M3_CASE'); }}
+                                            className="w-full glass p-6 rounded-3xl text-left border-r-4 border-red-600 active:bg-red-950/20 transition-all">
+                                        <div className="flex justify-between items-center mb-2">
+                                            <span className="text-[8px] font-black bg-red-600 px-2 py-0.5 rounded text-white">{c.status}</span>
+                                            <i className="fa-solid fa-folder-closed text-red-900"></i>
                                         </div>
-                                        <i className="fa-solid fa-chevron-right text-slate-700"></i>
+                                        <h3 className="text-sm font-black tracking-tight">{c.title}</h3>
+                                        <p className="text-[10px] text-slate-500 font-bold uppercase">{c.subtitle}</p>
                                     </button>
-                                    <button onClick={() => setView('M1_RADAR')} className="glass p-6 rounded-3xl flex items-center justify-between border-l-4 border-orange-500">
-                                        <div className="flex items-center gap-4">
-                                            <i className="fa-solid fa-radiation text-2xl text-orange-500"></i>
-                                            <div className="text-left">
-                                                <p className="text-xs font-black uppercase text-orange-400">Hazard Radar</p>
-                                                <p className="text-[9px] text-slate-400">Live "BLOCK" feed</p>
-                                            </div>
-                                        </div>
-                                        <span className="bg-red-600 text-[10px] px-2 py-0.5 rounded-full font-black">2 LIVE</span>
-                                    </button>
-                                </div>
+                                ))}
                             </div>
                         )}
 
-                        {/* --- MANUAL 01: INSPECTION VIEW --- */}
-                        {view === 'M1_INSPECTION' && (
-                            <div className="glass p-6 rounded-[2.5rem] space-y-6 animate-in fade-in">
+                        {/* --- MANUAL 03: CASE DETAILS --- */}
+                        {view === 'M3_CASE' && selectedCase && (
+                            <div className="space-y-6 animate-in zoom-in duration-200">
                                 <div className="flex justify-between items-center">
-                                    <h2 className="brand text-blue-400 text-xs tracking-widest italic">NEW INSPECTION</h2>
-                                    <button onClick={() => setView('M1_MENU')} className="text-[10px] font-black text-slate-500 uppercase">Cancel</button>
+                                    <button onClick={() => setView('M3_MENU')} className="text-slate-500"><i className="fa-solid fa-arrow-left"></i></button>
+                                    <h2 className="brand text-red-500 text-xs tracking-widest italic">{selectedCase.title}</h2>
+                                    <div className="w-6"></div>
                                 </div>
-                                <div className="space-y-3">
-                                    {checklistItems.map(item => (
-                                        <div key={item.id} className="flex items-center justify-between p-4 bg-slate-900/50 rounded-2xl border border-slate-800">
-                                            <span className="text-xs font-bold text-slate-300">{item.task}</span>
-                                            <div className="flex gap-2">
-                                                <button className="w-10 h-10 rounded-xl bg-green-900/30 border border-green-500/30 flex items-center justify-center">
-                                                    <i className="fa-solid fa-check text-green-500"></i>
-                                                </button>
-                                                <button className="w-10 h-10 rounded-xl bg-red-900/30 border border-red-500/30 flex items-center justify-center">
-                                                    <i className="fa-solid fa-xmark text-red-500"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                                <button className="w-full bg-blue-600 p-4 rounded-2xl font-black text-sm uppercase shadow-lg shadow-blue-900/20">Finalize & Sign</button>
-                            </div>
-                        )}
 
-                        {/* --- MANUAL 01: HAZARD RADAR --- */}
-                        {view === 'M1_RADAR' && (
-                            <div className="space-y-4 animate-in slide-in-from-right">
-                                <div className="flex justify-between items-center px-2">
-                                    <h2 className="brand text-orange-500 text-xs italic">LIVE HAZARD RADAR</h2>
-                                    <button onClick={() => setView('M1_MENU')} className="text-[10px] font-black text-slate-500 uppercase">Back</button>
-                                </div>
-                                <div className="bg-red-900/20 border border-red-600/30 p-4 rounded-2xl flex items-center gap-4">
-                                    <div className="w-12 h-12 bg-red-600 rounded-xl flex items-center justify-center animate-pulse">
-                                        <i className="fa-solid fa-skull-crossbones text-xl text-white"></i>
+                                <div className="glass p-6 rounded-[2.5rem] space-y-4 border-red-900/30">
+                                    <p className="text-[10px] font-bold text-slate-400 leading-relaxed uppercase tracking-tighter">
+                                        {selectedCase.desc}
+                                    </p>
+                                    
+                                    <div className="pt-4 border-t border-slate-800 space-y-3">
+                                        <div className="flex items-center justify-between p-4 bg-red-950/10 rounded-2xl border border-red-900/20">
+                                            <div className="flex items-center gap-3">
+                                                <i className="fa-solid fa-camera-retro text-red-500"></i>
+                                                <span className="text-[10px] font-black uppercase">Evidence Vault</span>
+                                            </div>
+                                            <span className="text-[10px] font-bold text-slate-500 italic">4 Files</span>
+                                        </div>
+                                        <div className="flex items-center justify-between p-4 bg-slate-900/50 rounded-2xl border border-slate-800 opacity-60">
+                                            <div className="flex items-center gap-3">
+                                                <i className="fa-solid fa-fingerprint text-slate-500"></i>
+                                                <span className="text-[10px] font-black uppercase">Audit Trail</span>
+                                            </div>
+                                            <i className="fa-solid fa-lock text-[10px]"></i>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <p className="text-[10px] font-black text-red-500">BLOCK: GAS LEAK DETECTED</p>
-                                        <p className="text-xs font-bold mt-1 uppercase">Naftocement IV // Engine Room</p>
-                                        <p className="text-[8px] text-slate-500 mt-1 font-bold">REPORTED BY: M. SYKINIOTIS • 14:20</p>
+
+                                    <div className="bg-slate-900/80 p-4 rounded-2xl border border-slate-800">
+                                        <p className="text-[8px] font-black text-red-600 uppercase tracking-widest">Legal Warning</p>
+                                        <p className="text-[9px] text-slate-500 mt-1 italic">
+                                            Κάθε καταγραφή σε αυτόν τον φάκελο συνοδεύεται από GPS Metadata & Immutable Server Timestamp.
+                                        </p>
                                     </div>
                                 </div>
                             </div>
                         )}
                     </main>
 
-                    {/* --- SMART CAPTURE BUTTON --- */}
                     <footer className="fixed bottom-6 left-0 right-0 flex justify-center pointer-events-none">
-                        <button className="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(37,99,235,0.4)] border-4 border-slate-950 pointer-events-auto active:scale-90 transition-all">
+                        <button className="w-20 h-20 bg-red-600 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(220,38,38,0.4)] border-4 border-slate-950 pointer-events-auto active:scale-90 transition-all">
                             <i className="fa-solid fa-camera text-2xl text-white"></i>
                         </button>
                     </footer>

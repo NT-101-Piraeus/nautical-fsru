@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NTG COMMAND | V56 WORKFORCE</title>
+    <title>NTG COMMAND | V56 CEO PULSE</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -14,9 +14,8 @@
         body { font-family: 'Inter', sans-serif; background: #020617; color: white; -webkit-tap-highlight-color: transparent; }
         .brand { font-family: 'Orbitron', sans-serif; }
         .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); }
-        .status-on { color: #22c55e; text-shadow: 0 0 10px rgba(34, 197, 94, 0.4); }
-        .user-card { transition: all 0.2s; border-left: 4px solid transparent; }
-        .user-card:active { background: rgba(255,255,255,0.05); scale: 0.98; }
+        .pulse-card { transition: all 0.3s; border-top: 2px solid transparent; }
+        .money-text { font-family: 'Orbitron', sans-serif; color: #10b981; }
     </style>
 </head>
 <body>
@@ -27,29 +26,17 @@
 
         function App() {
             const [view, setView] = useState('HOME');
-            const [myStatus, setMyStatus] = useState('OFF DUTY');
-
-            const team = [
-                { id: 1, name: "N. GEORGIOU", role: "SAFETY TECH", status: "ON DUTY", location: "NAFTOCEMENT IV" },
-                { id: 2, name: "S. PAPADOPOULOS", role: "WELDER", status: "ON DUTY", location: "TERME YARD" },
-                { id: 3, name: "A. MARINOU", role: "SURVEYOR", status: "OFF DUTY", location: "-" },
-                { id: 4, name: "D. KONTOS", role: "LOGISTICS", status: "ON DUTY", location: "PIRAEUS PORT" }
-            ];
+            const [showFinances, setShowFinances] = useState(false);
 
             return (
                 <div className="min-h-screen pb-20">
                     {/* --- HEADER --- */}
-                    <header className="glass sticky top-0 z-50 p-4 flex justify-between items-center border-b border-emerald-500/20">
+                    <header className="glass sticky top-0 z-50 p-4 flex justify-between items-center border-b border-purple-500/20">
                         <div onClick={() => setView('HOME')} className="cursor-pointer">
-                            <p className="text-[9px] font-black text-emerald-500 tracking-[0.3em]">NTG WORKFORCE</p>
-                            <h1 className="font-bold text-sm uppercase italic">M. SYKINIOTIS</h1>
+                            <p className="text-[9px] font-black text-purple-500 tracking-[0.3em]">NTG CEO MASTER PULSE</p>
+                            <h1 className="font-bold text-sm uppercase italic">COMMAND CENTER</h1>
                         </div>
-                        <div className="flex flex-col items-end">
-                            <span className={`text-[8px] font-black tracking-widest ${myStatus === 'ON DUTY' ? 'status-on' : 'text-slate-500'}`}>
-                                ● {myStatus}
-                            </span>
-                            <i className="fa-solid fa-users-gear text-emerald-500 mt-1"></i>
-                        </div>
+                        <i className="fa-solid fa-crown text-purple-500 animate-bounce"></i>
                     </header>
 
                     <main className="p-4">
@@ -58,66 +45,85 @@
                             <div className="grid grid-cols-2 gap-4 animate-in fade-in duration-300">
                                 <button onClick={() => setView('M1')} className="glass p-6 rounded-[2rem] flex flex-col items-center gap-2 opacity-40">
                                     <i className="fa-solid fa-shield-halved text-2xl"></i>
-                                    <span className="text-[10px] font-black uppercase">Safety</span>
+                                    <span className="text-[10px] font-black uppercase tracking-tighter">Safety</span>
                                 </button>
                                 <button onClick={() => setView('M2')} className="glass p-6 rounded-[2rem] flex flex-col items-center gap-2 opacity-40">
                                     <i className="fa-solid fa-ship text-2xl"></i>
-                                    <span className="text-[10px] font-black uppercase">Repairs</span>
+                                    <span className="text-[10px] font-black uppercase tracking-tighter">Repairs</span>
                                 </button>
-                                <button onClick={() => setView('M5')} className="glass p-8 rounded-[2.5rem] flex flex-col items-center gap-3 col-span-2 border-b-4 border-emerald-500 shadow-[0_10px_30px_rgba(16,185,129,0.1)]">
-                                    <i className="fa-solid fa-user-clock text-4xl text-emerald-500"></i>
-                                    <span className="text-xs font-black uppercase tracking-widest">Personnel & Shifts</span>
+                                <button onClick={() => setView('M6')} className="glass p-8 rounded-[2.5rem] flex flex-col items-center gap-3 col-span-2 border-t-4 border-purple-600 shadow-[0_0_30px_rgba(168,85,247,0.15)] pulse-card">
+                                    <i className="fa-solid fa-chart-line text-4xl text-purple-500"></i>
+                                    <span className="text-xs font-black uppercase tracking-[0.2em]">CEO Master Pulse</span>
                                 </button>
                             </div>
                         )}
 
-                        {/* --- MANUAL 05: WORKFORCE HUB --- */}
-                        {view === 'M5' && (
-                            <div className="space-y-6 animate-in slide-in-from-right duration-300">
+                        {/* --- MANUAL 06: CEO DASHBOARD --- */}
+                        {view === 'M6' && (
+                            <div className="space-y-6 animate-in zoom-in duration-300">
                                 <div className="flex justify-between items-center px-2">
-                                    <h2 className="brand text-emerald-500 text-xs italic underline underline-offset-8 uppercase">Shift Management</h2>
-                                    <button onClick={() => setView('HOME')} className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Back</button>
+                                    <h2 className="brand text-purple-500 text-xs italic underline underline-offset-8 uppercase tracking-widest">Global Overview</h2>
+                                    <button onClick={() => setView('HOME')} className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Close</button>
                                 </div>
 
-                                {/* My Personal Shift Control */}
-                                <div className="glass p-6 rounded-[2.5rem] bg-emerald-950/5 border-emerald-500/20">
-                                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">Your Active Session</p>
-                                    <div className="flex justify-between items-center">
-                                        <div>
-                                            <h3 className="text-lg font-black tracking-tighter uppercase">{myStatus}</h3>
-                                            <p className="text-[9px] text-slate-500 font-bold uppercase italic tracking-wider">GPS Verification: Active</p>
-                                        </div>
-                                        <button 
-                                            onClick={() => setMyStatus(myStatus === 'ON DUTY' ? 'OFF DUTY' : 'ON DUTY')}
-                                            className={`px-6 py-3 rounded-2xl font-black text-[10px] uppercase transition-all ${myStatus === 'ON DUTY' ? 'bg-red-600 shadow-lg shadow-red-900/20' : 'bg-emerald-600 shadow-lg shadow-emerald-900/20'}`}
-                                        >
-                                            {myStatus === 'ON DUTY' ? 'Clock Out' : 'Clock In'}
-                                        </button>
+                                {/* Fleet Health Stats */}
+                                <div className="grid grid-cols-3 gap-3">
+                                    <div className="glass p-4 rounded-2xl flex flex-col items-center border-b-2 border-emerald-500">
+                                        <span className="text-[18px] font-black text-emerald-500 tracking-tighter">12</span>
+                                        <span className="text-[8px] font-black text-slate-500 uppercase">Active</span>
+                                    </div>
+                                    <div className="glass p-4 rounded-2xl flex flex-col items-center border-b-2 border-red-500">
+                                        <span className="text-[18px] font-black text-red-500 tracking-tighter">3</span>
+                                        <span className="text-[8px] font-black text-slate-500 uppercase">Alerts</span>
+                                    </div>
+                                    <div className="glass p-4 rounded-2xl flex flex-col items-center border-b-2 border-blue-500">
+                                        <span className="text-[18px] font-black text-blue-500 tracking-tighter">84%</span>
+                                        <span className="text-[8px] font-black text-slate-500 uppercase">Health</span>
                                     </div>
                                 </div>
 
-                                {/* Team Status List */}
-                                <div className="space-y-3">
-                                    <p className="text-[10px] font-black text-slate-500 uppercase ml-2 tracking-widest">Team Overview</p>
-                                    {team.map(user => (
-                                        <div key={user.id} className="user-card glass p-4 rounded-3xl flex items-center justify-between border-slate-800">
-                                            <div className="flex items-center gap-4">
-                                                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-xs ${user.status === 'ON DUTY' ? 'bg-emerald-500/20 text-emerald-500' : 'bg-slate-800 text-slate-600'}`}>
-                                                    {user.name.charAt(0)}
-                                                </div>
-                                                <div>
-                                                    <h4 className="text-xs font-black tracking-tighter uppercase">{user.name}</h4>
-                                                    <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">{user.role}</p>
-                                                </div>
+                                {/* Financial Pulse */}
+                                <div className="glass p-6 rounded-[2.5rem] bg-purple-950/5 border-purple-500/20">
+                                    <div className="flex justify-between items-center mb-4">
+                                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Financial Pulse</p>
+                                        <button onClick={() => setShowFinances(!showFinances)} className="text-[10px] font-black text-purple-500">
+                                            {showFinances ? 'HIDE' : 'SHOW PIN'}
+                                        </button>
+                                    </div>
+                                    <div className={`space-y-4 transition-all ${showFinances ? 'blur-0' : 'blur-md'}`}>
+                                        <div className="flex justify-between items-end">
+                                            <div>
+                                                <p className="text-[8px] font-black text-emerald-500 uppercase">Total Profitability</p>
+                                                <h3 className="money-text text-2xl">+32.4%</h3>
                                             </div>
                                             <div className="text-right">
-                                                <p className={`text-[8px] font-black uppercase ${user.status === 'ON DUTY' ? 'text-emerald-500' : 'text-slate-600'}`}>
-                                                    {user.status}
-                                                </p>
-                                                <p className="text-[7px] text-slate-500 font-bold italic tracking-tighter uppercase mt-1">{user.location}</p>
+                                                <p className="text-[8px] font-black text-red-500 uppercase">Burn Rate</p>
+                                                <h3 className="text-sm font-black text-red-400">€4.2K / DAY</h3>
                                             </div>
                                         </div>
-                                    ))}
+                                        <div className="h-1 bg-slate-800 rounded-full overflow-hidden">
+                                            <div className="h-full bg-emerald-500" style={{width: '72%'}}></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Risk Intelligence List */}
+                                <div className="space-y-3">
+                                    <p className="text-[10px] font-black text-slate-500 uppercase ml-2 tracking-widest">Executive Risk Alerts</p>
+                                    <div className="glass p-4 rounded-3xl flex items-center gap-4 border-l-4 border-red-600">
+                                        <i className="fa-solid fa-triangle-exclamation text-red-600"></i>
+                                        <div>
+                                            <p className="text-[10px] font-black text-red-500">LEGAL: NAFTOCEMENT VIETNAM</p>
+                                            <p className="text-xs font-bold text-slate-300 tracking-tighter">High probability of court action in 48h.</p>
+                                        </div>
+                                    </div>
+                                    <div className="glass p-4 rounded-3xl flex items-center gap-4 border-l-4 border-orange-500 opacity-80">
+                                        <i className="fa-solid fa-clock-rotate-left text-orange-500"></i>
+                                        <div>
+                                            <p className="text-[10px] font-black text-orange-500">DELAY: TERME YARD 1</p>
+                                            <p className="text-xs font-bold text-slate-300 tracking-tighter">Welding team behind schedule (-15%).</p>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         )}
@@ -125,8 +131,8 @@
 
                     {/* Navigation Mini-Status */}
                     <div className="fixed bottom-4 w-full text-center">
-                        <p className="text-[7px] text-slate-700 font-black tracking-[0.4em] uppercase">
-                            Workforce Management Active • v1.7
+                        <p className="text-[7px] text-slate-700 font-black tracking-[0.5em] uppercase">
+                            Executive Authority Active • NTG Command
                         </p>
                     </div>
                 </div>

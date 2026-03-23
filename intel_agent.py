@@ -1,20 +1,26 @@
 import os
 from supabase import create_client, Client
 
-# Σύνδεση με Supabase μέσω των Secrets που ήδη έχεις βάλει στο GitHub
-url = os.environ.get("SUPABASE_URL")
-key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
-supabase: Client = create_client(url, key)
+# Τραβάει τα στοιχεία από τα GitHub Secrets (τα έχουμε βάλει ήδη)
+URL = os.environ.get("SUPABASE_URL", "https://omdarjncczohpfzrqqhr.supabase.co")
+KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
 
-def log_user_action(user_id, action, description):
-    """Καταγραφή Audit Trail στη βάση"""
-    data = {"user_id": user_id, "action_type": action, "description": description}
+def log_event(action, detail):
+    """Καταγράφει κάθε κίνηση στο νομικό ημερολόγιο της NTG"""
     try:
-        supabase.table("user_audit_logs").insert(data).execute()
-        print(f"🔒 Audit Log: {action} by {user_id}")
+        if not KEY:
+            print("❌ Error: Missing Service Role Key")
+            return
+        supabase: Client = create_client(URL, KEY)
+        supabase.table("user_audit_logs").insert({
+            "user_id": "CAPTAIN_M_SYK",
+            "action_type": action,
+            "description": detail
+        }).execute()
+        print(f"🔒 Logged: {action}")
     except Exception as e:
-        print(f"❌ Audit Error: {e}")
+        print(f"❌ Error: {e}")
 
 if __name__ == "__main__":
-    log_user_action("SYSTEM_BOT", "AGENT_START", "V56 Supabase Storage Active - Ready for Inspection")
-    print("🚀 NTG Agent is live and waiting for photos!")
+    log_event("AGENT_BOOT", "Intel Agent V56 Active - Monitoring Supabase Storage.")
+    print("🚀 NTG Intel Agent: STANDBY MODE ACTIVE")

@@ -3,37 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NTG COMMAND | V56 COMPLETE HUB</title>
+    <title>NTG COMMAND | FULL OPERATIONAL</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Inter:wght@400;700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Inter:wght@400;600;900&display=swap');
         body { font-family: 'Inter', sans-serif; background: #020617; color: white; -webkit-tap-highlight-color: transparent; }
         .brand { font-family: 'Orbitron', sans-serif; }
         .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); }
-        .house-card { transition: all 0.2s; }
-        .house-card:active { scale: 0.98; background: rgba(236, 72, 153, 0.1); }
-        .status-badge { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); }
+        .active-btn { transform: scale(0.95); background: rgba(59, 130, 246, 0.2); }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState } = React;
+        const { useState, useEffect } = React;
+
+        // ΣΥΝΔΕΣΗ SUPABASE (ΑΝΤΙΚΑΤΑΣΤΗΣΕ ΜΕ ΤΑ ΔΙΚΑ ΣΟΥ)
+        const SUPABASE_URL = 'https://ovofreerowjofpvyqqre.supabase.co'; 
+        const SUPABASE_KEY = 'YOUR_ACTUAL_KEY_HERE'; 
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         function App() {
-            const [activeManual, setActiveManual] = useState('HOME');
-            
-            const properties = [
-                { id: 1, name: "Syros Loft A", location: "Ερμούπολη", beds: 4, occupied: 3, status: "ACTIVE", price: "€65/day" },
-                { id: 2, name: "Piraeus Port Apt", location: "Πασαλιμάνι", beds: 2, occupied: 0, status: "CLEANING", price: "€50/day" },
-                { id: 3, name: "Elefsina Crew House", location: "Κέντρο", beds: 6, occupied: 6, status: "FULL", price: "€80/day" }
-            ];
+            const [view, setView] = useState('HOME');
+            const [mode, setMode] = useState('MARITIME');
+            const [search, setSearch] = useState('');
 
+            // --- NAVIGATION ---
             const manuals = [
                 { id: 'M1', title: 'SAFETY', icon: 'fa-shield-halved', color: 'text-blue-400' },
                 { id: 'M2', title: 'REPAIRS', icon: 'fa-ship', color: 'text-cyan-400' },
@@ -46,22 +47,25 @@
             ];
 
             return (
-                <div className="min-h-screen pb-24">
+                <div className="min-h-screen pb-24 max-w-md mx-auto">
                     {/* --- GLOBAL HEADER --- */}
-                    <header className="glass sticky top-0 z-50 p-4 flex justify-between items-center border-b border-pink-500/20">
-                        <div onClick={() => setActiveManual('HOME')} className="cursor-pointer">
-                            <p className="text-[9px] font-black text-pink-500 tracking-[0.3em]">NTG COMMAND HUB</p>
-                            <h1 className="font-bold text-sm tracking-tighter uppercase">M. SYKINIOTIS</h1>
+                    <header className="glass sticky top-0 z-50 p-4 flex justify-between items-center border-b border-blue-500/20">
+                        <div onClick={() => setView('HOME')} className="cursor-pointer">
+                            <p className="text-[9px] font-black text-blue-500 tracking-[0.3em]">NTG COMMAND</p>
+                            <h1 className="font-bold text-sm tracking-tighter">M. SYKINIOTIS</h1>
                         </div>
-                        <i className="fa-solid fa-key text-pink-500 animate-pulse"></i>
+                        <button onClick={() => setMode(mode === 'MARITIME' ? 'INDUSTRIAL' : 'MARITIME')} 
+                                className="text-[9px] font-black bg-blue-600/10 border border-blue-500/50 px-3 py-1 rounded-full text-blue-400">
+                            {mode}
+                        </button>
                     </header>
 
                     <main className="p-4">
-                        {/* --- HOME VIEW --- */}
-                        {activeManual === 'HOME' && (
-                            <div className="grid grid-cols-2 gap-4 animate-in fade-in duration-500">
+                        {/* --- HOME HUB --- */}
+                        {view === 'HOME' && (
+                            <div className="grid grid-cols-2 gap-4 animate-in fade-in duration-300">
                                 {manuals.map(m => (
-                                    <button key={m.id} onClick={() => setActiveManual(m.id)} className="glass p-6 rounded-[2.5rem] flex flex-col items-center gap-2 border-b-2 border-transparent active:border-white/20 transition-all">
+                                    <button key={m.id} onClick={() => setView(m.id)} className="glass p-6 rounded-[2.5rem] flex flex-col items-center gap-2 border-b-2 border-transparent active:border-white/20">
                                         <i className={`fa-solid ${m.icon} text-3xl ${m.color}`}></i>
                                         <span className="text-[10px] font-black uppercase tracking-tighter">{m.title}</span>
                                     </button>
@@ -69,78 +73,128 @@
                             </div>
                         )}
 
-                        {/* --- MANUAL 08: ACCOMMODATION HUB --- */}
-                        {activeManual === 'M8' && (
-                            <div className="space-y-6 animate-in slide-in-from-right duration-300">
-                                <div className="flex justify-between items-center px-2">
-                                    <h2 className="brand text-pink-500 text-xs italic underline underline-offset-8 uppercase tracking-widest">Crew Housing</h2>
-                                    <button onClick={() => setActiveManual('HOME')} className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Back</button>
+                        {/* --- M1: SAFETY (INSPECTION ENGINE) --- */}
+                        {view === 'M1' && (
+                            <div className="space-y-4">
+                                <h2 className="brand text-blue-400 text-xs italic">M1 // SAFETY INSPECTOR</h2>
+                                <div className="glass p-5 rounded-3xl space-y-4">
+                                    <input type="text" placeholder="Project Name..." className="w-full bg-slate-900 border border-slate-700 p-4 rounded-xl text-xs" />
+                                    <select className="w-full bg-slate-900 border border-slate-700 p-4 rounded-xl text-xs">
+                                        <option>Deck Area</option><option>Engine Room</option><option>Hot Works Zone</option>
+                                    </select>
+                                    <button className="w-full bg-blue-600 p-4 rounded-xl font-black text-xs uppercase">Start Live Audit</button>
                                 </div>
-
-                                <div className="space-y-4">
-                                    <p className="text-[10px] font-black text-slate-500 uppercase ml-2 tracking-widest">Managed Properties</p>
-                                    {properties.map(house => (
-                                        <div key={house.id} className="house-card glass p-5 rounded-[2rem] border-l-4 border-pink-600">
-                                            <div className="flex justify-between items-start mb-4">
-                                                <div>
-                                                    <h3 className="text-sm font-black uppercase tracking-tighter">{house.name}</h3>
-                                                    <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">{house.location}</p>
-                                                </div>
-                                                <span className={`text-[8px] font-black px-2 py-1 rounded uppercase ${house.status === 'ACTIVE' ? 'text-emerald-500' : 'text-orange-500'}`}>
-                                                    {house.status}
-                                                </span>
-                                            </div>
-                                            
-                                            <div className="flex justify-between items-center border-t border-slate-800 pt-4">
-                                                <div className="flex gap-4">
-                                                    <div className="text-center">
-                                                        <p className="text-[8px] font-black text-slate-500 uppercase">Capacity</p>
-                                                        <p className="text-xs font-black">{house.beds}</p>
-                                                    </div>
-                                                    <div className="text-center border-l border-slate-800 pl-4">
-                                                        <p className="text-[8px] font-black text-slate-500 uppercase">Occupied</p>
-                                                        <p className={`text-xs font-black ${house.occupied === house.beds ? 'text-red-500' : 'text-emerald-500'}`}>{house.occupied}</p>
-                                                    </div>
-                                                </div>
-                                                <p className="text-[10px] font-black text-pink-500">{house.price}</p>
-                                            </div>
-
-                                            <div className="mt-4 flex gap-2">
-                                                <button className="flex-1 bg-slate-800 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest">Check-in Photo</button>
-                                                <button className="flex-1 bg-pink-600/20 border border-pink-500/30 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest">Guest List</button>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-
-                                <button className="w-full glass p-4 rounded-2xl flex items-center justify-center gap-3 border-dashed border-slate-700">
-                                    <i className="fa-solid fa-plus text-slate-500 text-xs"></i>
-                                    <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Register New Property</span>
-                                </button>
+                                <button onClick={() => setView('HOME')} className="w-full text-center text-[10px] font-black text-slate-500 uppercase">Back to Hub</button>
                             </div>
                         )}
 
-                        {/* --- PLACEHOLDERS FOR OTHERS (PRESERVED LOGIC) --- */}
-                        {['M1','M2','M3','M4','M5','M6','M7'].includes(activeManual) && (
-                            <div className="flex flex-col items-center justify-center py-20 animate-in fade-in">
-                                <i className={`fa-solid ${manuals.find(m=>m.id===activeManual).icon} text-5xl mb-4 ${manuals.find(m=>m.id===activeManual).color} opacity-20`}></i>
-                                <p className="brand text-[10px] text-slate-500 italic">Manual {activeManual} Logic Active</p>
-                                <button onClick={() => setActiveManual('HOME')} className="mt-10 bg-slate-800 px-8 py-3 rounded-full text-[10px] font-black uppercase tracking-widest">Return to Bridge</button>
+                        {/* --- M2: REPAIRS (SEARCH & TIMELINE) --- */}
+                        {view === 'M2' && (
+                            <div className="space-y-4">
+                                <h2 className="brand text-cyan-400 text-xs italic">M2 // REPAIR CONTROLLER</h2>
+                                <input type="text" placeholder="Search Vessel Name..." className="w-full bg-slate-900 border border-slate-700 p-4 rounded-xl text-xs" />
+                                <div className="glass p-5 rounded-3xl border-l-4 border-cyan-500">
+                                    <div className="flex justify-between items-center mb-2">
+                                        <span className="text-[10px] font-black tracking-widest text-cyan-400">NAFTOCEMENT IV</span>
+                                        <span className="text-[8px] font-black bg-red-600 px-2 py-0.5 rounded text-white italic">2 DAYS LEFT</span>
+                                    </div>
+                                    <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                                        <div className="bg-cyan-500 h-full w-[75%]"></div>
+                                    </div>
+                                    <p className="text-[9px] text-slate-500 mt-2 font-bold uppercase tracking-widest text-center italic">Under Repair - 75% Complete</p>
+                                </div>
+                                <button onClick={() => setView('HOME')} className="w-full text-center text-[10px] font-black text-slate-500 uppercase">Back</button>
+                            </div>
+                        )}
+
+                        {/* --- M3: LEGAL (EVIDENCE) --- */}
+                        {view === 'M3' && (
+                            <div className="space-y-4">
+                                <h2 className="brand text-red-500 text-xs italic">M3 // LEGAL VAULT</h2>
+                                <div className="glass p-5 rounded-3xl border-l-4 border-red-600 space-y-2">
+                                    <p className="text-xs font-black uppercase tracking-tighter">Case A: Naftocement Vietnam</p>
+                                    <p className="text-[9px] text-slate-400 italic font-bold tracking-widest">STatus: Ship Escaped Nightly</p>
+                                    <button className="w-full bg-red-600/20 border border-red-600/50 py-2 rounded-lg text-[9px] font-black text-red-500 uppercase">Open Evidence File</button>
+                                </div>
+                                <button onClick={() => setView('HOME')} className="w-full text-center text-[10px] font-black text-slate-500 uppercase">Back</button>
+                            </div>
+                        )}
+
+                        {/* --- M5: WORKFORCE (ATTENDANCE) --- */}
+                        {view === 'M5' && (
+                            <div className="space-y-4 text-center">
+                                <h2 className="brand text-emerald-400 text-xs italic">M5 // WORKFORCE LOG</h2>
+                                <div className="glass p-10 rounded-full w-48 h-48 mx-auto flex flex-col items-center justify-center border-4 border-emerald-500 shadow-[0_0_30px_rgba(16,185,129,0.2)]">
+                                    <p className="text-[10px] font-black text-emerald-500 uppercase mb-2">System Ready</p>
+                                    <button className="bg-emerald-600 p-4 rounded-xl font-black text-xs uppercase tracking-widest active:scale-95">CLOCK IN</button>
+                                </div>
+                                <p className="text-[9px] text-slate-500 italic uppercase tracking-widest">GPS Verification: ACTIVE</p>
+                                <button onClick={() => setView('HOME')} className="w-full text-center text-[10px] font-black text-slate-500 uppercase mt-4">Back</button>
+                            </div>
+                        )}
+
+                        {/* --- M6: CEO (FINANCE) --- */}
+                        {view === 'M6' && (
+                            <div className="space-y-4">
+                                <h2 className="brand text-purple-500 text-xs italic">M6 // CEO MASTER PULSE</h2>
+                                <div className="glass p-6 rounded-[2.5rem] bg-purple-950/5 border-purple-500/20">
+                                    <p className="text-[8px] font-black text-emerald-500 uppercase tracking-widest">Annual Profitability</p>
+                                    <h3 className="text-3xl font-black text-white tracking-tighter">+32.4%</h3>
+                                    <div className="mt-4 grid grid-cols-2 gap-2">
+                                        <div className="p-3 bg-slate-900 rounded-2xl border border-slate-800 text-center text-[10px] font-black uppercase italic tracking-tighter italic">Fleet Health: 84%</div>
+                                        <div className="p-3 bg-slate-900 rounded-2xl border border-slate-800 text-center text-[10px] font-black uppercase italic tracking-tighter italic">Burn Rate: 4.2k</div>
+                                    </div>
+                                </div>
+                                <button onClick={() => setView('HOME')} className="w-full text-center text-[10px] font-black text-slate-500 uppercase">Back</button>
+                            </div>
+                        )}
+
+                        {/* --- M7: MERCHANT (E-SHOP) --- */}
+                        {view === 'M7' && (
+                            <div className="space-y-4">
+                                <h2 className="brand text-orange-500 text-xs italic">M7 // X-MERCHANT</h2>
+                                <div className="space-y-2">
+                                    <div className="glass p-4 rounded-2xl flex justify-between items-center border-slate-800">
+                                        <span className="text-[10px] font-black uppercase tracking-tighter">Gas Detector GX-2009</span>
+                                        <span className="text-[10px] font-black text-orange-500 tracking-tighter">€420</span>
+                                    </div>
+                                    <div className="glass p-4 rounded-2xl flex justify-between items-center border-slate-800 border-l-4 border-red-600">
+                                        <span className="text-[10px] font-black uppercase tracking-tighter">Oil Filter Marine-X</span>
+                                        <span className="text-[10px] font-black text-red-500 tracking-tighter italic uppercase italic italic italic italic italic">Low Stock</span>
+                                    </div>
+                                </div>
+                                <button onClick={() => setView('HOME')} className="w-full text-center text-[10px] font-black text-slate-500 uppercase">Back</button>
+                            </div>
+                        )}
+
+                        {/* --- M8: AIRBNB (ΥΠΑΡΧΟΝ) --- */}
+                        {view === 'M8' && (
+                            <div className="space-y-4 animate-in slide-in-from-right duration-300">
+                                <h2 className="brand text-pink-500 text-xs italic uppercase tracking-widest">Crew Housing</h2>
+                                <div className="glass p-5 rounded-[2rem] border-l-4 border-pink-600">
+                                    <div className="flex justify-between items-start mb-4">
+                                        <div><h3 className="text-sm font-black uppercase tracking-tighter">Syros Loft A</h3><p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest italic">Ερμούπολη</p></div>
+                                        <span className="text-[8px] font-black px-2 py-1 rounded bg-emerald-950 text-emerald-500 uppercase">ACTIVE</span>
+                                    </div>
+                                    <div className="flex justify-between items-center border-t border-slate-800 pt-4">
+                                        <div className="flex gap-4">
+                                            <div className="text-center text-[10px] font-black uppercase">Capacity: 4</div>
+                                            <div className="text-center text-[10px] font-black text-emerald-500 uppercase italic pl-4 border-l border-slate-800">Occ: 3</div>
+                                        </div>
+                                        <p className="text-[10px] font-black text-pink-500 tracking-widest tracking-widest tracking-widest tracking-widest tracking-widest italic">€65/day</p>
+                                    </div>
+                                </div>
+                                <button onClick={() => setView('HOME')} className="w-full text-center text-[10px] font-black text-slate-500 uppercase">Back</button>
                             </div>
                         )}
                     </main>
 
-                    {/* --- GLOBAL COMMAND ACTION --- */}
-                    <div className="fixed bottom-6 left-0 right-0 flex justify-center pointer-events-none z-50">
-                        <button className="w-20 h-20 bg-pink-600 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(236,72,153,0.4)] border-4 border-slate-950 pointer-events-auto active:scale-90 transition-all">
+                    {/* --- GLOBAL SMART CAPTURE [🔵] --- */}
+                    <footer className="fixed bottom-6 left-0 right-0 flex justify-center pointer-events-none z-50">
+                        <label className="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(37,99,235,0.4)] border-4 border-slate-950 pointer-events-auto active:scale-90 transition-all cursor-pointer">
                             <i className="fa-solid fa-camera text-2xl text-white"></i>
-                        </button>
-                    </div>
-
-                    <footer className="fixed bottom-2 w-full text-center">
-                        <p className="brand text-[7px] text-slate-700 font-black tracking-[0.5em] uppercase">
-                            NTG Command Hub • Version 2.0 Complete
-                        </p>
+                            <input type="file" accept="image/*" capture="environment" className="hidden" />
+                        </label>
                     </footer>
                 </div>
             );

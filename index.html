@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NTG COMMAND | V56 LEGAL VAULT</title>
+    <title>NTG COMMAND | V56 TECH CORE</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -14,7 +14,9 @@
         body { font-family: 'Inter', sans-serif; background: #020617; color: white; -webkit-tap-highlight-color: transparent; }
         .brand { font-family: 'Orbitron', sans-serif; }
         .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); }
-        .legal-glow { box-shadow: 0 0 20px rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.3); }
+        .tech-glow { box-shadow: 0 0 15px rgba(100, 116, 139, 0.2); }
+        .progress-bg { background: rgba(255,255,255,0.05); height: 8px; border-radius: 4px; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #3b82f6, #60a5fa); width: 12%; }
     </style>
 </head>
 <body>
@@ -24,127 +26,117 @@
         const { useState } = React;
 
         function App() {
-            const [view, setView] = useState('HOME'); // HOME, M1, M2, M3_MENU, M3_CASE
-            const [selectedCase, setSelectedCase] = useState(null);
-
-            const cases = [
-                { 
-                    id: 'A', 
-                    title: "NAFTOCEMENT IV", 
-                    subtitle: "Ship vs Yard Conflict", 
-                    status: "URGENT", 
-                    desc: "Υπόθεση διαφυγής πλοίου προς Βιετνάμ. Απαιτείται τεκμηρίωση ζημιών και επικοινωνίας.",
-                    color: "text-red-500"
-                },
-                { 
-                    id: 'B', 
-                    title: "TERME SHIPYARD", 
-                    subtitle: "Investor vs Board", 
-                    status: "ONGOING", 
-                    desc: "Διαμάχη μετόχων. Απαιτούνται πιστοποιημένες αναφορές προόδου εργασιών.",
-                    color: "text-orange-500"
-                }
-            ];
+            const [view, setView] = useState('HOME');
 
             return (
                 <div className="min-h-screen pb-20">
                     {/* --- HEADER --- */}
-                    <header className="glass sticky top-0 z-50 p-4 flex justify-between items-center border-b border-red-500/20">
+                    <header className="glass sticky top-0 z-50 p-4 flex justify-between items-center border-b border-slate-700/50">
                         <div onClick={() => setView('HOME')} className="cursor-pointer">
-                            <p className="text-[9px] font-black text-red-500 tracking-[0.3em]">NTG LEGAL VAULT</p>
-                            <h1 className="font-bold text-sm uppercase italic">M. SYKINIOTIS</h1>
+                            <p className="text-[9px] font-black text-slate-500 tracking-[0.3em]">NTG TECH CORE</p>
+                            <h1 className="font-bold text-sm uppercase">M. SYKINIOTIS</h1>
                         </div>
-                        <i className="fa-solid fa-gavel text-red-500"></i>
+                        <div className="flex items-center gap-2">
+                            <span className="text-[8px] font-bold text-blue-500">ENGINE v1.6</span>
+                            <i className="fa-solid fa-microchip text-blue-500"></i>
+                        </div>
                     </header>
 
                     <main className="p-4">
                         {/* --- HOME HUB --- */}
                         {view === 'HOME' && (
                             <div className="grid grid-cols-2 gap-4 animate-in fade-in duration-300">
-                                <button onClick={() => setView('M1')} className="glass p-8 rounded-[2.5rem] flex flex-col items-center gap-3 opacity-40">
-                                    <i className="fa-solid fa-shield-halved text-4xl"></i>
+                                <button onClick={() => setView('M1')} className="glass p-6 rounded-[2rem] flex flex-col items-center gap-2 opacity-40">
+                                    <i className="fa-solid fa-shield-halved text-2xl"></i>
                                     <span className="text-[10px] font-black uppercase">Safety</span>
                                 </button>
-                                <button onClick={() => setView('M2')} className="glass p-8 rounded-[2.5rem] flex flex-col items-center gap-3 opacity-40">
-                                    <i className="fa-solid fa-ship text-4xl"></i>
+                                <button onClick={() => setView('M2')} className="glass p-6 rounded-[2rem] flex flex-col items-center gap-2 opacity-40">
+                                    <i className="fa-solid fa-ship text-2xl"></i>
                                     <span className="text-[10px] font-black uppercase">Repairs</span>
                                 </button>
-                                <button onClick={() => setView('M3_MENU')} className="glass p-8 rounded-[2.5rem] flex flex-col items-center gap-3 border-b-4 border-red-600 col-span-2 legal-glow">
-                                    <i className="fa-solid fa-scale-balanced text-4xl text-red-500"></i>
-                                    <span className="text-xs font-black uppercase tracking-widest">Legal & Conflicts</span>
+                                <button onClick={() => setView('M3')} className="glass p-6 rounded-[2rem] flex flex-col items-center gap-2 opacity-40">
+                                    <i className="fa-solid fa-scale-balanced text-2xl"></i>
+                                    <span className="text-[10px] font-black uppercase">Legal</span>
+                                </button>
+                                <button onClick={() => setView('M4')} className="glass p-6 rounded-[2rem] flex flex-col items-center gap-2 border-b-4 border-slate-400 tech-glow">
+                                    <i className="fa-solid fa-microchip text-2xl text-slate-400"></i>
+                                    <span className="text-[10px] font-black uppercase">Technical</span>
                                 </button>
                             </div>
                         )}
 
-                        {/* --- MANUAL 03: LEGAL MENU --- */}
-                        {view === 'M3_MENU' && (
-                            <div className="space-y-4 animate-in slide-in-from-bottom">
+                        {/* --- MANUAL 04: TECH HUB --- */}
+                        {view === 'M4' && (
+                            <div className="space-y-4 animate-in slide-in-from-top duration-300">
                                 <div className="flex justify-between items-center px-2">
-                                    <h2 className="brand text-red-500 text-sm italic underline underline-offset-8">CONFLICT FILES</h2>
-                                    <button onClick={() => setView('HOME')} className="text-[10px] font-black text-slate-500 uppercase">Back</button>
-                                </div>
-                                
-                                {cases.map(c => (
-                                    <button key={c.id} onClick={() => { setSelectedCase(c); setView('M3_CASE'); }}
-                                            className="w-full glass p-6 rounded-3xl text-left border-r-4 border-red-600 active:bg-red-950/20 transition-all">
-                                        <div className="flex justify-between items-center mb-2">
-                                            <span className="text-[8px] font-black bg-red-600 px-2 py-0.5 rounded text-white">{c.status}</span>
-                                            <i className="fa-solid fa-folder-closed text-red-900"></i>
-                                        </div>
-                                        <h3 className="text-sm font-black tracking-tight">{c.title}</h3>
-                                        <p className="text-[10px] text-slate-500 font-bold uppercase">{c.subtitle}</p>
-                                    </button>
-                                ))}
-                            </div>
-                        )}
-
-                        {/* --- MANUAL 03: CASE DETAILS --- */}
-                        {view === 'M3_CASE' && selectedCase && (
-                            <div className="space-y-6 animate-in zoom-in duration-200">
-                                <div className="flex justify-between items-center">
-                                    <button onClick={() => setView('M3_MENU')} className="text-slate-500"><i className="fa-solid fa-arrow-left"></i></button>
-                                    <h2 className="brand text-red-500 text-xs tracking-widest italic">{selectedCase.title}</h2>
-                                    <div className="w-6"></div>
+                                    <h2 className="brand text-slate-400 text-sm italic underline underline-offset-8">SYSTEM ENGINE</h2>
+                                    <button onClick={() => setView('HOME')} className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Back</button>
                                 </div>
 
-                                <div className="glass p-6 rounded-[2.5rem] space-y-4 border-red-900/30">
-                                    <p className="text-[10px] font-bold text-slate-400 leading-relaxed uppercase tracking-tighter">
-                                        {selectedCase.desc}
-                                    </p>
-                                    
-                                    <div className="pt-4 border-t border-slate-800 space-y-3">
-                                        <div className="flex items-center justify-between p-4 bg-red-950/10 rounded-2xl border border-red-900/20">
-                                            <div className="flex items-center gap-3">
-                                                <i className="fa-solid fa-camera-retro text-red-500"></i>
-                                                <span className="text-[10px] font-black uppercase">Evidence Vault</span>
-                                            </div>
-                                            <span className="text-[10px] font-bold text-slate-500 italic">4 Files</span>
-                                        </div>
-                                        <div className="flex items-center justify-between p-4 bg-slate-900/50 rounded-2xl border border-slate-800 opacity-60">
-                                            <div className="flex items-center gap-3">
-                                                <i className="fa-solid fa-fingerprint text-slate-500"></i>
-                                                <span className="text-[10px] font-black uppercase">Audit Trail</span>
-                                            </div>
-                                            <i className="fa-solid fa-lock text-[10px]"></i>
-                                        </div>
+                                {/* Drive Capacity Tracker */}
+                                <div className="glass p-5 rounded-3xl space-y-3">
+                                    <div className="flex justify-between items-center">
+                                        <p className="text-[10px] font-black text-blue-400 uppercase">Google Drive Storage (2TB)</p>
+                                        <span className="text-[10px] font-bold text-slate-500">240 GB / 2 TB</span>
                                     </div>
+                                    <div className="progress-bg"><div className="progress-fill"></div></div>
+                                    <p className="text-[8px] text-slate-500 font-bold italic italic tracking-wider uppercase">Triple Redundancy Active: Supabase -> Drive -> Local</p>
+                                </div>
 
-                                    <div className="bg-slate-900/80 p-4 rounded-2xl border border-slate-800">
-                                        <p className="text-[8px] font-black text-red-600 uppercase tracking-widest">Legal Warning</p>
-                                        <p className="text-[9px] text-slate-500 mt-1 italic">
-                                            Κάθε καταγραφή σε αυτόν τον φάκελο συνοδεύεται από GPS Metadata & Immutable Server Timestamp.
-                                        </p>
+                                {/* Intel Agent Monitor */}
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="glass p-4 rounded-2xl flex flex-col items-center gap-2 border-l-2 border-green-500">
+                                        <i className="fa-solid fa-robot text-green-500 text-xl"></i>
+                                        <p className="text-[9px] font-black uppercase">Intel Agent</p>
+                                        <p className="text-[8px] text-green-500 font-bold">STABLE</p>
+                                    </div>
+                                    <div className="glass p-4 rounded-2xl flex flex-col items-center gap-2 border-l-2 border-blue-500">
+                                        <i className="fa-solid fa-cloud-arrow-up text-blue-500 text-xl"></i>
+                                        <p className="text-[9px] font-black uppercase">Backup Sync</p>
+                                        <p className="text-[8px] text-blue-500 font-bold">12m AGO</p>
                                     </div>
                                 </div>
+
+                                {/* API Status Table */}
+                                <div className="glass p-4 rounded-3xl overflow-hidden">
+                                    <table className="w-full text-left">
+                                        <thead>
+                                            <tr className="border-b border-slate-800">
+                                                <th className="pb-2 text-[9px] font-black text-slate-500 uppercase">Service</th>
+                                                <th className="pb-2 text-[9px] font-black text-slate-500 uppercase text-right">Latency</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="text-[10px] font-bold">
+                                            <tr>
+                                                <td className="py-2 text-slate-300">Supabase API</td>
+                                                <td className="py-2 text-right text-green-500">42ms</td>
+                                            </tr>
+                                            <tr>
+                                                <td className="py-2 text-slate-300">GitHub Deployment</td>
+                                                <td className="py-2 text-right text-blue-500">v1.6-LIVE</td>
+                                            </tr>
+                                            <tr>
+                                                <td className="py-2 text-slate-300">Auth & PIN Hash</td>
+                                                <td className="py-2 text-right text-green-500">OK</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <button className="w-full bg-slate-800 p-4 rounded-2xl flex items-center justify-center gap-3 active:bg-slate-700 transition-all">
+                                    <i className="fa-solid fa-terminal text-slate-500 text-xs"></i>
+                                    <span className="text-[10px] font-black uppercase tracking-widest">Run Full Diagnostics</span>
+                                </button>
                             </div>
                         )}
                     </main>
 
-                    <footer className="fixed bottom-6 left-0 right-0 flex justify-center pointer-events-none">
-                        <button className="w-20 h-20 bg-red-600 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(220,38,38,0.4)] border-4 border-slate-950 pointer-events-auto active:scale-90 transition-all">
-                            <i className="fa-solid fa-camera text-2xl text-white"></i>
-                        </button>
-                    </footer>
+                    {/* Navigation Mini-Status */}
+                    <div className="fixed bottom-4 w-full text-center">
+                        <p className="text-[7px] text-slate-700 font-black tracking-[0.5em] uppercase animate-pulse">
+                            Secure Core Connection Established
+                        </p>
+                    </div>
                 </div>
             );
         }

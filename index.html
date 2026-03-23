@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NTG COMMAND | V5.0 UNIFIED MASTER</title>
+    <title>NTG COMMAND | V5.1 OPERATIONAL</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -15,7 +15,7 @@
         .brand { font-family: 'Orbitron', sans-serif; }
         .glass { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); }
         .pin-input { letter-spacing: 1.2rem; text-align: center; font-size: 2rem; border: 2px solid #3b82f6; }
-        .hazard-pulse { animation: pulse-red 2s infinite; }
+        .hazard-pulse { animation: pulse-red 2s infinite; cursor: pointer; }
         @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.5); } 70% { box-shadow: 0 0 0 15px rgba(220, 38, 38, 0); } 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); } }
     </style>
 </head>
@@ -28,123 +28,109 @@
         function App() {
             const [isLocked, setIsLocked] = useState(true);
             const [view, setView] = useState('HOME'); 
+            const [walletLocked, setWalletLocked] = useState(true);
             const [selectedShip, setSelectedShip] = useState(null);
             const [selectedZone, setSelectedZone] = useState(null);
 
-            // ΔΕΔΟΜΕΝΑ ΣΕΠΕ ΑΠΡΙΛΙΟΣ 2026 (Manual 02)
-            const repairsData = [
-                { name: 'FELIX', imo: '9464182', port: 'DRAPETSONA', end: '2026-04-05', prog: 45 },
-                { name: 'BADJI MOKHTAR III', imo: '9827889', port: 'ELEFSINA', end: '2026-04-30', prog: 12 },
-                { name: 'ARIADNI', imo: '9135262', port: 'PIRAEUS', end: '2026-03-28', prog: 88 },
-                { name: 'RIGEL III', imo: '7807744', port: 'PERAMA', end: '2026-04-15', prog: 5 }
+            // ΔΕΔΟΜΕΝΑ ΣΕΠΕ ΑΠΡΙΛΙΟΣ 2026
+            const sepeData = [
+                { name: 'FELIX', imo: '9464182', port: 'DRAPETSONA', time: '07:00', attended: true },
+                { name: 'BADJI MOKHTAR III', imo: '9827889', port: 'ELEFSINA', time: '11:00', attended: false },
+                { name: 'ARIADNI', imo: '9135262', port: 'PIRAEUS', time: '13:00', attended: false },
+                { name: 'RIGEL III', imo: '7807744', port: 'PERAMA', time: '15:00', attended: false }
             ];
 
-            const zones = ["Engine Room", "Main Deck", "Pump Room", "Bridge", "Accommodation"];
-
-            const calculateDays = (dateStr) => {
-                const diff = new Date(dateStr) - new Date();
-                const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
-                return days > 0 ? days : 0;
-            };
+            const techZones = ["Engine Room", "Main Deck", "Pump Room", "Bridge", "Accommodation"];
 
             if (isLocked) {
                 return (
                     <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-slate-950">
                         <i className="fa-solid fa-shield-halved text-5xl text-blue-500 mb-8"></i>
-                        <h2 className="brand text-xs mb-8 tracking-[0.3em] uppercase">NTG COMMAND v5.0</h2>
+                        <h2 className="brand text-xs mb-8 tracking-[0.3em] uppercase">SYSTEM ENCRYPTED</h2>
                         <input type="password" maxLength="4" placeholder="PIN" onChange={(e) => e.target.value === '1234' && setIsLocked(false)}
                                className="w-48 bg-slate-900 p-4 rounded-3xl pin-input outline-none shadow-xl shadow-blue-500/20 text-blue-500" />
-                        <p className="mt-8 text-[8px] text-slate-500 font-bold uppercase tracking-[0.4em]">Authorized Personnel Only</p>
+                        <p className="mt-8 text-[8px] text-slate-500 font-bold uppercase tracking-[0.4em]">Master Manual Security (M4)</p>
                     </div>
                 );
             }
 
             return (
                 <div className="min-h-screen pb-24 max-w-md mx-auto relative flex flex-col">
-                    {/* --- MASTER HEADER --- */}
                     <header className="glass sticky top-0 z-50 p-4 flex justify-between items-center border-b border-blue-500/30">
                         <div onClick={() => setView('HOME')} className="cursor-pointer">
-                            <p className="text-[10px] font-black text-blue-500 tracking-[0.2em] mb-1 uppercase leading-none">NTG UNIFIED HUB</p>
+                            <p className="text-[10px] font-black text-blue-500 tracking-[0.2em] mb-1 uppercase leading-none italic">NTG COMMAND HUB</p>
                             <h1 className="font-bold text-sm tracking-tighter uppercase italic">M. SYKINIOTIS</h1>
                         </div>
                         <button onClick={() => setIsLocked(true)}><i className="fa-solid fa-power-off text-slate-600"></i></button>
                     </header>
 
                     <main className="p-4 flex-1 overflow-y-auto">
-                        {/* --- HUB (8 MANUALS) --- */}
+                        {/* --- HUB (8 MANUALS REBRANDED) --- */}
                         {view === 'HOME' && (
-                            <div className="grid grid-cols-2 gap-4 animate-in fade-in duration-500">
-                                <button onClick={() => setView('M1')} className="glass p-6 rounded-[2.5rem] flex flex-col items-center gap-2 border-b-2 border-blue-500">
-                                    <i className="fa-solid fa-shield text-3xl text-blue-400"></i>
-                                    <span className="text-[10px] font-black uppercase">Safety</span>
-                                </button>
-                                <button onClick={() => setView('M2')} className="glass p-6 rounded-[2.5rem] flex flex-col items-center gap-2 border-b-2 border-cyan-500">
-                                    <i className="fa-solid fa-ship text-3xl text-cyan-400"></i>
-                                    <span className="text-[10px] font-black uppercase">Repairs</span>
-                                </button>
-                                <button onClick={() => setView('M3')} className="glass p-6 rounded-[2.5rem] flex flex-col items-center gap-2 border-b-2 border-red-500">
-                                    <i className="fa-solid fa-scale-balanced text-3xl text-red-500"></i>
-                                    <span className="text-[10px] font-black uppercase">Legal</span>
-                                </button>
-                                <button onClick={() => setView('M5')} className="glass p-6 rounded-[2.5rem] flex flex-col items-center gap-2 border-b-2 border-emerald-500">
-                                    <i className="fa-solid fa-user-clock text-3xl text-emerald-500"></i>
-                                    <span className="text-[10px] font-black uppercase">Staff</span>
-                                </button>
-                                <button onClick={() => setView('M6')} className="glass p-6 rounded-[2.5rem] flex flex-col items-center gap-2 border-b-2 border-purple-500">
-                                    <i className="fa-solid fa-chart-line text-3xl text-purple-500"></i>
-                                    <span className="text-[10px] font-black uppercase">CEO Pulse</span>
-                                </button>
-                                <button onClick={() => setView('M7')} className="glass p-6 rounded-[2.5rem] flex flex-col items-center gap-2 border-b-2 border-orange-500">
-                                    <i className="fa-solid fa-cart-shopping text-3xl text-orange-500"></i>
-                                    <span className="text-[10px] font-black uppercase">Merchant</span>
-                                </button>
-                                <button onClick={() => setView('M8')} className="glass p-6 rounded-[2.5rem] flex flex-col items-center gap-2 border-b-2 border-pink-500">
-                                    <i className="fa-solid fa-house-chimney-user text-3xl text-pink-500"></i>
-                                    <span className="text-[10px] font-black uppercase">Airbnb</span>
-                                </button>
-                                <button onClick={() => setView('M4')} className="glass p-6 rounded-[2.5rem] flex flex-col items-center gap-2 border-b-2 border-slate-500">
-                                    <i className="fa-solid fa-microchip text-3xl text-slate-500"></i>
-                                    <span className="text-[10px] font-black uppercase">Tech</span>
-                                </button>
+                            <div className="grid grid-cols-2 gap-4 animate-in fade-in duration-300">
+                                <button onClick={() => setView('M1')} className="glass p-6 rounded-[2.5rem] flex flex-col items-center gap-2 border-b-2 border-blue-500"><i className="fa-solid fa-shield text-3xl text-blue-400"></i><span className="text-[10px] font-black uppercase">Safety</span></button>
+                                <button onClick={() => setView('M2')} className="glass p-6 rounded-[2.5rem] flex flex-col items-center gap-2 border-b-2 border-cyan-500"><i className="fa-solid fa-ship text-3xl text-cyan-400"></i><span className="text-[10px] font-black uppercase tracking-tighter italic">Repairs</span></button>
+                                <button onClick={() => setView('M3')} className="glass p-6 rounded-[2.5rem] flex flex-col items-center gap-2 border-b-2 border-red-500"><i className="fa-solid fa-scale-balanced text-3xl text-red-500"></i><span className="text-[10px] font-black uppercase">Legal</span></button>
+                                <button onClick={() => setView('M5')} className="glass p-6 rounded-[2.5rem] flex flex-col items-center gap-2 border-b-2 border-emerald-500"><i className="fa-solid fa-users text-3xl text-emerald-500"></i><span className="text-[10px] font-black uppercase tracking-tighter italic">Staff</span></button>
+                                <button onClick={() => setView('M6')} className="glass p-6 rounded-[2.5rem] flex flex-col items-center gap-2 border-b-2 border-purple-500"><i className="fa-solid fa-chart-line text-3xl text-purple-500"></i><span className="text-[10px] font-black uppercase">CEO Pulse</span></button>
+                                <button onClick={() => setView('M7')} className="glass p-6 rounded-[2.5rem] flex flex-col items-center gap-2 border-b-2 border-orange-500"><i className="fa-solid fa-cart-shopping text-3xl text-orange-500"></i><span className="text-[10px] font-black uppercase">X.GR</span></button>
+                                <button onClick={() => setView('M8')} className="glass p-6 rounded-[2.5rem] flex flex-col items-center gap-2 border-b-2 border-pink-500"><i className="fa-solid fa-house-chimney text-3xl text-pink-500"></i><span className="text-[10px] font-black uppercase">LIVE IN MYKONOS</span></button>
+                                <button onClick={() => setView('M4')} className="glass p-6 rounded-[2.5rem] flex flex-col items-center gap-2 border-b-2 border-slate-500"><i className="fa-solid fa-microchip text-3xl text-slate-500"></i><span className="text-[10px] font-black uppercase">Tech</span></button>
                             </div>
                         )}
 
-                        {/* --- M1: SAFETY TACTICAL (Hazard Radar + 5 Tiles) --- */}
+                        {/* --- M1: SAFETY HUB --- */}
                         {view === 'M1' && (
                             <div className="space-y-6 animate-in slide-in-from-right">
-                                <div className="flex justify-between items-center"><h2 className="brand text-blue-400 text-xs italic tracking-widest uppercase">Safety Hub</h2><button onClick={() => setView('HOME')} className="text-[10px] font-black text-slate-500 uppercase">Back</button></div>
-                                <div className="hazard-pulse glass p-4 rounded-3xl border-2 border-red-600 flex items-center gap-4">
+                                <div className="flex justify-between items-center"><h2 className="brand text-blue-400 text-xs tracking-widest uppercase">Safety Tactical</h2><button onClick={() => setView('HOME')} className="text-[10px] font-black text-slate-500 uppercase">Back</button></div>
+                                <div onClick={() => alert("BLOCK 01: Hot Works without permit - Naftocement\nBLOCK 02: Gas Leak Detector OOR - Piraeus")} className="hazard-pulse glass p-4 rounded-3xl border-2 border-red-600 flex items-center gap-4">
                                     <i className="fa-solid fa-radiation text-2xl text-red-600 animate-pulse"></i>
-                                    <div><p className="text-[10px] font-black text-red-500 uppercase">Radar Active</p><p className="text-xs font-black uppercase italic tracking-tighter">2 "BLOCK" Entries Found</p></div>
+                                    <div><p className="text-[10px] font-black text-red-500 uppercase leading-none">Hazard Radar: 2 BLOCK ENTRIES</p><p className="text-[8px] text-slate-400 mt-1 uppercase italic italic tracking-tighter italic">Click to view details</p></div>
                                 </div>
                                 <div className="grid grid-cols-2 gap-3">
-                                    <button onClick={() => setView('M1_SHIP')} className="glass p-6 rounded-3xl flex flex-col items-center gap-2 border-b-2 border-blue-500"><i className="fa-solid fa-rocket text-blue-400"></i><span className="text-[9px] font-black uppercase">Inspection</span></button>
-                                    <button className="glass p-6 rounded-3xl flex flex-col items-center gap-2 border-b-2 border-emerald-500"><i className="fa-solid fa-book text-emerald-500"></i><span className="text-[9px] font-black uppercase tracking-tighter italic">Logbook</span></button>
-                                    <button className="glass p-6 rounded-3xl flex flex-col items-center gap-2 border-b-2 border-purple-500"><i className="fa-solid fa-file-pdf text-purple-500"></i><span className="text-[9px] font-black uppercase">Reports</span></button>
-                                    <button className="glass p-6 rounded-3xl flex flex-col items-center gap-2 border-b-2 border-yellow-500"><i className="fa-solid fa-wallet text-yellow-500"></i><span className="text-[9px] font-black uppercase tracking-widest">Wallet</span></button>
+                                    <button onClick={() => setView('M1_INSPECTION')} className="glass p-6 rounded-3xl flex flex-col items-center gap-2 border-b-2 border-blue-500"><i className="fa-solid fa-rocket text-blue-400"></i><span className="text-[9px] font-black uppercase tracking-widest">Inspection</span></button>
+                                    <button onClick={() => alert("Logbook: Viewing last 50 entries...")} className="glass p-6 rounded-3xl flex flex-col items-center gap-2 border-b-2 border-emerald-500"><i className="fa-solid fa-book text-emerald-500"></i><span className="text-[9px] font-black uppercase tracking-widest italic">Logbook</span></button>
+                                    <button onClick={() => alert("Generating Report V45...")} className="glass p-6 rounded-3xl flex flex-col items-center gap-2 border-b-2 border-purple-500"><i className="fa-solid fa-file-pdf text-purple-500"></i><span className="text-[9px] font-black uppercase tracking-widest">Reports</span></button>
+                                    <button onClick={() => setView('M1_WALLET_PIN')} className="glass p-6 rounded-3xl flex flex-col items-center gap-2 border-b-2 border-yellow-500"><i className="fa-solid fa-wallet text-yellow-500"></i><span className="text-[9px] font-black uppercase tracking-widest">Wallet</span></button>
                                 </div>
-                                <div className="glass p-4 rounded-3xl flex justify-between items-center border border-yellow-500/20"><p className="text-[9px] font-black text-yellow-500 uppercase tracking-widest"><i className="fa-solid fa-bolt mr-2"></i>IoT: Gas Detector GD-04</p><span className="text-[8px] font-black bg-yellow-900/50 px-2 py-0.5 rounded text-yellow-400 italic">CALIBRATION</span></div>
                             </div>
                         )}
 
-                        {/* --- INSPECTION ENGINE (Ship -> Zone) --- */}
-                        {view === 'M1_SHIP' && (
+                        {/* --- M1: WALLET PIN --- */}
+                        {view === 'M1_WALLET_PIN' && (
+                            <div className="flex flex-col items-center justify-center py-10">
+                                <h3 className="brand text-xs text-yellow-500 mb-6 uppercase tracking-widest">CEO PIN REQUIRED</h3>
+                                <input type="password" maxLength="4" onChange={(e) => e.target.value === '1234' && alert("Wallet Access Granted: Total Expenses €12,450")}
+                                       className="w-32 bg-slate-900 p-4 rounded-2xl border-2 border-yellow-500/50 pin-input outline-none text-yellow-500" />
+                                <button onClick={() => setView('M1')} className="mt-8 text-[10px] font-black text-slate-500 uppercase">Cancel</button>
+                            </div>
+                        )}
+
+                        {/* --- M1: INSPECTION -> SHIP SELECTION --- */}
+                        {view === 'M1_INSPECTION' && (
                             <div className="space-y-4 animate-in slide-in-from-right">
-                                <h2 className="brand text-blue-400 text-xs italic tracking-widest uppercase mb-4 px-2">1. Select Vessel</h2>
-                                {repairsData.map(ship => (
-                                    <button key={ship.name} onClick={() => { setSelectedShip(ship.name); setView('M1_ZONE'); }} className="w-full glass p-5 rounded-3xl text-left border-l-4 border-blue-500 flex justify-between items-center active:bg-blue-900/20">
-                                        <div><h3 className="font-black text-sm tracking-tighter uppercase">{ship.name}</h3><p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">{ship.port}</p></div>
-                                        <i className="fa-solid fa-chevron-right text-slate-700"></i>
+                                <h2 className="brand text-blue-400 text-xs italic tracking-widest px-2 uppercase">1. Select Vessel (April Schedule)</h2>
+                                {sepeData.map(ship => (
+                                    <button key={ship.name} onClick={() => { setSelectedShip(ship.name); setView('M1_ZONE'); }} 
+                                            className="w-full glass p-5 rounded-3xl text-left border-l-4 border-blue-500 flex justify-between items-center active:bg-blue-900/20">
+                                        <div>
+                                            <h3 className="font-black text-sm tracking-tighter uppercase">{ship.name}</h3>
+                                            <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">{ship.port} // Time: {ship.time}</p>
+                                        </div>
+                                        {ship.attended ? <i className="fa-solid fa-circle-check text-green-500 text-lg"></i> : <i className="fa-solid fa-circle-xmark text-slate-700 text-lg"></i>}
                                     </button>
                                 ))}
+                                <button onClick={() => setView('M1')} className="w-full text-center text-[10px] font-black text-slate-500 uppercase">Back</button>
                             </div>
                         )}
 
+                        {/* --- M1: INSPECTION -> ZONE SELECTION --- */}
                         {view === 'M1_ZONE' && (
                             <div className="space-y-4 animate-in zoom-in">
-                                <div className="flex justify-between items-center px-2 mb-4"><h2 className="brand text-blue-400 text-xs italic uppercase">2. Select Zone</h2><p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Target: {selectedShip}</p></div>
-                                {zones.map(z => (
-                                    <button key={z} onClick={() => { setSelectedZone(z); alert(`Audit Active: ${selectedShip} // ${z}`); }} className="w-full glass p-5 rounded-2xl text-left flex justify-between items-center active:bg-blue-600/20 border border-slate-800">
+                                <div className="flex justify-between items-center px-2 mb-4"><h2 className="brand text-blue-400 text-xs italic uppercase underline decoration-blue-500/50 underline-offset-8">2. Select Zone ({selectedShip})</h2><button onClick={() => setView('M1_INSPECTION')} className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Back</button></div>
+                                {techZones.map(z => (
+                                    <button key={z} onClick={() => { setSelectedZone(z); setView('M1_CHECKLIST'); }} 
+                                            className="w-full glass p-5 rounded-2xl text-left flex justify-between items-center active:bg-blue-600/20 border border-slate-800">
                                         <span className="text-xs font-black tracking-widest uppercase">{z}</span>
                                         <i className="fa-solid fa-crosshairs text-blue-900"></i>
                                     </button>
@@ -152,35 +138,74 @@
                             </div>
                         )}
 
-                        {/* --- M2: REPAIRS (Timeline Logic) --- */}
-                        {view === 'M2' && (
-                            <div className="space-y-4 animate-in slide-in-from-bottom">
-                                <div className="flex justify-between items-center px-2 mb-4"><h2 className="brand text-cyan-400 text-xs italic uppercase">Repairs Watchlist</h2><button onClick={() => setView('HOME')} className="text-[10px] font-black text-slate-500 uppercase">Back</button></div>
-                                {repairsData.map(ship => {
-                                    const daysLeft = calculateDays(ship.end);
-                                    return (
-                                        <div key={ship.name} className="glass p-5 rounded-3xl border-l-4 border-cyan-500 flex justify-between items-center">
-                                            <div><h3 className="font-black text-sm tracking-tighter uppercase">{ship.name}</h3><p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">{ship.port} // IMO: {ship.imo}</p></div>
-                                            <div className="text-right">
-                                                <span className={`text-[8px] font-black px-2 py-1 rounded ${daysLeft < 3 ? 'bg-red-600 text-white' : 'bg-slate-800 text-slate-400'}`}>{daysLeft} DAYS LEFT</span>
+                        {/* --- M1: ENGINE ROOM CHECKLIST (Template) --- */}
+                        {view === 'M1_CHECKLIST' && (
+                            <div className="space-y-4 animate-in fade-in">
+                                <div className="flex justify-between items-center px-2 mb-4">
+                                    <div className="flex flex-col"><h2 className="brand text-blue-400 text-[10px] tracking-widest uppercase">Safety Audit</h2><p className="text-[9px] font-black text-slate-500 uppercase tracking-widest italic">{selectedShip} // {selectedZone}</p></div>
+                                    <button onClick={() => setView('M1_ZONE')} className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Back</button>
+                                </div>
+                                <div className="space-y-3">
+                                    {["Hot Works Permit Valid", "Fire Watcher on Duty", "Gas Free Cert Expiry OK", "Scaffolding Safety Label", "PPE Mask Compliance"].map(check => (
+                                        <div key={check} className="glass p-4 rounded-2xl flex justify-between items-center border border-slate-800">
+                                            <span className="text-[10px] font-black text-slate-300 uppercase italic tracking-tighter italic">{check}</span>
+                                            <div className="flex gap-2">
+                                                <button onClick={(e) => e.target.style.color = '#22c55e'} className="text-slate-700 active:text-green-500"><i className="fa-solid fa-check"></i></button>
+                                                <button onClick={(e) => e.target.style.color = '#ef4444'} className="text-slate-700 active:text-red-500"><i className="fa-solid fa-xmark"></i></button>
                                             </div>
                                         </div>
-                                    );
-                                })}
+                                    ))}
+                                </div>
+                                <button onClick={() => {alert("Report Saved: M. SYKINIOTIS - Timestamp Synced"); setView('M1');}} className="w-full bg-blue-600 p-4 rounded-xl font-black text-xs uppercase tracking-widest mt-6">Submit Audit Report</button>
                             </div>
                         )}
 
-                        {/* --- M6: CEO PULSE (KPIs) --- */}
-                        {view === 'M6' && (
-                            <div className="space-y-6 animate-in zoom-in">
-                                <div className="flex justify-between items-center px-2"><h2 className="brand text-purple-500 text-xs italic uppercase tracking-widest">Global Executive Pulse</h2><button onClick={() => setView('HOME')} className="text-[10px] font-black text-slate-500 uppercase">Back</button></div>
-                                <div className="glass p-8 rounded-[3rem] bg-purple-900/5 border-purple-500/20 text-center">
-                                    <p className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.3em] mb-2">Net Profitability</p>
-                                    <h3 className="text-4xl font-black text-white tracking-tighter">+32.4%</h3>
-                                    <div className="grid grid-cols-2 gap-3 mt-8">
-                                        <div className="p-3 bg-slate-900 rounded-2xl border border-slate-800"><p className="text-[8px] text-slate-500 font-bold mb-1 uppercase tracking-widest">Fleet Health</p><p className="text-xs font-black">84%</p></div>
-                                        <div className="p-3 bg-slate-900 rounded-2xl border border-slate-800"><p className="text-[8px] text-slate-500 font-bold mb-1 uppercase tracking-widest">Burn Rate</p><p className="text-xs font-black tracking-tighter">€4.2k / d</p></div>
-                                    </div>
+                        {/* --- M3: LEGAL HUB (Naftocement / Terme Split) --- */}
+                        {view === 'M3' && (
+                            <div className="space-y-4 animate-in slide-in-from-right">
+                                <div className="flex justify-between items-center px-2 mb-4"><h2 className="brand text-red-500 text-xs italic uppercase tracking-widest">Legal & Conflicts</h2><button onClick={() => setView('HOME')} className="text-[10px] font-black text-slate-500 uppercase">Back</button></div>
+                                <button onClick={() => alert("Vault A: Naftocement IV Evidence - Files: 12 - GPS Verified")} className="w-full glass p-6 rounded-3xl border-l-4 border-red-600 flex justify-between items-center active:bg-red-950/20 mb-3 text-left">
+                                    <div><h3 className="font-black text-sm uppercase italic italic tracking-tighter italic tracking-tighter italic">NAFTOCEMENT IV</h3><p className="text-[8px] text-slate-500 font-bold uppercase tracking-widest italic tracking-widest tracking-widest tracking-widest tracking-widest">Ship vs Yard // Vietnam Case</p></div>
+                                    <i className="fa-solid fa-folder-open text-red-900"></i>
+                                </button>
+                                <button onClick={() => alert("Vault B: Terme Shipyard Evidence - Files: 8 - Audit Trail Active")} className="w-full glass p-6 rounded-3xl border-l-4 border-red-600 flex justify-between items-center active:bg-red-950/20 text-left">
+                                    <div><h3 className="font-black text-sm uppercase italic italic tracking-tighter italic tracking-tighter italic">TERME SHIPYARD</h3><p className="text-[8px] text-slate-500 font-bold uppercase tracking-widest italic tracking-widest tracking-widest tracking-widest tracking-widest">Investor vs Board // Survey Logs</p></div>
+                                    <i className="fa-solid fa-scale-balanced text-red-900"></i>
+                                </button>
+                            </div>
+                        )}
+
+                        {/* --- M5: STAFF HUB --- */}
+                        {view === 'M5' && (
+                            <div className="space-y-4 animate-in slide-in-from-right">
+                                <div className="flex justify-between items-center px-2 mb-4"><h2 className="brand text-emerald-500 text-xs italic uppercase">Workforce Directory</h2><button onClick={() => setView('HOME')} className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Back</button></div>
+                                <div className="glass p-4 rounded-2xl border-l-4 border-emerald-500 flex justify-between items-center mb-2">
+                                    <div><p className="text-xs font-black uppercase tracking-tighter">N. GEORGIOU</p><p className="text-[8px] text-slate-500 uppercase italic">Safety Tech // On Duty</p></div>
+                                    <i className="fa-solid fa-user-check text-emerald-500"></i>
+                                </div>
+                                <button onClick={() => alert("Clock-in Initialized: GPS 37.942, 23.638")} className="w-full bg-emerald-600 p-4 rounded-xl font-black text-xs uppercase mt-4">Start Shift</button>
+                            </div>
+                        )}
+
+                        {/* --- M7: X.GR MERCHANT --- */}
+                        {view === 'M7' && (
+                            <div className="space-y-4 animate-in slide-in-from-right">
+                                <div className="flex justify-between items-center px-2 mb-4"><h2 className="brand text-orange-500 text-xs italic uppercase underline decoration-orange-500/50 underline-offset-8">X.GR Merchant Catalog</h2><button onClick={() => setView('HOME')} className="text-[10px] font-black text-slate-500 uppercase">Back</button></div>
+                                <div className="grid grid-cols-1 gap-3">
+                                    <div className="glass p-4 rounded-2xl flex justify-between items-center border border-slate-800"><span className="text-[10px] font-black uppercase tracking-widest italic">Gas Detector GX-2009</span><span className="text-xs font-black text-orange-500 tracking-tighter italic tracking-tighter italic">€420</span></div>
+                                    <div className="glass p-4 rounded-2xl flex justify-between items-center border-l-4 border-red-600"><span className="text-[10px] font-black uppercase tracking-widest italic">Oil Filter Marine-X</span><span className="text-xs font-black text-red-500 tracking-tighter italic tracking-tighter italic">LOW STOCK</span></div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* --- M8: LIVE IN MYKONOS --- */}
+                        {view === 'M8' && (
+                            <div className="space-y-4 animate-in slide-in-from-bottom">
+                                <div className="flex justify-between items-center px-2 mb-4"><h2 className="brand text-pink-500 text-xs italic uppercase tracking-widest">Live in Mykonos</h2><button onClick={() => setView('HOME')} className="text-[10px] font-black text-slate-500 uppercase">Back</button></div>
+                                <div className="glass p-5 rounded-3xl border-l-4 border-pink-500">
+                                    <h3 className="font-black text-sm uppercase tracking-tighter">Mykonos Crew Villa A</h3>
+                                    <p className="text-[9px] text-slate-500 uppercase tracking-widest mb-4">Ano Mera // Capacity: 6</p>
+                                    <div className="flex justify-between items-center border-t border-slate-800 pt-3"><span className="text-[10px] font-black text-pink-500 uppercase italic tracking-widest italic">€120 / day</span><span className="text-[8px] font-black bg-emerald-950 text-emerald-500 px-2 py-1 rounded">AVAILABLE</span></div>
                                 </div>
                             </div>
                         )}
@@ -188,14 +213,14 @@
 
                     {/* --- GLOBAL SMART CAPTURE [🔵] --- */}
                     <div className="fixed bottom-6 left-0 right-0 flex justify-center pointer-events-none z-50">
-                        <label className="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center shadow-[0_0_40px_rgba(37,99,235,0.4)] border-4 border-slate-950 pointer-events-auto active:scale-90 transition-all cursor-pointer">
+                        <label className="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center shadow-[0_0_40px_rgba(37,99,235,0.4)] border-4 border-slate-950 pointer-events-auto active:scale-95 transition-all cursor-pointer">
                             <i className="fa-solid fa-camera text-2xl text-white"></i>
                             <input type="file" accept="image/*" capture="environment" className="hidden" />
                         </label>
                     </div>
 
                     <footer className="fixed bottom-2 w-full text-center">
-                        <p className="brand text-[7px] text-slate-700 font-black tracking-[0.4em] uppercase">NTG Command Hub • V5.0 MASTER UNIFIED</p>
+                        <p className="brand text-[7px] text-slate-700 font-black tracking-[0.5em] uppercase">NTG Command Hub • Unified V5.1 Operational</p>
                     </footer>
                 </div>
             );

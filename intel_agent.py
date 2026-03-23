@@ -1,67 +1,63 @@
+import os
 import feedparser
 import requests
 import time
 from supabase import create_client
 
-# --- CONFIGURATION ---
-SUPABASE_URL = "https://omdarjncczohpffunfy.supabase.co"
-SUPABASE_KEY = "YOUR_SERVICE_ROLE_KEY"
-TELEGRAM_TOKEN = "YOUR_BOT_TOKEN"
-TELEGRAM_CHAT_ID = "YOUR_CHAT_ID"
-# Keywords για αναζήτηση επισκευών
-KEYWORDS = ["REPAIR", "DOCKING", "SYROS", "PERAMA", "PIRAEUS", "ΕΠΙΣΚΕΥΗ", "ΔΕΞΑΜΕΝΙΣΜΟΣ"]
-# Target Vessel
+# --- SETTINGS ---
+# Τα κλειδιά διαβάζονται αυτόματα από τα GitHub Secrets
+SUPABASE_URL = os.environ.get("SUPABASE_URL")
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
+TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN")
+TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
+
+# Στόχοι και Λέξεις-Κλειδιά
+KEYWORDS = ["REPAIR", "DOCKING", "SYROS", "PERAMA", "PIRAEUS", "ΕΠΙΣΚΕΥΗ", "ΔΕΞΑΜΕΝΙΣΜΟΣ", "HAI PHONG"]
 TARGET_IMO = "7355349" 
 
+# Σύνδεση με Supabase
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 def send_alert(msg):
     url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
-    requests.post(url, data={"chat_id": TELEGRAM_CHAT_ID, "text": f"🛰️ INTEL ALERT: {msg}"})
+    try:
+        requests.post(url, data={"chat_id": TELEGRAM_CHAT_ID, "text": f"🛰️ NTG INTEL: {msg}"})
+    except Exception as e:
+        print(f"Telegram Error: {e}")
 
 def scan_news():
-    # Πηγές ειδήσεων (RSS Feeds)
+    print("🔍 Scanning shipping news feeds...")
     feeds = [
         "https://www.hellenicshippingnews.com/category/shipping-news/feed/",
-        "https://www.naftikachronika.gr/feed/"
+        "https://www.naftikachronika.gr/feed/",
+        "https://shippingherald.com/feed/"
     ]
     
     for url in feeds:
         feed = feedparser.parse(url)
         for entry in feed.entries:
-            # Έλεγχος αν ο τίτλος περιέχει keywords
             if any(key.upper() in entry.title.upper() for key in KEYWORDS):
-                # Έλεγχος αν υπάρχει ήδη στη βάση
+                # Έλεγχος αν το lead υπάρχει ήδη
                 exists = supabase.table("ntg_intel_leads").select("*").eq("link", entry.link).execute()
                 if not exists.data:
                     data = {
-                        "source": "Shipping News",
+                        "source": "Shipping Intel",
                         "title": entry.title,
                         "link": entry.link,
                         "intel_type": "REPAIR",
                         "priority": "HIGH"
                     }
                     supabase.table("ntg_intel_leads").insert(data).execute()
-                    send_alert(f"Νέα ευκαιρία επισκευής: {entry.title}\n{entry.link}")
+                    send_alert(f"ΝΕΑ ΕΥΚΑΙΡΙΑ ΕΠΙΣΚΕΥΗΣ:\n{entry.title}\n{entry.link}")
 
-def track_ais():
-    # Εδώ θα έμπαινε το API call στο MarineTraffic ή στο Spire
-    # Για τη δοκιμή, ας υποθέσουμε ότι ελέγχουμε το στίγμα του Naftocement
-    print(f"📡 Tracking AIS for IMO {TARGET_IMO}...")
-    # response = requests.get(f"MARINETRAFFIC_API_URL").json()
-    # Logic: If position changed or speed > 1kn -> Alert
-
-def main():
-    print("🚀 Intelligence Agent Started...")
-    while True:
-        try:
-            scan_news()
-            track_ais()
-        except Exception as e:
-            print(f"Error: {e}")
-        
-        # Περιμένουμε 30 λεπτά πριν το επόμενο σκανάρισμα
-        time.sleep(1800)
+def track_target_vessel():
+    print(f"📡 Checking status for IMO {TARGET_IMO}...")
+    # Εδώ ο Agent θα μπορούσε να χτυπήσει ένα δωρεάν AIS API αν είχαμε κλειδί
+    # Προς το παρόν καταγράφουμε την πρόοδο του Tracker
+    pass
 
 if __name__ == "__main__":
-    main()
+    print("🚀 Intel Agent Mission Started.")
+    scan_news()
+    track_target_vessel()
+    print("🏁 Mission accomplished. Going to sleep.")

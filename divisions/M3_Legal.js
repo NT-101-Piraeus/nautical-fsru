@@ -1,24 +1,37 @@
-window.M3_Legal = function({ setView }) {
+window.M3_Legal = function({ view, setView, supabase }) {
+    const [cases, setCases] = React.useState([]);
+
+    React.useEffect(() => {
+        const fetchCases = async () => {
+            const { data } = await supabase.from('ntg_legal_cases').select('*').order('priority', { ascending: false });
+            if (data) setCases(data);
+        };
+        fetchCases();
+    }, []);
+
     return (
-        <div className="space-y-6 animate-in slide-in-from-right duration-300">
-            <div className="flex justify-between items-center">
-                <h2 className="brand text-red-500 text-xs tracking-widest uppercase italic font-bold">M3 // Legal Vault</h2>
-                <button onClick={() => setView('HOME')} className="text-[10px] font-black text-slate-500 uppercase italic">Back</button>
+        <div className="space-y-8 animate-in slide-in-from-right duration-500">
+            <div className="flex justify-between items-center px-2">
+                <h2 className="brand text-red-500 text-xs tracking-widest uppercase italic font-black underline underline-offset-8 decoration-red-500/30">M3 // LEGAL VAULT</h2>
+                <button onClick={() => setView('HOME')} className="text-[10px] font-black text-slate-500 uppercase italic">Exit</button>
             </div>
 
-            <div className="glass p-6 rounded-[2.5rem] border border-red-500/30">
-                <i className="fa-solid fa-gavel text-red-500 mb-2"></i>
-                <h3 className="text-xs font-black uppercase italic text-white mb-4 italic underline font-bold">Case Monitor</h3>
-                <div className="space-y-3">
-                    <div className="p-3 bg-red-500/5 rounded-2xl border border-red-500/20">
-                        <p className="text-[10px] font-black text-red-400">Naftocement IV Dispute</p>
-                        <p className="text-[8px] text-slate-500 uppercase">Status: Evidence Collection</p>
+            <div className="space-y-4">
+                {cases.map(c => (
+                    <div key={c.id} className="glass p-6 rounded-[2.5rem] border-l-8 border-red-600 flex justify-between items-center shadow-xl">
+                        <div>
+                            <h4 className="brand text-sm font-black text-white uppercase italic">{c.case_name}</h4>
+                            <p className="text-[8px] text-slate-500 font-bold uppercase tracking-widest mt-1">Priority: {c.priority}</p>
+                        </div>
+                        <span className={`text-[8px] font-black px-3 py-1 rounded-full uppercase ${c.status === 'ACTIVE' ? 'bg-red-500/20 text-red-500 animate-pulse' : 'bg-slate-800 text-slate-400'}`}>
+                            {c.status}
+                        </span>
                     </div>
-                    <div className="p-3 bg-slate-900 rounded-2xl border border-slate-800">
-                        <p className="text-[10px] font-black text-slate-400">Terme Shipyard B Agreement</p>
-                        <p className="text-[8px] text-slate-500 uppercase">Status: Signed & Archived</p>
-                    </div>
-                </div>
+                ))}
+            </div>
+
+            <div className="glass p-6 rounded-3xl border border-red-900/20 bg-red-950/5">
+                <p className="text-[8px] text-slate-500 uppercase font-black italic text-center">Protected by NTG Legal Encryption Protocol</p>
             </div>
         </div>
     );

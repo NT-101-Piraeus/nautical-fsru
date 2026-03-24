@@ -1,12 +1,21 @@
 /**
  * NTG COMMAND HUB - MAIN BRIDGE v2.0
- * Status: STABLE RECOVERY WITH LIVE KEYS
+ * Status: STABLE RECOVERY WITH PRODUCTION KEYS
+ * Administrator: M. SYKINIOTIS
  */
 
-// 1. Σύνδεση με Supabase (Επίσημα Κλειδιά NauticalOS_V3)
-const supabaseUrl = 'https://omdarjncczohpfzrqqhr.supabase.co'; 
+// 1. Σύνδεση με Supabase (NauticalOS_V3) [cite: 34, 341]
+const supabaseUrl = 'https://omdarjncczohpfzrqqhr.supabase.co';
 const supabaseKey = 'sb_publishable_V-nfUDy5MxEG4SlXkisFBg_GBlD_4Y9';
-const _supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+let _supabase = null;
+try {
+    if (window.supabase) {
+        _supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+    }
+} catch (e) {
+    console.error("Supabase Initialization Failed:", e);
+}
 
 const { useState } = React;
 
@@ -14,9 +23,9 @@ const App = () => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [pin, setPin] = useState('');
     const [view, setView] = useState('HOME');
-    const USER_ID = "M. SYKINIOTIS"; // Administrator Identity [cite: 340]
+    const USER_ID = "M. SYKINIOTIS"; [cite: 340]
 
-    // Πρωτόκολλο Ασφαλείας PIN [cite: 339]
+    // Πρωτόκολλο Ασφαλείας PIN (Manual 04) [cite: 45, 212, 339]
     const handleLogin = (e) => {
         e.preventDefault();
         if (pin === '1234') {
@@ -27,14 +36,14 @@ const App = () => {
         }
     };
 
-    // Ασφαλής φόρτωση των Divisions για αποφυγή Black Screen 
+    // Ασφαλής φόρτωση των Divisions (Modular Engine Logic) 
     const renderDivision = (DivisionComponent, props) => {
-        if (!DivisionComponent) {
+        if (typeof DivisionComponent !== 'function') {
             return (
                 <div className="h-screen flex flex-col items-center justify-center p-10 text-center bg-slate-950">
                     <i className="fa-solid fa-triangle-exclamation text-4xl text-amber-500 mb-4"></i>
                     <p className="text-amber-500 font-black brand uppercase text-xs tracking-widest">Division Loading Error</p>
-                    <p className="text-slate-500 text-[10px] mt-2 uppercase font-bold italic">Check if the .js file exists in /divisions/</p>
+                    <p className="text-slate-500 text-[10px] mt-2 uppercase font-bold italic font-bold">Check if the .js file exists in /divisions/</p>
                     <button onClick={() => setView('HOME')} className="mt-8 px-6 py-2 bg-slate-900 rounded-full text-[10px] text-white uppercase font-black border border-slate-800">Return to Bridge</button>
                 </div>
             );
@@ -68,11 +77,11 @@ const App = () => {
     }
 
     return (
-        <div className="min-h-screen p-4 pb-28 max-w-lg mx-auto relative overflow-hidden bg-slate-950 text-white">
+        <div className="min-h-screen p-4 pb-28 max-w-lg mx-auto relative overflow-hidden bg-slate-950 text-white selection:bg-blue-500/30">
             {view === 'HOME' ? (
                 <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                     <div className="flex justify-between items-center px-4">
-                        <div className="flex flex-col">
+                        <div className="flex flex-col text-left">
                             <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">Admin Master Active</span>
                             <span className="brand text-sm italic font-bold text-white uppercase tracking-tighter">{USER_ID}</span>
                         </div>
@@ -82,7 +91,7 @@ const App = () => {
                         </div>
                     </div>
 
-                    {/* Central Grid Navigation [cite: 342-350] */}
+                    {/* Central Grid Navigation (Manual 02) [cite: 342-350] */}
                     <div className="grid grid-cols-2 gap-4 px-2">
                         <button onClick={() => setView('M1')} className="glass p-7 rounded-[2.5rem] border-b-4 border-blue-600 flex flex-col items-center gap-4 transition-all active:scale-95">
                             <i className="fa-solid fa-shield-halved text-3xl text-blue-400"></i>
@@ -91,11 +100,11 @@ const App = () => {
                         
                         <button onClick={() => setView('M5')} className="glass p-7 rounded-[2.5rem] border-b-4 border-emerald-600 flex flex-col items-center gap-4 transition-all active:scale-95">
                             <i className="fa-solid fa-users-viewfinder text-3xl text-emerald-400"></i>
-                            <span className="text-[10px] font-black uppercase tracking-widest brand text-white">STAFF HUB</span>
+                            <span className="text-[10px] font-black uppercase tracking-widest brand text-white font-bold italic">STAFF HUB</span>
                         </button>
 
-                        <button onClick={() => setView('M2')} className="glass p-7 rounded-[2.5rem] border-b-4 border-cyan-600 flex flex-col items-center gap-4 transition-all active:scale-95">
-                            <i className="fa-solid fa-ship text-3xl text-cyan-400"></i>
+                        <button onClick={() => setView('M2')} className="glass p-7 rounded-[2.5rem] border-b-4 border-cyan-600 flex flex-col items-center gap-4 transition-all active:scale-95 font-bold italic">
+                            <i className="fa-solid fa-ship text-3xl text-cyan-400 font-bold italic"></i>
                             <span className="text-[10px] font-black uppercase tracking-widest brand text-white">REPAIRS</span>
                         </button>
 
@@ -117,7 +126,7 @@ const App = () => {
                 </div>
             ) : (
                 <div className="animate-in fade-in slide-in-from-right duration-500 h-full">
-                    {/* Divisional Logic Routing [cite: 183-190] */}
+                    {/* Router for Divisions (Manual 02 Architecture) [cite: 182, 272] */}
                     {view.startsWith('M1') && renderDivision(window.M1_Safety, { view, setView, supabase: _supabase })}
                     {view.startsWith('M2') && renderDivision(window.M2_Repairs, { view, setView, supabase: _supabase })}
                     {view.startsWith('M3') && renderDivision(window.M3_Legal, { view, setView, supabase: _supabase })}
@@ -127,10 +136,10 @@ const App = () => {
                 </div>
             )}
 
-            {/* Smart Capture Button [cite: 260-262] */}
-            <div className="fixed bottom-8 left-0 right-0 flex justify-center pointer-events-none z-50">
+            {/* Global Element: Smart Capture [cite: 260-262, 315-318] */}
+            <div className="fixed bottom-8 left-0 right-0 flex justify-center pointer-events-none z-50 font-bold italic">
                 <button 
-                    onClick={() => alert('SMART CAPTURE INITIALIZED')}
+                    onClick={() => alert('SMART CAPTURE: Deployment Mode Initialized')}
                     className="h-16 w-16 bg-blue-600 rounded-full border-4 border-slate-950 flex items-center justify-center shadow-2xl active:scale-90 transition-all pointer-events-auto shadow-blue-500/30 hover:bg-blue-500"
                 >
                     <i className="fa-solid fa-camera text-2xl text-white"></i>

@@ -1,60 +1,30 @@
-const supabaseUrl = 'https://omdarjncczohpfzrqqhr.supabase.co';
-const supabaseKey = 'sb_publishable_V-nfUDy5MxEG4SlXkisFBg_GBlD_4Y9';
-const _supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NTG Command Hub v2.0</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+        .brand { font-family: 'Orbitron', sans-serif; }
+        .glass { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(14px); }
+    </style>
+</head>
+<body class="bg-slate-950 text-white overflow-x-hidden selection:bg-blue-500/30">
+    <div id="root"></div>
 
-const { useState } = React;
+    <script src="divisions/M1_Safety.js"></script>
+    <script src="divisions/M2_Repairs.js"></script>
+    <script src="divisions/M3_Legal.js"></script>
+    <script src="divisions/M5_Staff.js"></script>
+    <script src="divisions/M6_CEO_Pulse.js"></script>
+    <script src="divisions/M8_Mykonos.js"></script>
 
-const App = () => {
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [pin, setPin] = useState('');
-    const [view, setView] = useState('HOME');
-
-    const handleLogin = (e) => {
-        e.preventDefault();
-        if (pin === '1234') setIsAuthenticated(true);
-        else { alert('INVALID PIN'); setPin(''); }
-    };
-
-    if (!isAuthenticated) {
-        return (
-            <div className="h-screen flex items-center justify-center p-6 bg-slate-950 text-white">
-                <form onSubmit={handleLogin} className="glass p-10 rounded-[3rem] border border-slate-800 w-full max-w-sm text-center">
-                    <h1 className="brand text-xl mb-8 tracking-widest text-blue-500 font-black">NTG COMMAND</h1>
-                    <input type="password" value={pin} onChange={(e) => setPin(e.target.value)}
-                           className="w-full bg-slate-900 border border-slate-700 p-5 rounded-2xl text-center text-3xl mb-6 text-white outline-none"
-                           placeholder="PIN" maxLength="4" autoFocus />
-                    <button type="submit" className="w-full bg-blue-600 p-5 rounded-2xl brand font-bold uppercase tracking-widest">Unlock Core</button>
-                </form>
-            </div>
-        );
-    }
-
-    return (
-        <div className="min-h-screen p-4 max-w-lg mx-auto text-white font-bold italic">
-            {view === 'HOME' ? (
-                <div className="space-y-8 animate-in fade-in duration-500 text-left font-bold italic">
-                    <h2 className="brand text-sm italic font-black uppercase text-slate-500 italic">M. SYKINIOTIS // Director</h2>
-                    <div className="grid grid-cols-2 gap-4">
-                        <button onClick={() => setView('M1')} className="glass p-8 rounded-[2rem] border-b-4 border-blue-600 flex flex-col items-center gap-4">
-                            <i className="fa-solid fa-shield-halved text-2xl text-blue-400"></i>
-                            <span className="text-[10px] font-black brand uppercase italic">Τ.Α. ΠΛΟΙΩΝ</span>
-                        </button>
-                        <button onClick={() => setView('M5')} className="glass p-8 rounded-[2rem] border-b-4 border-emerald-600 flex flex-col items-center gap-4">
-                            <i className="fa-solid fa-users text-2xl text-emerald-400"></i>
-                            <span className="text-[10px] font-black brand uppercase italic">STAFF HUB</span>
-                        </button>
-                    </div>
-                </div>
-            ) : (
-                <div className="h-full">
-                    {view.startsWith('M1') && window.M1_Safety && <window.M1_Safety view={view} setView={setView} supabase={_supabase} />}
-                    {view.startsWith('M5') && window.M5_Staff && <window.M5_Staff view={view} setView={setView} supabase={_supabase} />}
-                    <button onClick={() => setView('HOME')} className="mt-10 text-[10px] text-slate-500 uppercase font-black underline">Back to Bridge</button>
-                </div>
-            )}
-        </div>
-    );
-};
-
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(<App />);
+    <script src="main.js"></script>
+</body>
+</html>

@@ -1,29 +1,25 @@
 window.M3_Legal = function({ setView }) {
     return (
-        <div className="space-y-6 animate-in slide-in-from-right">
-            <h2 className="brand text-red-500 text-xs tracking-widest uppercase italic">Legal Vault & Conflicts</h2>
-            
-            {/* Case 1: Naftocement [cite: 110-112, 347] */}
-            <button onClick={() => alert("Naftocement IV Evidence: 12 Files GPS Synced. Case: Vietnam Escape.")} 
-                    className="w-full glass p-6 rounded-3xl border-l-4 border-red-600 flex justify-between items-center text-left active:bg-red-950/20">
-                <div>
-                    <h3 className="font-black text-sm uppercase italic">NAFTOCEMENT IV</h3>
-                    <p className="text-[8px] text-slate-500 font-bold uppercase tracking-widest">Vietnam Case // Evidence Vault</p>
-                </div>
-                <i className="fa-solid fa-folder-closed text-red-900 text-2xl"></i>
-            </button>
+        <div className="space-y-6 animate-in slide-in-from-right duration-300">
+            <div className="flex justify-between items-center">
+                <h2 className="brand text-red-500 text-xs tracking-widest uppercase italic font-bold">M3 // Legal Vault</h2>
+                <button onClick={() => setView('HOME')} className="text-[10px] font-black text-slate-500 uppercase italic">Back</button>
+            </div>
 
-            {/* Case 2: Terme [cite: 116-118, 348] */}
-            <button onClick={() => alert("Terme Shipyard: Investor vs Board Dispute - 8 Survey Logs Active.")} 
-                    className="w-full glass p-6 rounded-3xl border-l-4 border-red-600 flex justify-between items-center text-left active:bg-red-950/20">
-                <div>
-                    <h3 className="font-black text-sm uppercase italic">TERME SHIPYARD</h3>
-                    <p className="text-[8px] text-slate-500 font-bold uppercase tracking-widest">Investor/Board Dispute // Audit Log</p>
+            <div className="glass p-6 rounded-[2.5rem] border border-red-500/30">
+                <i className="fa-solid fa-gavel text-red-500 mb-2"></i>
+                <h3 className="text-xs font-black uppercase italic text-white mb-4 italic underline font-bold">Case Monitor</h3>
+                <div className="space-y-3">
+                    <div className="p-3 bg-red-500/5 rounded-2xl border border-red-500/20">
+                        <p className="text-[10px] font-black text-red-400">Naftocement IV Dispute</p>
+                        <p className="text-[8px] text-slate-500 uppercase">Status: Evidence Collection</p>
+                    </div>
+                    <div className="p-3 bg-slate-900 rounded-2xl border border-slate-800">
+                        <p className="text-[10px] font-black text-slate-400">Terme Shipyard B Agreement</p>
+                        <p className="text-[8px] text-slate-500 uppercase">Status: Signed & Archived</p>
+                    </div>
                 </div>
-                <i className="fa-solid fa-scale-balanced text-red-900 text-2xl"></i>
-            </button>
-            
-            <button onClick={() => setView('HOME')} className="w-full text-center text-[10px] font-black text-slate-500 uppercase mt-4">Back to Hub</button>
+            </div>
         </div>
     );
 };

@@ -1,37 +1,41 @@
-window.M3_Legal = function({ view, setView, supabase }) {
-    const [cases, setCases] = React.useState([]);
+window.M3_Legal = function({ setView, supabase }) {
+    const redFlags = [
+        "Στρατηγικός κατακερματισμός ομίλου (Samsun/Tuzla) [cite: 66]",
+        "Χρήση Λιβεριανών εταιρειών-βιτρίνα (Capital/Barker) [cite: 60]",
+        "Μετονομασία Naftobulk VII σε Vine I (IMO 9513191) [cite: 116, 192]"
+    ];
 
-    React.useEffect(() => {
-        const fetchCases = async () => {
-            const { data } = await supabase.from('ntg_legal_cases').select('*').order('priority', { ascending: false });
-            if (data) setCases(data);
-        };
-        fetchCases();
-    }, []);
+    const targets = ["Emir Öztürk", "Erkan Zorlu", "Mustafa Kemal Sezer", "Tuğrul Karaca"]; // [cite: 72, 88]
 
     return (
-        <div className="space-y-8 animate-in slide-in-from-right duration-500">
-            <div className="flex justify-between items-center px-2">
-                <h2 className="brand text-red-500 text-xs tracking-widest uppercase italic font-black underline underline-offset-8 decoration-red-500/30">M3 // LEGAL VAULT</h2>
-                <button onClick={() => setView('HOME')} className="text-[10px] font-black text-slate-500 uppercase italic">Exit</button>
-            </div>
-
-            <div className="space-y-4">
-                {cases.map(c => (
-                    <div key={c.id} className="glass p-6 rounded-[2.5rem] border-l-8 border-red-600 flex justify-between items-center shadow-xl">
-                        <div>
-                            <h4 className="brand text-sm font-black text-white uppercase italic">{c.case_name}</h4>
-                            <p className="text-[8px] text-slate-500 font-bold uppercase tracking-widest mt-1">Priority: {c.priority}</p>
-                        </div>
-                        <span className={`text-[8px] font-black px-3 py-1 rounded-full uppercase ${c.status === 'ACTIVE' ? 'bg-red-500/20 text-red-500 animate-pulse' : 'bg-slate-800 text-slate-400'}`}>
-                            {c.status}
-                        </span>
+        <div className="space-y-6 animate-in slide-in-from-right duration-500">
+            <h2 className="brand text-red-500 text-xs tracking-widest uppercase italic font-black">M3 // LEGAL VAULT</h2>
+            
+            {/* Red Flags Section [cite: 31, 55] */}
+            <div className="glass p-6 rounded-3xl border border-red-500/30 bg-red-950/10">
+                <p className="text-[10px] font-black text-red-500 uppercase mb-4 italic">Critical Red Flags</p>
+                {redFlags.map((flag, i) => (
+                    <div key={i} className="flex gap-3 mb-3 items-start">
+                        <i className="fa-solid fa-circle-exclamation text-red-500 mt-1"></i>
+                        <p className="text-[9px] text-white uppercase font-bold italic leading-tight">{flag}</p>
                     </div>
                 ))}
             </div>
 
-            <div className="glass p-6 rounded-3xl border border-red-900/20 bg-red-950/5">
-                <p className="text-[8px] text-slate-500 uppercase font-black italic text-center">Protected by NTG Legal Encryption Protocol</p>
+            {/* Target UBOs [cite: 41, 72] */}
+            <div className="glass p-6 rounded-3xl border border-slate-800">
+                <p className="text-[10px] font-black text-slate-500 uppercase mb-4 italic">Tracked UBOs (Forensic Monitoring)</p>
+                <div className="grid grid-cols-2 gap-2">
+                    {targets.map(name => (
+                        <div key={name} className="p-3 bg-slate-900 rounded-xl border border-slate-800 text-[8px] font-black uppercase text-center italic">
+                            {name}
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            <div className="glass p-4 rounded-2xl text-center border border-blue-500/20">
+                <p className="text-[8px] text-blue-400 uppercase font-black italic">Alter Ego Doctrine Protection Active [cite: 175]</p>
             </div>
         </div>
     );

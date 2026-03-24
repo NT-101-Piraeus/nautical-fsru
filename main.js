@@ -1,50 +1,53 @@
 /**
  * NTG COMMAND HUB - MAIN BRIDGE v2.0
- * Status: STABLE RECOVERY WITH PRODUCTION KEYS
- * Administrator: M. SYKINIOTIS
+ * EMERGENCY STABILITY & DEBUG MODE
+ * Keys: sb_publishable_... (NauticalOS_V3)
  */
 
-// 1. Σύνδεση με Supabase (NauticalOS_V3) [cite: 34, 341]
+// 1. Στοιχεία Σύνδεσης (Επίσημα κλειδιά που έστειλες)
 const supabaseUrl = 'https://omdarjncczohpfzrqqhr.supabase.co';
 const supabaseKey = 'sb_publishable_V-nfUDy5MxEG4SlXkisFBg_GBlD_4Y9';
 
+// 2. Αρχικοποίηση με προστασία σφαλμάτων
 let _supabase = null;
-try {
-    if (window.supabase) {
-        _supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
-    }
-} catch (e) {
-    console.error("Supabase Initialization Failed:", e);
-}
+const initSupabase = () => {
+    try {
+        if (window.supabase && window.supabase.createClient) {
+            _supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+            return true;
+        }
+    } catch (e) { console.error("Supabase init error:", e); }
+    return false;
+};
 
-const { useState } = React;
+const { useState, useEffect } = React;
 
 const App = () => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [pin, setPin] = useState('');
     const [view, setView] = useState('HOME');
-    const USER_ID = "M. SYKINIOTIS"; [cite: 340]
+    const [dbReady, setDbReady] = useState(false);
 
-    // Πρωτόκολλο Ασφαλείας PIN (Manual 04) [cite: 45, 212, 339]
+    // Έλεγχος αν η Supabase είναι έτοιμη
+    useEffect(() => {
+        const ready = initSupabase();
+        setDbReady(ready);
+    }, []);
+
     const handleLogin = (e) => {
         e.preventDefault();
-        if (pin === '1234') {
-            setIsAuthenticated(true);
-        } else {
-            alert('ACCESS DENIED: INVALID PIN');
-            setPin('');
-        }
+        if (pin === '1234') setIsAuthenticated(true);
+        else { alert('INVALID PIN'); setPin(''); }
     };
 
-    // Ασφαλής φόρτωση των Divisions (Modular Engine Logic) 
+    // Ασφαλής φόρτωση των Divisions
     const renderDivision = (DivisionComponent, props) => {
-        if (typeof DivisionComponent !== 'function') {
+        if (!DivisionComponent || typeof DivisionComponent !== 'function') {
             return (
-                <div className="h-screen flex flex-col items-center justify-center p-10 text-center bg-slate-950">
-                    <i className="fa-solid fa-triangle-exclamation text-4xl text-amber-500 mb-4"></i>
-                    <p className="text-amber-500 font-black brand uppercase text-xs tracking-widest">Division Loading Error</p>
-                    <p className="text-slate-500 text-[10px] mt-2 uppercase font-bold italic font-bold">Check if the .js file exists in /divisions/</p>
-                    <button onClick={() => setView('HOME')} className="mt-8 px-6 py-2 bg-slate-900 rounded-full text-[10px] text-white uppercase font-black border border-slate-800">Return to Bridge</button>
+                <div className="p-10 text-center bg-slate-900 rounded-3xl border border-red-500 m-4">
+                    <p className="text-red-500 font-black brand text-[10px] mb-2 uppercase italic">Division Load Failure</p>
+                    <p className="text-white text-[8px] uppercase font-bold italic">Το αρχείο .js λείπει ή έχει σφάλμα</p>
+                    <button onClick={() => setView('HOME')} className="mt-4 text-[10px] text-blue-400 underline uppercase italic font-bold">Back to Bridge</button>
                 </div>
             );
         }
@@ -54,22 +57,17 @@ const App = () => {
     if (!isAuthenticated) {
         return (
             <div className="h-screen flex items-center justify-center p-6 bg-slate-950">
-                <form onSubmit={handleLogin} className="glass p-10 rounded-[3rem] border border-slate-800 w-full max-w-sm text-center shadow-2xl animate-in zoom-in duration-500">
+                <form onSubmit={handleLogin} className="glass p-10 rounded-[3rem] border border-slate-800 w-full max-w-sm text-center shadow-2xl">
                     <div className="mb-8">
-                        <i className="fa-solid fa-anchor text-4xl text-blue-500 mb-4 drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]"></i>
-                        <h1 className="brand text-xl tracking-[0.3em] font-black uppercase text-white">NTG COMMAND</h1>
+                        <i className="fa-solid fa-anchor text-4xl text-blue-500 mb-4 shadow-blue-500/20"></i>
+                        <h1 className="brand text-xl tracking-[0.3em] font-black text-white italic">NTG COMMAND</h1>
+                        {!dbReady && <p className="text-[8px] text-amber-500 mt-2 uppercase animate-pulse italic">Connecting to Cloud...</p>}
                     </div>
-                    <input 
-                        type="password" 
-                        value={pin} 
-                        onChange={(e) => setPin(e.target.value)}
-                        className="w-full bg-slate-900 border border-slate-700 p-5 rounded-2xl text-center text-3xl tracking-[0.8em] mb-6 text-white outline-none focus:border-blue-500 transition-all"
-                        placeholder="PIN" 
-                        maxLength="4" 
-                        autoFocus
-                    />
-                    <button type="submit" className="w-full bg-blue-600 hover:bg-blue-500 p-5 rounded-2xl brand font-bold uppercase tracking-widest text-sm active:scale-95 transition-all shadow-lg shadow-blue-900/40">
-                        Initiate Access
+                    <input type="password" value={pin} onChange={(e) => setPin(e.target.value)}
+                           className="w-full bg-slate-900 border border-slate-700 p-5 rounded-2xl text-center text-3xl tracking-[0.8em] mb-6 text-white outline-none focus:border-blue-500"
+                           placeholder="PIN" maxLength="4" autoFocus />
+                    <button type="submit" className="w-full bg-blue-600 p-5 rounded-2xl brand font-bold uppercase tracking-widest text-sm active:scale-95 shadow-lg">
+                        Unlock Core
                     </button>
                 </form>
             </div>
@@ -77,56 +75,51 @@ const App = () => {
     }
 
     return (
-        <div className="min-h-screen p-4 pb-28 max-w-lg mx-auto relative overflow-hidden bg-slate-950 text-white selection:bg-blue-500/30">
+        <div className="min-h-screen p-4 pb-28 max-w-lg mx-auto bg-slate-950 text-white font-bold italic">
             {view === 'HOME' ? (
-                <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    <div className="flex justify-between items-center px-4">
-                        <div className="flex flex-col text-left">
-                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">Admin Master Active</span>
-                            <span className="brand text-sm italic font-bold text-white uppercase tracking-tighter">{USER_ID}</span>
+                <div className="space-y-8 animate-in fade-in duration-500">
+                    <div className="flex justify-between items-center px-4 font-bold italic">
+                        <div className="flex flex-col text-left font-bold italic">
+                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">Administrator Master</span>
+                            <span className="brand text-sm italic font-bold text-white uppercase tracking-tighter italic">M. SYKINIOTIS</span>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <span className="text-[8px] font-black text-emerald-500 uppercase tracking-widest italic">Cloud Sync</span>
-                            <div className="h-2.5 w-2.5 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)] animate-pulse"></div>
-                        </div>
+                        <div className="h-2.5 w-2.5 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"></div>
                     </div>
 
-                    {/* Central Grid Navigation (Manual 02) [cite: 342-350] */}
                     <div className="grid grid-cols-2 gap-4 px-2">
-                        <button onClick={() => setView('M1')} className="glass p-7 rounded-[2.5rem] border-b-4 border-blue-600 flex flex-col items-center gap-4 transition-all active:scale-95">
+                        <button onClick={() => setView('M1')} className="glass p-7 rounded-[2.5rem] border-b-4 border-blue-600 flex flex-col items-center gap-4 active:scale-95 transition-all">
                             <i className="fa-solid fa-shield-halved text-3xl text-blue-400"></i>
-                            <span className="text-[10px] font-black uppercase tracking-widest brand text-white">Τ.Α. ΠΛΟΙΩΝ</span>
+                            <span className="text-[10px] font-black uppercase tracking-widest brand text-white italic">Τ.Α. ΠΛΟΙΩΝ</span>
                         </button>
                         
-                        <button onClick={() => setView('M5')} className="glass p-7 rounded-[2.5rem] border-b-4 border-emerald-600 flex flex-col items-center gap-4 transition-all active:scale-95">
+                        <button onClick={() => setView('M5')} className="glass p-7 rounded-[2.5rem] border-b-4 border-emerald-600 flex flex-col items-center gap-4 active:scale-95 transition-all">
                             <i className="fa-solid fa-users-viewfinder text-3xl text-emerald-400"></i>
-                            <span className="text-[10px] font-black uppercase tracking-widest brand text-white font-bold italic">STAFF HUB</span>
+                            <span className="text-[10px] font-black uppercase tracking-widest brand text-white italic">STAFF HUB</span>
                         </button>
 
-                        <button onClick={() => setView('M2')} className="glass p-7 rounded-[2.5rem] border-b-4 border-cyan-600 flex flex-col items-center gap-4 transition-all active:scale-95 font-bold italic">
-                            <i className="fa-solid fa-ship text-3xl text-cyan-400 font-bold italic"></i>
-                            <span className="text-[10px] font-black uppercase tracking-widest brand text-white">REPAIRS</span>
+                        <button onClick={() => setView('M2')} className="glass p-7 rounded-[2.5rem] border-b-4 border-cyan-600 flex flex-col items-center gap-4 active:scale-95 transition-all font-bold italic">
+                            <i className="fa-solid fa-ship text-3xl text-cyan-400"></i>
+                            <span className="text-[10px] font-black uppercase tracking-widest brand text-white italic">REPAIRS</span>
                         </button>
 
-                        <button onClick={() => setView('M6')} className="glass p-7 rounded-[2.5rem] border-b-4 border-purple-600 flex flex-col items-center gap-4 transition-all active:scale-95">
+                        <button onClick={() => setView('M6')} className="glass p-7 rounded-[2.5rem] border-b-4 border-purple-600 flex flex-col items-center gap-4 active:scale-95 transition-all font-bold italic">
                             <i className="fa-solid fa-chart-line text-3xl text-purple-400"></i>
-                            <span className="text-[10px] font-black uppercase tracking-widest brand text-white">CEO PULSE</span>
+                            <span className="text-[10px] font-black uppercase tracking-widest brand text-white italic">CEO PULSE</span>
                         </button>
 
-                        <button onClick={() => setView('M8')} className="glass p-7 rounded-[2.5rem] border-b-4 border-orange-600 flex flex-col items-center gap-4 transition-all active:scale-95">
+                        <button onClick={() => setView('M8')} className="glass p-7 rounded-[2.5rem] border-b-4 border-orange-600 flex flex-col items-center gap-4 active:scale-95 transition-all font-bold italic">
                             <i className="fa-solid fa-house-chimney text-3xl text-orange-400"></i>
-                            <span className="text-[10px] font-black uppercase tracking-widest brand text-white">MYKONOS</span>
+                            <span className="text-[10px] font-black uppercase tracking-widest brand text-white italic">MYKONOS</span>
                         </button>
 
-                        <button onClick={() => setView('M3')} className="glass p-7 rounded-[2.5rem] border-b-4 border-red-700 flex flex-col items-center gap-4 transition-all active:scale-95">
+                        <button onClick={() => setView('M3')} className="glass p-7 rounded-[2.5rem] border-b-4 border-red-700 flex flex-col items-center gap-4 active:scale-95 transition-all">
                             <i className="fa-solid fa-gavel text-3xl text-red-500"></i>
-                            <span className="text-[10px] font-black uppercase tracking-widest brand text-white text-red-500">LEGAL</span>
+                            <span className="text-[10px] font-black uppercase tracking-widest brand text-red-500 italic">LEGAL Vault</span>
                         </button>
                     </div>
                 </div>
             ) : (
-                <div className="animate-in fade-in slide-in-from-right duration-500 h-full">
-                    {/* Router for Divisions (Manual 02 Architecture) [cite: 182, 272] */}
+                <div className="animate-in fade-in slide-in-from-right duration-500 h-full font-bold italic">
                     {view.startsWith('M1') && renderDivision(window.M1_Safety, { view, setView, supabase: _supabase })}
                     {view.startsWith('M2') && renderDivision(window.M2_Repairs, { view, setView, supabase: _supabase })}
                     {view.startsWith('M3') && renderDivision(window.M3_Legal, { view, setView, supabase: _supabase })}
@@ -136,12 +129,8 @@ const App = () => {
                 </div>
             )}
 
-            {/* Global Element: Smart Capture [cite: 260-262, 315-318] */}
-            <div className="fixed bottom-8 left-0 right-0 flex justify-center pointer-events-none z-50 font-bold italic">
-                <button 
-                    onClick={() => alert('SMART CAPTURE: Deployment Mode Initialized')}
-                    className="h-16 w-16 bg-blue-600 rounded-full border-4 border-slate-950 flex items-center justify-center shadow-2xl active:scale-90 transition-all pointer-events-auto shadow-blue-500/30 hover:bg-blue-500"
-                >
+            <div className="fixed bottom-8 left-0 right-0 flex justify-center pointer-events-none z-50">
+                <button onClick={() => alert('Capture Engine Ready')} className="h-16 w-16 bg-blue-600 rounded-full border-4 border-slate-950 flex items-center justify-center shadow-2xl active:scale-90 transition-all pointer-events-auto">
                     <i className="fa-solid fa-camera text-2xl text-white"></i>
                 </button>
             </div>

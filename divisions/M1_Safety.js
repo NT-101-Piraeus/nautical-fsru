@@ -1,101 +1,91 @@
-const { useState, useEffect } = React;
+const { useState } = React;
 
-const M1_Dashboard = ({ setView }) => {
-    const [activeTab, setActiveTab] = useState('SCHEDULE'); // 'SCHEDULE' ή 'INSPECTION'
+const M1_Dashboard = ({ setView, supabase }) => {
+    const [activeTab, setActiveTab] = useState('WATCHLIST');
     const [selectedShip, setSelectedShip] = useState(null);
 
-    // Dummy data για το αυριανό πρόγραμμα (Αργότερα θα έρχονται από τη Supabase)
-    const todayShips = [
-        { id: 1, name: 'MINERVA VIRGO', task: 'Gas Measurement & Ventilation', status: 'PENDING' },
-        { id: 2, name: 'MSC YUVIKA V', task: 'Load Test Provision Crane', status: 'DONE' },
-        { id: 3, name: 'AEGEAN MYTH', task: 'Safety Audit', status: 'PENDING' }
+    // Η επίσημη Watchlist 2026 της NTG
+    const shipWatchlist = [
+        { id: 'f1', name: 'FELIX', imo: '9513191', task: 'Hot Works Permit', status: 'PENDING' },
+        { id: 'a1', name: 'ARIADNI', imo: 'N/A', task: 'Gas-Free Inspection', status: 'PENDING' },
+        { id: 'r1', name: 'RIGEL III', imo: 'N/A', task: 'Annual Safety Audit', status: 'DONE' },
+        { id: 'n1', name: 'NAFTOCEMENT IV', imo: 'N/A', task: 'Ventilation Check', status: 'PENDING' },
+        { id: 'm1', name: 'MINERVA VIRGO', imo: 'N/A', task: 'Full PD 70/90 Audit', status: 'PENDING' }
     ];
 
-    const inspectionTasks = [
-        { id: 't1', label: 'Atmosphere Testing (O2/LEL)', done: false },
-        { id: 't2', label: 'Ventilation Verification', done: false },
-        { id: 't3', label: 'PPE Compliance Check', done: false },
-        { id: 't4', label: 'Emergency Exit Clear', done: false }
+    // Checklists βάσει ΠΔ 70/90
+    const pd7090Tasks = [
+        { id: 'c1', label: 'Atmosphere: O2 (19.5% - 22.5%)', type: 'gas' },
+        { id: 'c2', label: 'LEL Check (< 1% for Hot Works)', type: 'gas' },
+        { id: 'c3', label: 'Continuous Ventilation Active', type: 'check' },
+        { id: 'c4', label: 'PPE: Helmet, Harness, Mask', type: 'check' },
+        { id: 'c5', label: 'Hot Works: Fire Ext. on standby', type: 'legal' },
+        { id: 'c6', label: 'Emergency Exit: Unblocked', type: 'check' }
     ];
 
     return (
-        <div className="p-4 bg-slate-900 rounded-[2.5rem] border border-slate-800 shadow-2xl min-h-[500px] font-bold italic">
+        <div className="p-4 bg-slate-900 rounded-[2.5rem] border border-slate-800 shadow-2xl min-h-[600px] font-bold italic text-white">
             {/* Header */}
             <header className="flex justify-between items-center mb-6 border-b border-slate-700 pb-4">
                 <div>
-                    <h2 className="brand text-blue-400 text-lg uppercase tracking-tighter">M1 / Safety Officer</h2>
-                    <p className="text-[9px] text-slate-500 uppercase tracking-widest">Operator: M. SYKINIOTIS</p>
+                    <h2 className="brand text-blue-400 text-lg uppercase">M1 / Safety Officer</h2>
+                    <p className="text-[9px] text-slate-500 uppercase tracking-widest italic">Compliance: ΠΔ 70/90</p>
                 </div>
-                <div className="h-3 w-3 rounded-full bg-green-500 animate-pulse shadow-[0_0_10px_#22c55e]"></div>
+                <button onClick={() => setView('HOME')} className="bg-slate-800 p-2 rounded-full text-xs">✖</button>
             </header>
 
-            {/* Sub-Navigation Tabs */}
-            <div className="flex gap-2 mb-6">
-                <button 
-                    onClick={() => {setActiveTab('SCHEDULE'); setSelectedShip(null);}}
-                    className={`flex-1 py-3 rounded-xl brand text-[10px] transition-all ${activeTab === 'SCHEDULE' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-500'}`}
-                >
-                    📅 Schedule
-                </button>
-                <button 
-                    className={`flex-1 py-3 rounded-xl brand text-[10px] transition-all ${selectedShip ? 'bg-orange-600 text-white' : 'bg-slate-800 text-slate-500 opacity-50'}`}
-                    disabled={!selectedShip}
-                >
-                    🔍 Active Job
-                </button>
-            </div>
-
-            {/* Content Logic */}
-            {activeTab === 'SCHEDULE' && !selectedShip && (
-                <div className="space-y-4 animate-in slide-in-from-bottom duration-300">
-                    <h3 className="text-[10px] text-slate-400 uppercase tracking-widest mb-2">Today's Missions</h3>
-                    {todayShips.map(ship => (
+            {/* View Logic */}
+            {!selectedShip ? (
+                <div className="space-y-4 animate-in fade-in duration-300">
+                    <h3 className="text-[10px] text-blue-500 uppercase mb-2 tracking-widest">Fleet Watchlist 2026</h3>
+                    {shipWatchlist.map(ship => (
                         <div 
                             key={ship.id}
                             onClick={() => setSelectedShip(ship)}
-                            className="bg-slate-950 p-5 rounded-2xl border-l-4 border-blue-500 flex justify-between items-center active:scale-95 transition-all"
+                            className={`p-5 rounded-2xl border-l-4 flex justify-between items-center active:scale-95 transition-all ${ship.status === 'DONE' ? 'bg-slate-800 border-green-500 opacity-60' : 'bg-slate-950 border-blue-600 shadow-lg'}`}
                         >
                             <div>
-                                <p className="text-sm text-white uppercase font-black">{ship.name}</p>
-                                <p className="text-[10px] text-slate-500 italic uppercase">{ship.task}</p>
+                                <p className="text-sm font-black uppercase">{ship.name}</p>
+                                <p className="text-[10px] text-slate-500 uppercase italic">IMO: {ship.imo}</p>
                             </div>
-                            <div className={`h-6 w-6 rounded-lg flex items-center justify-center ${ship.status === 'DONE' ? 'bg-green-500/20 text-green-500' : 'bg-slate-800 text-slate-600'}`}>
-                                {ship.status === 'DONE' ? '✓' : '...'}
-                            </div>
+                            <span className={`text-[9px] font-black px-3 py-1 rounded-lg ${ship.status === 'DONE' ? 'bg-green-500 text-black' : 'bg-blue-600/20 text-blue-400 border border-blue-600'}`}>
+                                {ship.status === 'DONE' ? 'DONE' : 'START'}
+                            </span>
                         </div>
                     ))}
                 </div>
-            )}
-
-            {selectedShip && (
-                <div className="animate-in fade-in duration-500">
-                    <div className="bg-blue-600/10 p-4 rounded-2xl border border-blue-600/30 mb-6 text-center">
-                        <p className="text-[10px] text-blue-400 uppercase">Inspecting Vessel</p>
-                        <h4 className="text-xl font-black text-white">{selectedShip.name}</h4>
+            ) : (
+                <div className="animate-in slide-in-from-right duration-400">
+                    <div className="bg-blue-600 p-4 rounded-2xl mb-6 shadow-xl relative overflow-hidden">
+                        <p className="text-[10px] text-blue-100 uppercase opacity-70">Active Inspection</p>
+                        <h4 className="text-xl font-black">{selectedShip.name}</h4>
+                        <div className="absolute right-[-10px] top-[-10px] text-6xl opacity-10">🚢</div>
                     </div>
 
-                    {/* Task Checklist */}
                     <div className="space-y-3 mb-8">
-                        {inspectionTasks.map(task => (
-                            <label key={task.id} className="flex items-center gap-4 bg-slate-950 p-4 rounded-xl border border-slate-800 active:bg-slate-800">
+                        {pd7090Tasks.map(task => (
+                            <label key={task.id} className="flex items-center gap-4 bg-slate-950 p-4 rounded-xl border border-slate-800 active:bg-slate-900 transition-colors">
                                 <input type="checkbox" className="w-6 h-6 rounded-md accent-blue-600" />
-                                <span className="text-xs uppercase text-slate-300">{task.label}</span>
+                                <div>
+                                    <span className="text-xs uppercase block">{task.label}</span>
+                                    {task.type === 'gas' && <span className="text-[8px] text-orange-500 uppercase font-black">Critical measurement</span>}
+                                </div>
                             </label>
                         ))}
                     </div>
 
                     {/* Smart Capture Area */}
-                    <button className="w-full bg-blue-600 h-24 rounded-3xl flex flex-col items-center justify-center shadow-2xl active:scale-95 transition-all">
-                        <span className="text-3xl mb-1">🔵</span>
-                        <span className="brand text-[9px] font-black uppercase tracking-widest">Smart Capture</span>
-                    </button>
-
-                    <button 
-                        onClick={() => setSelectedShip(null)}
-                        className="w-full mt-6 py-3 text-[9px] text-slate-500 uppercase underline"
-                    >
-                        Cancel & Return
-                    </button>
+                    <div className="grid grid-cols-1 gap-4">
+                        <button className="bg-blue-600 h-28 rounded-3xl flex flex-col items-center justify-center shadow-2xl active:scale-95">
+                            <span className="text-4xl mb-1">🔵</span>
+                            <span className="brand text-[10px] uppercase font-black tracking-tighter">Smart Capture [Evidence]</span>
+                        </button>
+                        
+                        <div className="flex gap-2">
+                            <button onClick={() => setSelectedShip(null)} className="flex-1 bg-slate-800 py-4 rounded-xl text-[9px] uppercase">Back</button>
+                            <button className="flex-1 bg-green-600 py-4 rounded-xl text-[9px] uppercase font-black">Complete Job</button>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

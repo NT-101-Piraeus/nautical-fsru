@@ -1,54 +1,67 @@
-window.M1_Safety = function({ view, setView, supabase }) {
-    const vessels = ["FELIX", "ARIADNI", "NAFTOCEMENT IV", "RIGEL III"]; // Από Repairs Watchlist [cite: 236-239]
+// NTG - M1 SHIPS' SAFETY OFFICER DASHBOARD (MVP)
+const M1_Dashboard = () => {
+  const [pin, setPin] = useState("");
+  const [isUnlocked, setIsUnlocked] = useState(false);
 
-    const startInspection = async (ship) => {
-        try {
-            const { error } = await supabase
-                .from('ntg_inspections')
-                .insert([{ vessel_name: ship, zone: 'Main Deck', inspector: 'M. SYKINIOTIS', status: 'OPEN' }]);
-            
-            if (error) throw error;
-            alert(`SUCCESS: Τεχνικό Audit ξεκίνησε για το ${ship}. Καταγράφηκε στη βάση!`);
-            setView('HOME');
-        } catch (err) {
-            alert('Cloud Sync Failure: Connection to Supabase lost.');
-        }
-    };
+  const checkPin = (value) => {
+    if (value === "0612") setIsUnlocked(true);
+  };
 
-    if (view === 'M1_SELECT_VESSEL') return (
-        <div className="space-y-6">
-            <h2 className="brand text-blue-400 text-xs italic tracking-widest uppercase font-black px-2 italic font-bold italic">Select Vessel for Audit</h2>
-            <div className="grid grid-cols-1 gap-3">
-                {vessels.map(ship => (
-                    <button key={ship} onClick={() => startInspection(ship)}
-                            className="w-full glass p-6 rounded-3xl text-left border-l-8 border-blue-600 font-black uppercase text-xs italic tracking-widest hover:bg-slate-900 transition-all">
-                        {ship}
-                    </button>
-                ))}
-            </div>
-            <button onClick={() => setView('M1')} className="w-full p-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">Back</button>
-        </div>
-    );
-
+  if (!isUnlocked) {
     return (
-        <div className="space-y-8 animate-in slide-in-from-right duration-300">
-            <div className="flex justify-between items-center px-2">
-                <h2 className="brand text-blue-400 text-xs tracking-widest uppercase italic font-black">M1 // Τ.Α. ΠΛΟΙΩΝ</h2>
-                <button onClick={() => setView('HOME')} className="text-[10px] font-black text-slate-500 uppercase italic">Exit</button>
-            </div>
-            
-            <button onClick={() => setView('M1_SELECT_VESSEL')} className="w-full glass p-10 rounded-[3rem] flex flex-col items-center gap-4 border-b-8 border-blue-600 active:scale-95 transition-all shadow-xl">
-                <i className="fa-solid fa-magnifying-glass-chart text-4xl text-blue-400"></i>
-                <span className="text-[11px] font-black uppercase tracking-[0.3em] brand text-white italic">Νέα Επιθεώρηση</span>
-            </button>
-
-            <div className="glass p-6 rounded-3xl border border-red-900/30">
-                <div className="flex items-center gap-3 mb-2">
-                    <i className="fa-solid fa-satellite-dish text-red-500 animate-pulse"></i>
-                    <p className="text-[9px] font-black text-red-500 uppercase tracking-widest">Hazard Radar: Active</p>
-                </div>
-                <p className="text-[8px] text-slate-500 uppercase font-bold italic leading-relaxed">System scanning for BLOCK entries in active sectors... [cite: 231]</p>
-            </div>
-        </div>
+      <div className="bg-slate-900 h-screen flex flex-col items-center justify-center p-10">
+        <h1 className="text-white mb-5 text-xl font-bold">SHIPS' SAFETY OFFICER</h1>
+        <input 
+          type="password" 
+          placeholder="ENTER PIN" 
+          className="text-center p-4 rounded-xl text-2xl w-full max-w-xs"
+          onChange={(e) => checkPin(e.target.value)}
+        />
+      </div>
     );
+  }
+
+  return (
+    <div className="bg-slate-800 min-h-screen p-4 text-white font-sans">
+      <header className="flex justify-between items-center mb-8 border-b border-slate-600 pb-4">
+        <h2 className="text-lg font-bold">NTG - M. SYKINIOTIS</h2>
+        <span className="bg-green-500 px-3 py-1 rounded-full text-xs">LIVE RADAR</span>
+      </header>
+
+      {/* HAZARD RADAR SECTION */}
+      <div className="grid grid-cols-3 gap-4 mb-8 text-center">
+        <div className="bg-slate-700 p-4 rounded-2xl border-b-4 border-green-500">
+          <p className="text-xs text-slate-400">O2</p>
+          <p className="text-xl font-mono">20.9%</p>
+        </div>
+        <div className="bg-slate-700 p-4 rounded-2xl border-b-4 border-green-500">
+          <p className="text-xs text-slate-400">LEL</p>
+          <p className="text-xl font-mono">0%</p>
+        </div>
+        <div className="bg-slate-700 p-4 rounded-2xl border-b-4 border-red-500">
+          <p className="text-xs text-slate-400">H2S</p>
+          <p className="text-xl font-mono">0.0</p>
+        </div>
+      </div>
+
+      {/* ACTION BUTTONS */}
+      <div className="grid grid-cols-1 gap-6">
+        <button className="bg-blue-600 h-40 rounded-3xl flex flex-col items-center justify-center shadow-2xl active:scale-95 transition-all">
+          <span className="text-5xl mb-2">🔵</span>
+          <span className="font-bold tracking-widest">SMART CAPTURE</span>
+        </button>
+        
+        <div className="grid grid-cols-2 gap-4">
+          <button className="bg-slate-700 p-6 rounded-2xl flex flex-col items-center">
+            <span>📝</span>
+            <span className="text-xs mt-2">CHECKLIST</span>
+          </button>
+          <button className="bg-slate-700 p-6 rounded-2xl flex flex-col items-center">
+            <span>⚓</span>
+            <span className="text-xs mt-2">VESSEL INFO</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 };

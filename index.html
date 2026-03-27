@@ -2,40 +2,35 @@
 <html lang="el">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NauticalOS v3</title>
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NauticalOS Launchpad</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');
-        body { background-color: #020617; color: white; margin: 0; }
-        .brand { font-family: 'Orbitron', sans-serif; }
+        body { background-color: #020617; color: white; font-family: 'Orbitron', sans-serif; font-style: italic; font-weight: bold; }
         .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
     </style>
 </head>
-<body>
-    <div id="root"></div>
-
-    <script type="text/babel">
-        window.supabaseClient = supabase.createClient('https://omdarjncczohpzfrqqhr.supabase.co', 'sb_publishable_V-nfUDy5MxEG4SlXkisFBg_GBlD_4Y9');
-    </script>
-
-    <script type="text/babel" src="divisions/M2_Safety.js"></script>
-    <script type="text/babel" src="divisions/M3_LoadTesting.js"></script>
-    <script type="text/babel" src="divisions/M4_Scout.js"></script>
-    <script type="text/babel" src="divisions/M5_Intel.js"></script>
-    <script type="text/babel" src="divisions/M6_CEO_Pulse.js"></script>
-    <script type="text/babel" src="divisions/M7_XGR.js"></script>
-    <script type="text/babel" src="divisions/M8_Academy.js"></script>
-    <script type="text/babel" src="divisions/M9_Operations.js"></script>
-    <script type="text/babel" src="divisions/M10_Architecture.js"></script>
-    <script type="text/babel" src="divisions/M12_StaffHub.js"></script>
-    <script type="text/babel" src="divisions/M13_Mykonos.js"></script>
+<body class="min-h-screen p-6 flex flex-col items-center">
+    <h1 class="text-xl text-blue-500 mb-10 tracking-widest">NTG COMMAND HUB</h1>
     
-    <script type="text/babel" src="main.js"></script>
+    <div class="grid grid-cols-2 gap-4 w-full max-w-sm">
+        <a href="m2_safety.html" class="glass p-6 rounded-[2rem] border-b-4 border-blue-600 flex flex-col items-center gap-3 active:scale-95 transition-all">
+            <i class="fa-solid fa-shield-halved text-2xl text-blue-500"></i>
+            <span class="text-[10px] uppercase">Safety Watch</span>
+        </a>
+
+        <a href="m3_loadtest.html" class="glass p-6 rounded-[2rem] border-b-4 border-orange-600 flex flex-col items-center gap-3 active:scale-95 transition-all">
+            <i class="fa-solid fa-weight-hanging text-2xl text-orange-500"></i>
+            <span class="text-[10px] uppercase">Load Testing</span>
+        </a>
+
+        <a href="m5_warroom.html" class="glass p-6 rounded-[2rem] border-b-4 border-red-600 flex flex-col items-center gap-3 active:scale-95 transition-all">
+            <i class="fa-solid fa-gavel text-2xl text-red-500"></i>
+            <span class="text-[10px] uppercase">War Room</span>
+        </a>
+        
+        </div>
 </body>
 </html>

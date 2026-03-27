@@ -3,31 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NTG Command Hub v2.0</title>
+    <title>NauticalOS v3 | Command Center</title>
+    
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');
+        body { background-color: #020617; overflow-x: hidden; color: white; }
         .brand { font-family: 'Orbitron', sans-serif; }
-        .glass { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(14px); }
+        .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); }
+        button:active { scale: 0.95; }
     </style>
 </head>
-<body class="bg-slate-950 text-white overflow-x-hidden">
+<body>
+
     <div id="root"></div>
 
-    <script type="text/babel" src="divisions/supabaseClient.js"></script>
+    <script type="text/babel">
+        // Χρησιμοποιούμε το Publishable Key (Όπως ζήτησε το GitHub Security)
+        const supabaseUrl = 'https://omdarjncczohpzfrqqhr.supabase.co';
+        const supabaseKey = 'sb_publishable_V-nfUDy5MxEG4SlXkisFBg_GBlD_4Y9'; 
+        window.supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+    </script>
+
     <script type="text/babel" src="divisions/M1_Safety.js"></script>
     <script type="text/babel" src="divisions/M10_LoadTesting.js"></script>
-    <script type="text/babel" src="divisions/M2_Repairs.js"></script>
-    <script type="text/babel" src="divisions/M3_Legal.js"></script>
-    <script type="text/babel" src="divisions/M5_Staff.js"></script>
-    <script type="text/babel" src="divisions/M6_CEO_Pulse.js"></script>
-    <script type="text/babel" src="divisions/M8_Mykonos.js"></script>
-
+    <script type="text/babel" src="divisions/M5_Intel.js"></script>
+    <script type="text/babel" src="divisions/M12_StaffHub.js"></script>
+    
     <script type="text/babel" src="main.js"></script>
+
 </body>
 </html>

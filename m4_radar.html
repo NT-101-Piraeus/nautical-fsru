@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>M4: Arrivals Radar</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');
+        body { background-color: #020617; color: white; font-family: 'Orbitron', sans-serif; font-style: italic; font-weight: bold; }
+        .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
+        .radar-scan { border-right: 2px solid rgba(34, 211, 238, 0.3); animation: scan 4s linear infinite; }
+        @keyframes scan { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState } = React;
+        const RadarApp = () => {
+            const arrivals = [
+                { ship: "NAFTOCEMENT IV", eta: "28/03 14:00", status: "ANCHORAGE", loc: "Samsun" },
+                { ship: "BADJI MOKHTAR III", eta: "29/03 08:00", status: "EN ROUTE", loc: "Piraeus" }
+            ];
+
+            return (
+                <div className="min-h-screen p-6 animate-fade">
+                    <div className="flex justify-between items-center mb-8">
+                        <a href="index.html" className="text-[10px] uppercase underline opacity-60 font-black text-cyan-400">← HUB</a>
+                        <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 bg-cyan-500 rounded-full animate-pulse"></div>
+                            <span className="text-[9px] text-cyan-400 font-black uppercase tracking-widest italic">AIS Live Feed</span>
+                        </div>
+                    </div>
+                    
+                    <div className="relative w-32 h-32 mx-auto mb-10 border-2 border-cyan-900/50 rounded-full flex items-center justify-center">
+                        <div className="absolute inset-0 radar-scan rounded-full"></div>
+                        <i className="fa-solid fa-tower-observation text-cyan-500 text-xl"></i>
+                    </div>
+
+                    <h1 className="brand text-cyan-400 text-lg uppercase mb-8 italic tracking-tighter text-center">M4: ARRIVALS RADAR</h1>
+                    
+                    <div className="space-y-4">
+                        <p className="text-[8px] text-slate-500 uppercase tracking-widest ml-2">Expected Vessels</p>
+                        {arrivals.map(v => (
+                            <div key={v.ship} className="glass p-5 rounded-[2rem] border-cyan-500/10">
+                                <div className="flex justify-between items-start">
+                                    <div>
+                                        <h3 className="text-[10px] font-black uppercase text-white">{v.ship}</h3>
+                                        <p className="text-[8px] text-slate-500 mt-1 uppercase italic font-black text-cyan-400">{v.loc}</p>
+                                    </div>
+                                    <span className="text-[7px] font-black text-cyan-400">{v.eta}</span>
+                                </div>
+                                <div className="mt-4 flex items-center gap-2">
+                                    <div className="h-1 flex-1 bg-slate-800 rounded-full overflow-hidden">
+                                        <div className="h-full bg-cyan-500 w-2/3"></div>
+                                    </div>
+                                    <span className="text-[7px] uppercase opacity-60 italic">{v.status}</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<RadarApp />);
+    </script>
+</body>
+</html>

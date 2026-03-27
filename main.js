@@ -30,6 +30,7 @@ const App = () => {
     ];
 
     const renderView = () => {
+        // Αυτό το αντικείμενο χαρτογραφεί τα IDs με τα window components
         const components = {
             M1: window.M1_UTM,
             M2: window.M2_Safety,
@@ -43,61 +44,4 @@ const App = () => {
             M10: window.M10_Architecture,
             M11: window.M11_Sensors,
             M12: window.M12_StaffHub,
-            M13: window.M13_Mykonos
-        };
-
-        const ActiveComp = components[view];
-        if (ActiveComp) return <ActiveComp userRole={role} />;
-        
-        return (
-            <div className="p-10 glass rounded-[2.5rem] text-center italic border border-slate-800 animate-fade">
-                <i className="fa-solid fa-microchip mb-4 text-2xl text-blue-500 animate-pulse"></i>
-                <p className="text-[10px] uppercase font-black">{view} : STATION INITIALIZING...</p>
-                <p className="text-[8px] text-slate-500 mt-2 uppercase font-bold italic">Checking GitHub Archive for {view}.js</p>
-            </div>
-        );
-    };
-
-    if (!isAuthenticated) return (
-        <div className="h-screen flex items-center justify-center p-6 bg-slate-950 font-bold italic">
-            <form onSubmit={handleLogin} className="glass p-10 rounded-[3.5rem] w-full max-w-sm text-center shadow-2xl border border-slate-800">
-                <h1 className="brand text-xl text-white mb-8 uppercase tracking-widest italic font-black">NTG COMMAND v3</h1>
-                <input type="password" value={pin} onChange={(e) => setPin(e.target.value)}
-                       className="w-full bg-slate-900 border border-slate-700 p-5 rounded-2xl text-center text-3xl mb-6 text-white outline-none focus:border-blue-500"
-                       placeholder="PIN" maxLength="4" autoFocus />
-                <button type="submit" className="w-full bg-blue-600 p-5 rounded-2xl brand uppercase text-white font-black active:scale-95 shadow-lg">Unlock</button>
-            </form>
-        </div>
-    );
-
-    return (
-        <div className="min-h-screen p-4 pb-28 max-w-lg mx-auto bg-slate-950 text-white font-bold italic">
-            {view === 'HOME' ? (
-                <div className="space-y-6 animate-fade">
-                    <div className="flex justify-between items-center px-4 pt-4">
-                        <p className="brand text-sm uppercase italic">M. SYKINIOTIS</p>
-                        <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_#10b981]"></div>
-                    </div>
-                    <div className="grid grid-cols-3 gap-2 px-1">
-                        {tiles.map(tile => (
-                            <button key={tile.id} onClick={() => setView(tile.id)} 
-                                    className={`glass p-3 h-28 rounded-[1.8rem] border-b-4 ${tile.color} flex flex-col items-center justify-center gap-2 active:scale-95 shadow-xl transition-all`}>
-                                <i className={`fa-solid ${tile.icon} text-lg opacity-80`}></i>
-                                <span className="text-[7px] font-black uppercase brand text-center leading-tight tracking-tighter">{tile.name}</span>
-                            </button>
-                        ))}
-                    </div>
-                </div>
-            ) : (
-                <div className="animate-fade h-full">
-                    <button onClick={() => setView('HOME')} className="mb-6 text-[10px] text-slate-500 uppercase underline italic font-black tracking-widest">← Back</button>
-                    {renderView()}
-                </div>
-            )}
-        </div>
-    );
-};
-
-const container = document.getElementById('root');
-const root = ReactDOM.createRoot(container);
-root.render(<App />);
+            M13: window.

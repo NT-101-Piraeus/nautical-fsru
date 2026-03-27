@@ -29,13 +29,13 @@ const App = () => {
 
     if (!isAuthenticated) {
         return (
-            <div className="h-screen flex items-center justify-center p-6 bg-slate-950 font-bold italic">
-                <form onSubmit={handleLogin} className="glass p-10 rounded-[3rem] w-full max-w-sm text-center">
-                    <h1 className="brand text-xl text-white mb-8 uppercase tracking-widest">NTG COMMAND v3</h1>
+            <div className="h-screen flex items-center justify-center p-6 bg-slate-950 font-bold italic text-white uppercase brand tracking-widest">
+                <form onSubmit={handleLogin} className="glass p-10 rounded-[3.5rem] w-full max-w-sm text-center">
+                    <h1 className="text-xl mb-8">NTG COMMAND v3</h1>
                     <input type="password" value={pin} onChange={(e) => setPin(e.target.value)}
-                           className="w-full bg-slate-900 border border-slate-700 p-5 rounded-2xl text-center text-3xl mb-6 text-white outline-none"
+                           className="w-full bg-slate-900 p-5 rounded-2xl text-center text-3xl mb-6 outline-none focus:border-blue-500"
                            placeholder="PIN" maxLength="4" autoFocus />
-                    <button type="submit" className="w-full bg-blue-600 p-5 rounded-2xl brand uppercase active:scale-95 italic">Unlock</button>
+                    <button type="submit" className="w-full bg-blue-600 p-5 rounded-2xl active:scale-95 transition-all shadow-lg">Unlock Core</button>
                 </form>
             </div>
         );
@@ -44,10 +44,10 @@ const App = () => {
     return (
         <div className="min-h-screen p-4 pb-28 max-w-lg mx-auto bg-slate-950 text-white font-bold italic">
             {view === 'HOME' ? (
-                <div className="space-y-6">
+                <div className="space-y-6 animate-fade">
                     <div className="flex justify-between items-center px-4 pt-4">
-                        <p className="brand text-sm uppercase italic">M. SYKINIOTIS</p>
-                        <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_#10b981]"></div>
+                        <p className="brand text-sm uppercase">M. SYKINIOTIS</p>
+                        <div className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse"></div>
                     </div>
                     <div className="grid grid-cols-3 gap-2 px-1">
                         {tiles.map(tile => (
@@ -60,7 +60,7 @@ const App = () => {
                 </div>
             ) : (
                 <div className="animate-fade h-full">
-                    <button onClick={() => setView('HOME')} className="mb-6 text-[10px] text-slate-500 uppercase underline italic font-black">← Back to Bridge</button>
+                    <button onClick={() => setView('HOME')} className="mb-6 text-[10px] text-slate-500 uppercase underline">← Back to Bridge</button>
                     {view === 'M1' && window.M1_UTM && <window.M1_UTM />}
                     {view === 'M2' && window.M2_Safety && <window.M2_Safety />}
                     {view === 'M3' && window.M3_LoadTesting && <window.M3_LoadTesting />}

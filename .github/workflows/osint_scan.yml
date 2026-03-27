@@ -1,17 +1,27 @@
 name: OSINT Panic Room Scan
 on:
   schedule:
-    - cron: '0 */12 * * *' # Τρέχει κάθε 12 ώρες αυτόματα
+    - cron: '0 */12 * * *' # Κάθε 12 ώρες (00:00 και 12:00)
+  workflow_dispatch: # Σου επιτρέπει να το τρέχεις και χειροκίνητα
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
           python-version: '3.9'
-      - name: Run Scraper
+
+      - name: Install Dependencies
         run: |
-          pip install requests beautifulsoup4 supabase
-          python scripts/panic_room.py
+          pip install requests supabase
+
+      - name: Run OSINT Script
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: python scripts/panic_room.py

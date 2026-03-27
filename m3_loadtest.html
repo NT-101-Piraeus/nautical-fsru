@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>M3: Load Testing Pro</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');
+        body { background-color: #020617; color: white; font-family: 'Orbitron', sans-serif; font-style: italic; font-weight: bold; }
+        .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState } = React;
+        const LoadTestApp = () => {
+            const [swl, setSwl] = useState('');
+            const proofLoad = swl ? (swl <= 20 ? swl * 1.25 : parseFloat(swl) + 5) : 0;
+
+            return (
+                <div className="min-h-screen p-6 animate-fade">
+                    <div className="flex justify-between items-center mb-8">
+                        <a href="index.html" className="text-[10px] uppercase underline opacity-60 font-black">← HUB</a>
+                        <span className="text-[10px] text-orange-500 font-black uppercase">ILO 152 Standard</span>
+                    </div>
+                    
+                    <h1 className="brand text-orange-500 text-lg uppercase mb-8 italic">M3: LOAD TESTING</h1>
+                    
+                    <div className="glass p-6 rounded-[2.5rem] border-orange-500/20 mb-6">
+                        <p className="text-[9px] uppercase text-slate-500 mb-4 tracking-widest">Calculations Engine</p>
+                        <div className="space-y-4">
+                            <div>
+                                <label className="text-[10px] uppercase block mb-2 opacity-70">Safe Working Load (SWL) - Tons</label>
+                                <input type="number" value={swl} onChange={(e)=>setSwl(e.target.value)}
+                                       className="w-full bg-black/50 p-5 rounded-2xl border border-slate-800 text-2xl text-orange-500 outline-none" placeholder="0.00" />
+                            </div>
+                            <div className="bg-orange-500/10 p-5 rounded-2xl border border-orange-500/30">
+                                <p className="text-[8px] uppercase text-orange-500 mb-1">Required Proof Load</p>
+                                <p className="text-3xl font-black">{proofLoad.toFixed(2)} <span className="text-sm">Tons</span></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button className="w-full bg-orange-600 p-5 rounded-3xl text-[11px] uppercase font-black shadow-lg active:scale-95 transition-all italic border-b-4 border-orange-900">
+                        Generate PDF Certificate 📄
+                    </button>
+                </div>
+            );
+        };
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<LoadTestApp />);
+    </script>
+</body>
+</html>

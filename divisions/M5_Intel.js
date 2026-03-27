@@ -1,62 +1,57 @@
 const { useState, useEffect } = React;
 
-const M5_Intel = ({ setView }) => {
-    const [logs, setLogs] = useState([]);
-    const [loading, setLoading] = useState(true);
-
-    const fetchIntel = async () => {
-        setLoading(true);
-        const { data, error } = await window.supabaseClient
-            .from('intel_logs')
-            .select('*')
-            .order('created_at', { ascending: false })
-            .limit(10);
-        
-        if (!error) setLogs(data);
-        setLoading(false);
-    };
-
-    useEffect(() => { fetchIntel(); }, []);
+const M5_Intel = () => {
+    const [alerts, setAlerts] = useState([
+        { id: 1, target: "Emir Öztürk", status: "MONITORING", lastChange: "None", severity: "LOW", source: "KRS Poland" },
+        { id: 2, target: "Alasund (Iceland)", status: "ALERT", lastChange: "Possible 404 detected", severity: "HIGH", source: "Website Scraper" },
+        { id: 3, target: "S.V. NIKOLAY", status: "GEOFENCE LIVE", lastChange: "At Samsun Port", severity: "CRITICAL", source: "MarineTraffic API" }
+    ]);
 
     return (
-        <div className="p-4 bg-slate-900 rounded-[2.5rem] border border-slate-800 shadow-2xl min-h-[500px] font-bold italic">
-            <h2 className="brand text-red-500 text-lg mb-6 border-b border-slate-700 pb-2 uppercase text-center italic font-bold tracking-tighter">M5: INTEL WAR ROOM</h2>
+        <div className="p-4 bg-slate-900 rounded-[2.5rem] border border-slate-800 shadow-2xl min-h-[600px] font-bold italic text-white animate-fade">
+            <h2 className="brand text-red-500 text-lg mb-6 border-b border-red-900/30 pb-2 uppercase text-center italic tracking-widest">
+                M5: WAR ROOM (OSINT)
+            </h2>
 
-            <div className="grid grid-cols-3 gap-2 mb-8">
-                {["ZORLU", "ÖZTÜRK", "KARACA"].map(target => (
-                    <div key={target} className="bg-slate-950 p-3 rounded-xl border border-red-900/30 text-center shadow-lg">
-                        <p className="text-[8px] text-red-500 font-black uppercase tracking-widest">{target}</p>
-                        <div className="h-1 w-full bg-red-900/20 mt-2 rounded-full overflow-hidden">
-                            <div className="h-full bg-red-600 w-1/2 animate-pulse"></div>
+            <div className="space-y-4">
+                {alerts.map(alert => (
+                    <div key={alert.id} className="bg-black/40 p-5 rounded-3xl border border-slate-800 relative overflow-hidden group">
+                        {alert.severity === 'CRITICAL' && <div className="absolute top-0 left-0 w-1 h-full bg-red-600 animate-pulse"></div>}
+                        
+                        <div className="flex justify-between items-start mb-3">
+                            <div>
+                                <p className="text-[10px] text-slate-500 uppercase font-black tracking-tighter italic">Target Entity</p>
+                                <h3 className="text-sm uppercase font-black text-white italic">{alert.target}</h3>
+                            </div>
+                            <span className={`text-[8px] px-2 py-1 rounded-full border ${alert.severity === 'CRITICAL' ? 'bg-red-900/20 border-red-600 text-red-500' : 'bg-slate-800 border-slate-700 text-slate-400'}`}>
+                                {alert.severity} PRIORITY
+                            </span>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4 mt-4">
+                            <div className="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                                <p className="text-[7px] text-slate-500 uppercase">Status</p>
+                                <p className={`text-[9px] font-black ${alert.status === 'ALERT' ? 'text-orange-500' : 'text-emerald-500'}`}>{alert.status}</p>
+                            </div>
+                            <div className="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                                <p className="text-[7px] text-slate-500 uppercase">Last Sync</p>
+                                <p className="text-[9px] text-slate-300">12h ago</p>
+                            </div>
+                        </div>
+
+                        <div className="mt-4 p-3 bg-red-600/5 border border-red-500/10 rounded-xl">
+                            <p className="text-[8px] text-slate-400 italic font-medium tracking-tight">
+                                <i className="fa-solid fa-bolt text-red-500 mr-2"></i>
+                                Source: {alert.source} | Querying Polish KRS & Google Dorks...
+                            </p>
                         </div>
                     </div>
                 ))}
             </div>
 
-            <div className="space-y-4">
-                <div className="flex justify-between items-center px-1">
-                    <h3 className="text-[10px] text-slate-500 uppercase font-black tracking-widest italic">Live OSINT Feed</h3>
-                    <button onClick={fetchIntel} className="text-[8px] text-blue-400 uppercase underline italic">Refresh Scan</button>
-                </div>
-                
-                {loading ? (
-                    <div className="text-center p-10 text-[10px] uppercase animate-pulse italic">Connecting to Naftotrade Intel Database...</div>
-                ) : logs.length > 0 ? (
-                    logs.map((log, index) => (
-                        <div key={index} className="bg-black/50 p-4 rounded-2xl border border-slate-800 border-l-4 border-l-red-600 shadow-md animate-in fade-in duration-300">
-                            <p className="text-[11px] text-white uppercase leading-tight mb-2 italic font-bold">{log.title}</p>
-                            <div className="flex justify-between items-center">
-                                <span className="text-[7px] text-slate-500 uppercase">{new Date(log.created_at).toLocaleDateString()}</span>
-                                <a href={log.link} target="_blank" className="text-[8px] text-red-500 font-bold uppercase underline italic">Report Source</a>
-                            </div>
-                        </div>
-                    ))
-                ) : (
-                    <div className="bg-slate-950 p-6 rounded-2xl border border-dashed border-slate-800 text-center italic">
-                        <p className="text-[10px] text-slate-600 uppercase">No confirmed alerts for Zorlu/Öztürk in the last cycle.</p>
-                    </div>
-                )}
-            </div>
+            <button className="w-full mt-8 bg-red-600 p-5 rounded-3xl brand text-white uppercase text-[11px] shadow-lg active:scale-95 transition-all font-black italic tracking-widest border-b-4 border-red-900">
+                Trigger Manual Global Scan 📡
+            </button>
         </div>
     );
 };

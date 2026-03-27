@@ -2,35 +2,65 @@
 <html lang="el">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NauticalOS Launchpad</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NauticalOS Master Hub</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');
-        body { background-color: #020617; color: white; font-family: 'Orbitron', sans-serif; font-style: italic; font-weight: bold; }
+        body { background-color: #020617; color: white; margin: 0; font-family: 'Orbitron', sans-serif; font-style: italic; font-weight: bold; }
         .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
+        .brand { letter-spacing: 0.1em; }
     </style>
 </head>
-<body class="min-h-screen p-6 flex flex-col items-center">
-    <h1 class="text-xl text-blue-500 mb-10 tracking-widest">NTG COMMAND HUB</h1>
-    
-    <div class="grid grid-cols-2 gap-4 w-full max-w-sm">
-        <a href="m2_safety.html" class="glass p-6 rounded-[2rem] border-b-4 border-blue-600 flex flex-col items-center gap-3 active:scale-95 transition-all">
-            <i class="fa-solid fa-shield-halved text-2xl text-blue-500"></i>
-            <span class="text-[10px] uppercase">Safety Watch</span>
-        </a>
+<body>
+    <div id="root"></div>
 
-        <a href="m3_loadtest.html" class="glass p-6 rounded-[2rem] border-b-4 border-orange-600 flex flex-col items-center gap-3 active:scale-95 transition-all">
-            <i class="fa-solid fa-weight-hanging text-2xl text-orange-500"></i>
-            <span class="text-[10px] uppercase">Load Testing</span>
-        </a>
+    <script type="text/babel">
+        const { useState, useEffect } = React;
 
-        <a href="m5_warroom.html" class="glass p-6 rounded-[2rem] border-b-4 border-red-600 flex flex-col items-center gap-3 active:scale-95 transition-all">
-            <i class="fa-solid fa-gavel text-2xl text-red-500"></i>
-            <span class="text-[10px] uppercase">War Room</span>
-        </a>
-        
-        </div>
-</body>
-</html>
+        const MasterHub = () => {
+            const [isAuth, setIsAuth] = useState(false);
+            const [role, setRole] = useState('');
+            const [pin, setPin] = useState('');
+
+            // Έλεγχος αν υπάρχει ήδη ενεργό session (Shared Login)
+            useEffect(() => {
+                const savedRole = localStorage.getItem('ntg_role');
+                if (savedRole) {
+                    setRole(savedRole);
+                    setIsAuth(true);
+                }
+            }, []);
+
+            const handleLogin = (e) => {
+                e.preventDefault();
+                let userRole = '';
+                if (pin === '1234') userRole = 'DIRECTOR';
+                else if (pin === '0612') userRole = 'WORKER';
+                
+                if (userRole) {
+                    localStorage.setItem('ntg_role', userRole);
+                    setRole(userRole);
+                    setIsAuth(true);
+                } else {
+                    alert("ACCESS DENIED");
+                    setPin('');
+                }
+            };
+
+            const logout = () => {
+                localStorage.removeItem('ntg_role');
+                setIsAuth(false);
+                setPin('');
+            };
+
+            const apps = [
+                { id: 'terme', name: 'TERME INTEL', icon: 'fa-gavel', color: 'border-red-600', link: 'm5_terme.html', directorOnly: true },
+                { id: 'airbnb', name: 'AIRBNB MYK', icon: 'fa-house-chimney', color: 'border-blue-300', link: 'm13_mykonos.html', directorOnly: true },
+                { id: 'startup', name: 'XGR STARTUP', icon: 'fa-rocket', color: 'border-yellow-500', link: 'm7_startup.html', directorOnly: true },
+                { id: 'utm', name: 'UTM GAUGING', icon: 'fa-layer-group', color: 'border-slate-500', link: 'm1_utm.html', directorOnly: false },
+                { id: 'safety', name: 'SAFETY WATCH', icon: 'fa-shield-halved', color: 'border-blue-600', link: 'm2_safety.html', director

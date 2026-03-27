@@ -9,23 +9,17 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');
-        body { background-color: #020617; color: white; margin: 0; padding: 0; }
+        body { background-color: #020617; color: white; user-select: none; margin: 0; }
         .brand { font-family: 'Orbitron', sans-serif; }
+        .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
     </style>
 </head>
 <body>
     <div id="root"></div>
-
-    <script type="text/babel">
-        // Initialize Supabase correctly
-        try {
-            window.supabaseClient = supabase.createClient('https://omdarjncczohpzfrqqhr.supabase.co', 'sb_publishable_V-nfUDy5MxEG4SlXkisFBg_GBlD_4Y9');
-        } catch(e) { console.error("Supabase Load Error", e); }
-    </script>
-
     <script type="text/babel" src="divisions/M1_UTM.js"></script>
     <script type="text/babel" src="divisions/M2_Safety.js"></script>
     <script type="text/babel" src="divisions/M3_LoadTesting.js"></script>
@@ -39,7 +33,6 @@
     <script type="text/babel" src="divisions/M11_Sensors.js"></script>
     <script type="text/babel" src="divisions/M12_StaffHub.js"></script>
     <script type="text/babel" src="divisions/M13_Mykonos.js"></script>
-    
     <script type="text/babel" src="main.js"></script>
 </body>
 </html>

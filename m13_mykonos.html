@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>M13: Mykonos Estate Hub</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');
+        body { background-color: #020617; color: white; font-family: 'Orbitron', sans-serif; font-style: italic; font-weight: bold; }
+        .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState } = React;
+        const MykonosApp = () => {
+            return (
+                <div className="min-h-screen p-6 animate-fade bg-slate-950">
+                    <div className="flex justify-between items-center mb-8">
+                        <a href="index.html" className="text-[10px] uppercase underline opacity-60 font-black text-blue-300">← HUB</a>
+                        <span className="text-[10px] text-blue-300 font-black uppercase tracking-widest">Premium Properties</span>
+                    </div>
+                    
+                    <h1 className="brand text-blue-300 text-lg uppercase mb-8 italic tracking-tighter">M13: LIVE IN MYKONOS</h1>
+                    
+                    <div className="space-y-4">
+                        <div className="glass p-6 rounded-[2.5rem] border-blue-400/20">
+                            <div className="flex justify-between items-start mb-4">
+                                <div>
+                                    <h3 className="text-xs font-black uppercase text-white">PROPERTY ALPHA</h3>
+                                    <p className="text-[8px] text-slate-500 mt-1 uppercase font-black tracking-widest italic text-blue-400">AMA: 00001068999</p>
+                                </div>
+                                <i className="fa-solid fa-house-circle-check text-blue-400"></i>
+                            </div>
+                            <div className="flex gap-2">
+                                <span className="text-[8px] bg-emerald-900/30 text-emerald-400 px-3 py-1 rounded-full uppercase italic font-black">Booked</span>
+                                <span className="text-[8px] bg-blue-900/30 text-blue-300 px-3 py-1 rounded-full uppercase italic font-black">Superhost</span>
+                            </div>
+                        </div>
+
+                        <div className="glass p-6 rounded-[2.5rem] border-blue-400/20 opacity-90">
+                            <div className="flex justify-between items-start mb-4">
+                                <div>
+                                    <h3 className="text-xs font-black uppercase text-white">PROPERTY BETA</h3>
+                                    <p className="text-[8px] text-slate-500 mt-1 uppercase font-black tracking-widest italic text-blue-400">AMA: 00001918880</p>
+                                </div>
+                                <i className="fa-solid fa-key text-blue-400/50"></i>
+                            </div>
+                            <div className="flex gap-2">
+                                <span className="text-[8px] bg-slate-800 text-slate-400 px-3 py-1 rounded-full uppercase italic font-black">Available</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="mt-8 p-6 glass rounded-3xl border border-blue-500/10 flex justify-between items-center">
+                        <span className="text-[10px] uppercase font-black italic text-slate-400 tracking-widest">Total Monthly Revenue</span>
+                        <span className="text-xl font-black text-blue-300">-- €</span>
+                    </div>
+                </div>
+            );
+        };
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<MykonosApp />);
+    </script>
+</body>
+</html>

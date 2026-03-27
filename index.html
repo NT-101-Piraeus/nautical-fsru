@@ -3,27 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NauticalOS v3 | Command Center</title>
+    <title>NauticalOS v3</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');
+        body { background-color: #020617; color: white; user-select: none; }
+        .brand { font-family: 'Orbitron', sans-serif; }
+        .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
+    </style>
 </head>
-<body class="bg-slate-950 text-white">
+<body>
     <div id="root"></div>
     <script type="text/babel">
-        const supabaseUrl = 'https://omdarjncczohpzfrqqhr.supabase.co';
-        const supabaseKey = 'sb_publishable_V-nfUDy5MxEG4SlXkisFBg_GBlD_4Y9'; 
-        window.supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+        window.supabaseClient = supabase.createClient('https://omdarjncczohpzfrqqhr.supabase.co', 'sb_publishable_V-nfUDy5MxEG4SlXkisFBg_GBlD_4Y9');
     </script>
-    <script type="text/babel" src="divisions/M1_Safety.js"></script>
-    <script type="text/babel" src="divisions/M10_LoadTesting.js"></script>
-    <script type="text/babel" src="divisions/M5_Intel.js"></script>
-    <script type="text/babel" src="divisions/M12_StaffHub.js"></script>
+
+    <script type="text/babel" src="divisions/M1_UTM.js"></script>
+    <script type="text/babel" src="divisions/M2_Safety.js"></script>
+    <script type="text/babel" src="divisions/M3_LoadTesting.js"></script>
     <script type="text/babel" src="divisions/M4_Scout.js"></script>
+    <script type="text/babel" src="divisions/M5_Intel.js"></script>
+    <script type="text/babel" src="divisions/M6_CeoPulse.js"></script>
+    <script type="text/babel" src="divisions/M7_Xgr.js"></script>
+    <script type="text/babel" src="divisions/M8_Academy.js"></script>
     <script type="text/babel" src="divisions/M9_Operations.js"></script>
+    <script type="text/babel" src="divisions/M10_Architecture.js"></script>
+    <script type="text/babel" src="divisions/M11_Sensors.js"></script>
+    <script type="text/babel" src="divisions/M12_StaffHub.js"></script>
+    <script type="text/babel" src="divisions/M13_Mykonos.js"></script>
+    
     <script type="text/babel" src="main.js"></script>
 </body>
 </html>

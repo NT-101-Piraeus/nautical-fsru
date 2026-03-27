@@ -1,200 +1,155 @@
-const { useState, useEffect, useRef } = React;
+const { useState, useEffect } = React;
 
-const M1_Dashboard = ({ setView }) => {
-    const [viewState, setViewState] = useState('LIST'); // LIST, INSPECTION, SIGNATURE
-    const [selectedShip, setSelectedShip] = useState(null);
-    const [timer, setTimer] = useState(0);
-    const [isTimerActive, setIsTimerActive] = useState(false);
-    const [selectedZone, setSelectedZone] = useState('');
-    const [ppeAlert, setPpeAlert] = useState('');
-    const canvasRef = useRef(null);
+const M1_Safety = ({ setView }) => {
+    const [inspections, setInspections] = useState([
+        { id: 1, vessel: "MT NAVIGATOR", type: "Annual", status: "PENDING", duration: "4h", location: "Deck" },
+        { id: 2, vessel: "LNG AVALON", type: "FSRU Special", status: "PENDING", duration: "6h", location: "Pump Room" }
+    ]);
+    
+    const [activeJob, setActiveJob] = useState(null);
+    const [photos, setPhotos] = useState([]);
+    const [checklist, setChecklist] = useState({
+        gasFree: false, ventilation: false, lifting: false, escape: false,
+        loto: false, ppe: false, hotWorks: false, height: false,
+        o2: "", lel: ""
+    });
 
-    // 1. Επίσημη Watchlist ΣΕΠΕ (Μάρτιος-Απρίλιος 2026)
-    const shipWatchlist = [
-        { id: 'f1', name: 'FELIX', imo: '9464182', zone: 'Δραπετσώνα', duration: '4h' },
-        { id: 'a1', name: 'ARIADNI', imo: '9135262', zone: 'Πέραμα', duration: '6h' },
-        { id: 'r1', name: 'RIGEL III', imo: '7807744', zone: 'Πέραμα', duration: '2h' },
-        { id: 'n1', name: 'NAFTOCEMENT IV', imo: '9123456', zone: 'Ελευσίνα', duration: '3h' }
-    ];
-
-    // 2. Ζώνες & PPE Alerts
-    const zones = [
-        { id: 'z1', label: 'Engine Room', alert: '' },
-        { id: 'z2', label: 'Main Deck', alert: '' },
-        { id: 'z3', label: 'Pump Room', alert: '🚨 ΠΡΟΣΟΧΗ: Απαιτείται Gas-Free Cert & Αντιεκρηκτικός Φανός.' },
-        { id: 'z4', label: 'Tanks (Cargo/Ballast)', alert: '🚨 ΚΡΙΣΙΜΟ: Έλεγχος O2 (19.5%-22.5%) & Gas-Free.' },
-        { id: 'z5', label: 'Chimney', alert: '🚨 ΥΨΟΣ: Απαιτείται ζώνη ασφαλείας (Full Body Harness).' },
-        { id: 'z6', label: 'Garage (Ro-Ro)', alert: '🚨 ΣΤΑΤΙΚΟΣ: Έλεγχος εξαερισμού & γειώσεων.' }
-    ];
-
-    // Timer Logic
-    useEffect(() => {
-        let interval = null;
-        if (isTimerActive) {
-            interval = setInterval(() => {
-                setTimer((prev) => prev + 1);
-            }, 1000);
-        } else {
-            clearInterval(interval);
+    // 1. SMART LOGIC: Auto-Tick Gas-Free & FSRU Logic
+    const updateChecklist = (field, value) => {
+        let newChecklist = { ...checklist, [field]: value };
+        
+        // Auto-tick Gas-Free for Tanks/Pump Room
+        if (field === 'location' && (value === 'Tanks' || value === 'Pump Room')) {
+            newChecklist.gasFree = true;
         }
-        return () => clearInterval(interval);
-    }, [isTimerActive]);
-
-    const formatTime = (seconds) => {
-        const hrs = Math.floor(seconds / 3600);
-        const mins = Math.floor((seconds % 3600) / 60);
-        const secs = seconds % 60;
-        return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        setChecklist(newChecklist);
     };
 
-    const startInspection = (ship) => {
-        setSelectedShip(ship);
-        setIsTimerActive(true);
-        setViewState('INSPECTION');
+    // 2. WATERMARK & CAPTURE LOGIC
+    const handleCapture = () => {
+        const timestamp = new Date().toLocaleString('el-GR');
+        // Προσομοίωση λήψης με Watermark
+        const newPhoto = {
+            id: Date.now(),
+            url: "https://via.placeholder.com/300x200?text=Inspection+Evidence",
+            time: timestamp
+        };
+        setPhotos([...photos, newPhoto]);
+        alert(`Photo Captured with Watermark: ${timestamp}`);
     };
 
-    // Signature Logic
-    const clearSignature = () => {
-        const canvas = canvasRef.current;
-        const ctx = canvas.getContext('2d');
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // 3. COMPLETE INSPECTION
+    const completeInspection = (id) => {
+        setInspections(inspections.map(job => 
+            job.id === id ? { ...job, status: "COMPLETED", duration: `COMPLETED: ${new Date().toLocaleTimeString()}` } : job
+        ));
+        setActiveJob(null);
+        setPhotos([]);
+        setChecklist({ gasFree: false, ventilation: false, o2: "", lel: "" });
     };
 
-    return (
-        <div className="p-4 bg-slate-950 rounded-[2.5rem] border border-slate-800 shadow-2xl min-h-[650px] font-bold italic text-white overflow-hidden">
-            
-            {/* Header με Timer */}
-            <header className="flex justify-between items-center mb-6 border-b border-slate-800 pb-4">
-                <div className="brand text-blue-400">
-                    <h2 className="text-lg leading-tight uppercase">M1 / Safety Officer</h2>
-                    <p className="text-[8px] text-slate-500 tracking-[0.2em]">OPERATOR: M. SYKINIOTIS</p>
+    if (activeJob) {
+        return (
+            <div className="p-4 bg-slate-900 rounded-[2.5rem] border border-slate-800 animate-fade font-bold italic">
+                <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-blue-400 text-xs uppercase brand">Active Inspection: {activeJob.vessel}</h2>
+                    <button onClick={() => setActiveJob(null)} className="text-[10px] text-slate-500 underline">Cancel</button>
                 </div>
-                {isTimerActive && (
-                    <div className="bg-red-500/10 px-3 py-1 rounded-full border border-red-500/50 flex items-center gap-2">
-                        <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-                        <span className="text-xs font-mono text-red-500">{formatTime(timer)}</span>
-                    </div>
-                )}
-            </header>
 
-            {viewState === 'LIST' && (
-                <div className="space-y-4 animate-in fade-in duration-500">
-                    <h3 className="text-[10px] text-blue-500 uppercase tracking-widest px-2 italic">ΣΕΠΕ Watchlist (Active Appointments)</h3>
-                    {shipWatchlist.map(ship => (
-                        <div key={ship.id} onClick={() => startInspection(ship)} className="bg-slate-900 p-5 rounded-3xl border border-slate-800 flex justify-between items-center active:scale-95 transition-all shadow-lg">
-                            <div>
-                                <p className="text-sm font-black text-white">{ship.name}</p>
-                                <p className="text-[9px] text-slate-500">IMO: {ship.imo} | {ship.zone}</p>
-                            </div>
-                            <div className="text-right">
-                                <p className="text-[9px] text-blue-500 uppercase">Duration</p>
-                                <p className="text-xs">{ship.duration}</p>
-                            </div>
-                        </div>
+                {/* CHECKLIST SECTION */}
+                <div className="grid grid-cols-1 gap-3 mb-6">
+                    {[
+                        { id: 'gasFree', label: 'Gas-Free / Atmosphere' },
+                        { id: 'ventilation', label: 'Ventilation OK' },
+                        { id: 'lifting', label: 'Lifting Ops / Equipment' },
+                        { id: 'escape', label: 'Escape Routes Clear' },
+                        { id: 'loto', label: 'Electrical / LOTO' },
+                        { id: 'ppe', label: 'PPE / Μ.Α.Π. Check' },
+                        { id: 'hotWorks', label: 'Hot Works Permit' },
+                        { id: 'height', label: 'Working at Height' }
+                    ].map(item => (
+                        <label key={item.id} className="flex items-center gap-3 bg-black/30 p-4 rounded-2xl border border-slate-800">
+                            <input 
+                                type="checkbox" 
+                                checked={checklist[item.id]} 
+                                onChange={(e) => updateChecklist(item.id, e.target.checked)}
+                                className="w-5 h-5 rounded border-slate-700 bg-slate-900 text-blue-600"
+                            />
+                            <span className="text-[10px] uppercase text-slate-300">{item.label}</span>
+                        </label>
                     ))}
                 </div>
-            )}
 
-            {viewState === 'INSPECTION' && (
-                <div className="animate-in slide-in-from-right duration-300">
-                    <div className="bg-blue-600 p-5 rounded-3xl mb-6 shadow-2xl">
-                        <h4 className="text-xl font-black">{selectedShip.name}</h4>
-                        <p className="text-[10px] opacity-80 uppercase tracking-widest">IMO: {selectedShip.imo}</p>
-                    </div>
-
-                    <div className="space-y-6">
-                        {/* Zone Selection */}
+                {/* 4. LNG / FSRU EXCEPTION INPUTS */}
+                {activeJob.type.includes("FSRU") && (
+                    <div className="grid grid-cols-2 gap-3 mb-6 p-4 bg-blue-900/10 border border-blue-500/30 rounded-2xl">
                         <div>
-                            <label className="text-[10px] text-slate-500 uppercase mb-2 block italic">Επιλογή Χώρου Επιθεώρησης</label>
-                            <select 
-                                className="w-full bg-slate-900 border border-slate-700 p-4 rounded-2xl text-xs outline-none focus:border-blue-500"
-                                onChange={(e) => {
-                                    const zone = zones.find(z => z.label === e.target.value);
-                                    setSelectedZone(e.target.value);
-                                    setPpeAlert(zone.alert);
-                                }}
-                            >
-                                <option value="">-- ΕΠΙΛΕΞΤΕ ΧΩΡΟ --</option>
-                                {zones.map(z => <option key={z.id} value={z.label}>{z.label}</option>)}
-                            </select>
+                            <label className="text-[8px] text-blue-400 uppercase">O2 Concentration %</label>
+                            <input type="number" placeholder="20.9" className="w-full bg-slate-950 p-3 rounded-xl border border-slate-700 text-white text-xs mt-1 outline-none" />
                         </div>
+                        <div>
+                            <label className="text-[8px] text-blue-400 uppercase">LEL %</label>
+                            <input type="number" placeholder="0.0" className="w-full bg-slate-950 p-3 rounded-xl border border-slate-700 text-white text-xs mt-1 outline-none" />
+                        </div>
+                    </div>
+                )}
 
-                        {/* PPE ALERT POPUP */}
-                        {ppeAlert && (
-                            <div className="bg-orange-500/20 border border-orange-500 p-4 rounded-2xl animate-bounce">
-                                <p className="text-[10px] text-orange-500 font-black leading-tight uppercase">{ppeAlert}</p>
+                {/* SMART CAPTURE BUTTON */}
+                <button 
+                    onClick={handleCapture}
+                    className="w-full bg-slate-800 border border-slate-700 p-5 rounded-2xl flex items-center justify-center gap-3 mb-6 active:scale-95">
+                    <i className="fa-solid fa-camera text-blue-500"></i>
+                    <span className="text-[10px] uppercase">Smart Capture (Watermarked)</span>
+                    {photos.length > 0 && <span className="bg-blue-600 text-[8px] px-2 py-1 rounded-full">{photos.length}</span>}
+                </button>
+
+                {/* HARD STOP: DISABLED IF NO PHOTOS */}
+                <button 
+                    disabled={photos.length === 0}
+                    onClick={() => completeInspection(activeJob.id)}
+                    className={`w-full p-5 rounded-3xl brand text-[11px] uppercase tracking-widest transition-all ${photos.length > 0 ? 'bg-emerald-600 text-white shadow-lg' : 'bg-slate-800 text-slate-600 grayscale cursor-not-allowed'}`}>
+                    <i className="fa-solid fa-signature mr-2"></i>
+                    Proceed to Signature
+                </button>
+                {photos.length === 0 && <p className="text-[7px] text-red-500 text-center mt-2 uppercase font-black">Evidence required to unlock signature</p>}
+            </div>
+        );
+    }
+
+    return (
+        <div className="p-4 bg-slate-900 rounded-[2.5rem] border border-slate-800 shadow-2xl min-h-[550px] font-bold italic animate-fade">
+            <h2 className="brand text-blue-400 text-lg mb-6 border-b border-slate-700 pb-2 uppercase text-center italic tracking-tighter">
+                M2: SAFETY WATCHLIST
+            </h2>
+
+            <div className="space-y-4">
+                {inspections.map(job => (
+                    <div 
+                        key={job.id} 
+                        onClick={() => job.status === 'PENDING' && setActiveJob(job)}
+                        className={`p-5 rounded-[2rem] border transition-all ${job.status === 'COMPLETED' ? 'bg-slate-950 opacity-60 border-slate-800' : 'bg-black/40 border-slate-800 active:scale-95 shadow-lg'}`}>
+                        <div className="flex justify-between items-start">
+                            <div>
+                                <div className="flex items-center gap-2">
+                                    <p className="text-[11px] text-white uppercase font-black">{job.vessel}</p>
+                                    {job.status === 'COMPLETED' && <i className="fa-solid fa-circle-check text-emerald-500 text-[10px]"></i>}
+                                </div>
+                                <p className="text-[8px] text-slate-500 uppercase">{job.type} • {job.location}</p>
                             </div>
-                        )}
-
-                        {/* PD 70/90 Checkbox List */}
-                        <div className="space-y-2">
-                             <label className="flex items-center gap-4 bg-slate-900 p-4 rounded-2xl border border-slate-800">
-                                <input type="checkbox" className="w-6 h-6 rounded-lg accent-blue-600" />
-                                <span className="text-[10px] uppercase">Θερμές Εργασίες (Hot Works)</span>
-                             </label>
-                             <label className="flex items-center gap-4 bg-slate-900 p-4 rounded-2xl border border-slate-800">
-                                <input type="checkbox" className="w-6 h-6 rounded-lg accent-blue-600" />
-                                <span className="text-[10px] uppercase">Εργασία σε Ύψος (Height)</span>
-                             </label>
-                             <div className="flex gap-2">
-                                <input type="text" placeholder="ΑΛΛΟ (CUSTOM WORK TYPE)" className="flex-1 bg-slate-900 border border-slate-800 p-4 rounded-2xl text-[10px] uppercase" />
-                             </div>
+                            <div className="text-right">
+                                <span className={`text-[7px] font-black uppercase ${job.status === 'COMPLETED' ? 'text-emerald-500' : 'text-blue-500'}`}>
+                                    {job.duration}
+                                </span>
+                            </div>
                         </div>
-
-                        {/* Smart Capture Area */}
-                        <button className="w-full bg-blue-600 h-28 rounded-[2rem] flex flex-col items-center justify-center shadow-xl active:scale-95 transition-all">
-                            <span className="text-4xl mb-1">🔵</span>
-                            <span className="brand text-[9px] uppercase tracking-widest font-black">Smart Capture [Evidence]</span>
-                        </button>
-
-                        <button onClick={() => setViewState('SIGNATURE')} className="w-full bg-emerald-600 py-5 rounded-2xl font-black brand text-[10px] uppercase tracking-widest">
-                            Proceed to Signature ✍️
-                        </button>
                     </div>
-                </div>
-            )}
+                ))}
+            </div>
 
-            {viewState === 'SIGNATURE' && (
-                <div className="animate-in fade-in duration-500 text-center">
-                    <h4 className="brand text-blue-400 text-sm mb-4 uppercase">Inspector Signature</h4>
-                    <p className="text-[9px] text-slate-500 mb-4 uppercase">Υπογραφή Τεχνικού Ασφαλείας (M. SYKINIOTIS)</p>
-                    
-                    <div className="bg-white rounded-3xl overflow-hidden shadow-2xl mb-4 border-4 border-slate-800">
-                        <canvas 
-                            ref={canvasRef}
-                            width={350} 
-                            height={250} 
-                            className="w-full touch-none cursor-crosshair"
-                            onMouseDown={(e) => {
-                                const ctx = canvasRef.current.getContext('2d');
-                                ctx.beginPath();
-                                ctx.moveTo(e.nativeEvent.offsetX, e.nativeEvent.offsetY);
-                                canvasRef.current.isDrawing = true;
-                            }}
-                            onMouseMove={(e) => {
-                                if (!canvasRef.current.isDrawing) return;
-                                const ctx = canvasRef.current.getContext('2d');
-                                ctx.lineTo(e.nativeEvent.offsetX, e.nativeEvent.offsetY);
-                                ctx.stroke();
-                                ctx.strokeStyle = "#000";
-                                ctx.lineWidth = 3;
-                            }}
-                            onMouseUp={() => canvasRef.current.isDrawing = false}
-                        ></canvas>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                        <button onClick={clearSignature} className="bg-slate-800 py-4 rounded-xl text-[10px] uppercase">Clear</button>
-                        <button onClick={() => {
-                            alert("INSPECTION CERTIFIED & LOGGED TO SUPABASE");
-                            setIsTimerActive(false);
-                            setView('HOME');
-                        }} className="bg-green-600 py-4 rounded-xl text-[10px] uppercase font-black">Final Certify</button>
-                    </div>
-                </div>
-            )}
+            <button className="w-full mt-10 bg-blue-600/10 border border-blue-600/30 p-5 rounded-3xl brand text-[10px] text-blue-400 uppercase tracking-widest font-black italic">
+                + New Unscheduled Inspection
+            </button>
         </div>
     );
 };
-
-window.M1_Safety = M1_Dashboard;
+window.M1_Safety = M1_Safety;

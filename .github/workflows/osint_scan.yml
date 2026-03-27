@@ -1,0 +1,17 @@
+name: OSINT Panic Room Scan
+on:
+  schedule:
+    - cron: '0 */12 * * *' # Τρέχει κάθε 12 ώρες αυτόματα
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+      - name: Run Scraper
+        run: |
+          pip install requests beautifulsoup4 supabase
+          python scripts/panic_room.py

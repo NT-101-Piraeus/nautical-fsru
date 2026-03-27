@@ -30,16 +30,16 @@ const M8_Academy = () => {
                     
                     {selectedManual === 'D01' && (
                         <div className="space-y-4 bg-black/60 p-6 rounded-3xl border border-emerald-500/20 text-[11px] leading-relaxed">
-                            <h3 className="text-emerald-400 font-black uppercase text-center border-b border-slate-800 pb-2 mb-4 italic">Δ-01: ΣΚΟΠΟΣ & ΠΟΛΙΤΙΚΗ ΠΟΙΟΤΗΤΑΣ</h3>
+                            <h3 className="text-emerald-400 font-black uppercase text-center border-b border-slate-800 pb-2 mb-4 italic font-bold">Δ-01: ΣΚΟΠΟΣ & ΠΟΛΙΤΙΚΗ ΠΟΙΟΤΗΤΑΣ</h3>
                             <p className="text-white uppercase"><span className="text-emerald-500">•</span> ΣΚΟΠΟΣ:</p>
-                            <p className="text-slate-400">Η Εταιρεία ειδικεύεται στην επιθεώρηση, δοκιμή φόρτωσης και συντήρηση μέσων καθαίρεσης σωστικών, σκαλών και ανυψωτικού εξοπλισμού[cite: 33, 71].</p>
+                            <p className="text-slate-400">Η Εταιρεία ειδικεύεται στην επιθεώρηση, δοκιμή φόρτωσης και συντήρηση μέσων καθαίρεσης σωστικών, σκαλών και ανυψωτικού εξοπλισμού.</p>
                             
                             <p className="text-white uppercase mt-4"><span className="text-emerald-500">•</span> ΠΟΛΙΤΙΚΗ ΠΟΙΟΤΗΤΑΣ (ISO 9001:2015):</p>
-                            <ul className="text-slate-400 space-y-2 list-disc pl-4">
-                                <li>Παροχή υπηρεσιών σύμφωνα με τις απαιτήσεις των πελατών[cite: 72].</li>
-                                <li>Συνεχής παρακολούθηση ενδιάμεσων και τελικών υπηρεσιών[cite: 74].</li>
-                                <li>Συνεχής βελτίωση της αποδοτικότητας του συστήματος μέσω διορθωτικών ενεργειών[cite: 76].</li>
-                                <li>Συμμόρφωση με τις ισχύουσες νομοθετικές διατάξεις[cite: 76].</li>
+                            <ul className="text-slate-400 space-y-2 list-disc pl-4 italic">
+                                <li>Παροχή υπηρεσιών σύμφωνα με τις απαιτήσεις των πελατών.</li>
+                                <li>Συνεχής παρακολούθηση ενδιάμεσων και τελικών υπηρεσιών.</li>
+                                <li>Συνεχής βελτίωση της αποδοτικότητας του συστήματος μέσω διορθωτικών ενεργειών.</li>
+                                <li>Συμμόρφωση με τις ισχύουσες νομοθετικές διατάξεις.</li>
                             </ul>
                             
                             <div className="mt-6 p-4 bg-emerald-600/10 border border-emerald-500/30 rounded-xl text-center">
@@ -52,4 +52,5 @@ const M8_Academy = () => {
         </div>
     );
 };
+// Η ΚΡΙΣΙΜΗ ΓΡΑΜΜΗ ΓΙΑ ΤΗ ΣΥΝΔΕΣΗ
 window.M8_Academy = M8_Academy;

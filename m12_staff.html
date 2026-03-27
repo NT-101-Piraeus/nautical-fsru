@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>M12: Staff Hub</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');
+        body { background-color: #020617; color: white; font-family: 'Orbitron', sans-serif; font-style: italic; font-weight: bold; }
+        .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const StaffApp = () => (
+            <div className="min-h-screen p-6 animate-fade bg-slate-950">
+                <div className="flex justify-between items-center mb-8">
+                    <a href="index.html" className="text-[10px] uppercase underline opacity-60 font-black text-blue-400">← HUB</a>
+                    <i className="fa-solid fa-users text-blue-400"></i>
+                </div>
+                
+                <h1 className="brand text-blue-400 text-lg uppercase mb-10 italic tracking-tighter">M12: STAFF HUB</h1>
+                
+                <div className="space-y-3">
+                    <div className="glass p-5 rounded-[2rem] border-blue-500/10 flex items-center gap-4">
+                        <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center border border-blue-500/30">
+                            <i className="fa-solid fa-user-tie text-[10px] text-blue-400"></i>
+                        </div>
+                        <div>
+                            <p className="text-[10px] uppercase font-black text-white italic">Safety Officer 1</p>
+                            <p className="text-[8px] text-emerald-500 uppercase font-black italic tracking-widest">On Shift (FELIX)</p>
+                        </div>
+                    </div>
+
+                    <div className="glass p-5 rounded-[2rem] border-blue-500/10 flex items-center gap-4 opacity-70">
+                        <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center border border-slate-700">
+                            <i className="fa-solid fa-user text-[10px] text-slate-500"></i>
+                        </div>
+                        <div>
+                            <p className="text-[10px] uppercase font-black text-slate-300 italic">UTM Inspector A</p>
+                            <p className="text-[8px] text-slate-600 uppercase font-black italic tracking-widest">Off-Duty</p>
+                        </div>
+                    </div>
+                </div>
+
+                <button className="w-full mt-10 bg-blue-600/10 border border-blue-500/30 p-5 rounded-3xl text-[9px] uppercase font-black text-blue-400 active:scale-95 transition-all italic tracking-widest">
+                    Manage Duty Roster 📅
+                </button>
+            </div>
+        );
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(StaffApp); // Note: Simple component render call
+    </script>
+</body>
+</html>

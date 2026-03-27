@@ -1,63 +1,53 @@
-const { useState, useEffect } = React;
+import os
+import feedparser
+import requests
+from supabase import create_client
 
-const M5_Intel = ({ setView }) => {
-    const [logs, setLogs] = useState([]);
-    const [loading, setLoading] = useState(true);
+# Σύνδεση με Supabase (Τα κλειδιά τραβιούνται από τα GitHub Secrets)
+url = os.environ.get("SUPABASE_URL")
+key = os.environ.get("SUPABASE_KEY")
+supabase = create_client(url, key)
 
-    const fetchIntel = async () => {
-        setLoading(true);
-        const { data, error } = await window.supabaseClient
-            .from('intel_logs')
-            .select('*')
-            .order('created_at', { ascending: false })
-            .limit(10);
-        
-        if (!error) setLogs(data);
-        setLoading(false);
-    };
+# Λίστα Στόχων & Λέξεων Κλειδιών
+KEYWORDS = ["Zorlu", "Emir Öztürk", "Naftotrade", "Terme Tersanesi", "Samsun Shipyard"]
 
-    useEffect(() => { fetchIntel(); }, []);
+# Πηγές Ειδήσεων (RSS Feeds)
+FEEDS = [
+    "https://www.maritime-executive.com/rss",
+    "https://safety4sea.com/feed/",
+    "https://www.shippingtelegraph.com/feed/"
+]
 
-    return (
-        <div className="p-4 bg-slate-900 rounded-[2.5rem] border border-slate-800 shadow-2xl min-h-[500px] font-bold italic">
-            <h2 className="brand text-red-500 text-lg mb-6 border-b border-slate-700 pb-2 uppercase text-center italic">M5: INTEL WAR ROOM</h2>
-
-            <div className="grid grid-cols-3 gap-2 mb-8">
-                {["ZORLU", "ÖZTÜRK", "KARACA"].map(target => (
-                    <div key={target} className="bg-slate-950 p-3 rounded-xl border border-red-900/30 text-center shadow-lg">
-                        <p className="text-[8px] text-red-500 font-black uppercase">{target}</p>
-                        <div className="h-1 w-full bg-red-900/20 mt-2 rounded-full overflow-hidden">
-                            <div className="h-full bg-red-600 w-1/2 animate-pulse"></div>
-                        </div>
-                    </div>
-                ))}
-            </div>
-
-            <div className="space-y-4">
-                <div className="flex justify-between items-center px-1">
-                    <h3 className="text-[10px] text-slate-500 uppercase font-black">Live OSINT Feed</h3>
-                    <button onClick={fetchIntel} className="text-[8px] text-blue-400 uppercase underline">Refresh</button>
-                </div>
+def scan_news():
+    print("🛰️ Starting Intelligence Scan...")
+    found_items = []
+    
+    for feed_url in FEEDS:
+        feed = feedparser.parse(feed_url)
+        for entry in feed.entries:
+            # Έλεγχος αν κάποια λέξη-κλειδί υπάρχει στον τίτλο
+            if any(key.lower() in entry.title.lower() for key in KEYWORDS):
+                print(f"🚩 Match Found: {entry.title}")
                 
-                {loading ? (
-                    <div className="text-center p-10 text-[10px] uppercase animate-pulse italic">Scanning Naftotrade Targets...</div>
-                ) : logs.length > 0 ? (
-                    logs.map((log, index) => (
-                        <div key={index} className="bg-black/50 p-4 rounded-2xl border border-slate-800 border-l-4 border-l-red-600 shadow-md">
-                            <p className="text-[11px] text-white uppercase leading-tight mb-2 italic">{log.title}</p>
-                            <div className="flex justify-between items-center">
-                                <span className="text-[7px] text-slate-500 uppercase">{new Date(log.created_at).toLocaleDateString()}</span>
-                                <a href={log.link} target="_blank" className="text-[8px] text-red-500 font-bold uppercase underline">Source</a>
-                            </div>
-                        </div>
-                    ))
-                ) : (
-                    <div className="bg-slate-950 p-6 rounded-2xl border border-dashed border-slate-800 text-center italic">
-                        <p className="text-[10px] text-slate-600 uppercase">No active leads for Zorlu/Öztürk in the last hour.</p>
-                    </div>
-                )}
-            </div>
-        </div>
-    );
-};
-window.M5_Intel = M5_Intel;
+                # Δεδομένα για τη βάση
+                data = {
+                    "title": entry.title,
+                    "link": entry.link,
+                    "source": "RSS_FEED",
+                    "status": "NEW"
+                }
+                
+                # Αποθήκευση στη Supabase (Πίνακας: intel_logs)
+                try:
+                    supabase.table("intel_logs").insert(data).execute()
+                    found_items.append(entry.title)
+                except Exception as e:
+                    print(f"❌ DB Error: {e}")
+
+    if not found_items:
+        print("✅ Scan complete. No new matches for targets.")
+    else:
+        print(f"🔥 Found {len(found_items)} new leads!")
+
+if __name__ == "__main__":
+    scan_news()

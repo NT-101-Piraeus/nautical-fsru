@@ -45,4 +45,55 @@ const App = () => {
                     <input type="password" value={pin} onChange={(e) => setPin(e.target.value)}
                            className="w-full bg-slate-900 border border-slate-700 p-5 rounded-2xl text-center text-3xl mb-6 text-white outline-none"
                            placeholder="PIN" maxLength="4" autoFocus />
-                    <button type="submit" className="w-
+                    <button type="submit" className="w-full bg-blue-600 p-5 rounded-2xl brand uppercase active:scale-95">Unlock</button>
+                </form>
+            </div>
+        );
+    }
+
+    return (
+        <div className="min-h-screen p-4 pb-28 max-w-lg mx-auto bg-slate-950 text-white font-bold italic">
+            {view === 'HOME' ? (
+                <div className="space-y-6 animate-fade">
+                    <div className="flex justify-between items-center px-4 pt-4">
+                        <div className="text-left font-bold italic">
+                            <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{role} MODE</span>
+                            <p className="brand text-sm uppercase tracking-tighter italic">M. SYKINIOTIS</p>
+                        </div>
+                        <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_#10b981]"></div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 px-1">
+                        {tiles.map(tile => (
+                            <button key={tile.id} onClick={() => setView(tile.id)} className={`glass p-3 h-28 rounded-[1.8rem] border-b-4 ${tile.color} flex flex-col items-center justify-center gap-2 active:scale-95 shadow-lg`}>
+                                <i className={`fa-solid ${tile.icon} text-lg opacity-80`}></i>
+                                <span className="text-[7px] font-black uppercase brand text-center leading-tight tracking-tighter">{tile.name}</span>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            ) : (
+                <div className="animate-fade h-full">
+                    <button onClick={() => setView('HOME')} className="mb-6 text-[10px] text-slate-500 uppercase underline italic font-black">← Back</button>
+                    {/* PASSING ROLE TO DIVISIONS */}
+                    {view === 'M3' && window.M3_LoadTesting && <window.M3_LoadTesting userRole={role} />}
+                    {view === 'M1' && window.M1_UTM && <window.M1_UTM userRole={role} />}
+                    {view === 'M2' && window.M2_Safety && <window.M2_Safety userRole={role} />}
+                    {view === 'M4' && window.M4_Scout && <window.M4_Scout />}
+                    {view === 'M5' && window.M5_Intel && <window.M5_Intel />}
+                    {view === 'M6' && window.M6_CEO_Pulse && <window.M6_CEO_Pulse />}
+                    {view === 'M7' && window.M7_XGR && <window.M7_XGR />}
+                    {view === 'M8' && window.M8_Academy && <window.M8_Academy />}
+                    {view === 'M9' && window.M9_Operations && <window.M9_Operations />}
+                    {view === 'M10' && window.M10_Architecture && <window.M10_Architecture />}
+                    {view === 'M11' && window.M11_Sensors && <window.M11_Sensors />}
+                    {view === 'M12' && window.M12_StaffHub && <window.M12_StaffHub />}
+                    {view === 'M13' && window.M13_Mykonos && <window.M13_Mykonos />}
+                </div>
+            )}
+        </div>
+    );
+};
+
+const container = document.getElementById('root');
+const root = ReactDOM.createRoot(container);
+root.render(<App />);

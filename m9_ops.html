@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>M9: Operations & Quality</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');
+        body { background-color: #020617; color: white; font-family: 'Orbitron', sans-serif; font-style: italic; font-weight: bold; }
+        .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const OpsApp = () => (
+            <div className="min-h-screen p-6 animate-fade bg-slate-950">
+                <div className="flex justify-between items-center mb-8">
+                    <a href="index.html" className="text-[10px] uppercase underline opacity-60 font-black text-indigo-400">← HUB</a>
+                    <i className="fa-solid fa-clipboard-check text-indigo-400"></i>
+                </div>
+                
+                <h1 className="brand text-indigo-400 text-lg uppercase mb-10 italic tracking-tighter">M9: OPS & QUALITY</h1>
+                
+                <div className="space-y-4">
+                    <div className="glass p-6 rounded-[2.5rem] border-indigo-500/10">
+                        <p className="text-[8px] text-indigo-400 uppercase font-black mb-3 italic tracking-widest">Inventory Status</p>
+                        <div className="flex justify-between items-center">
+                            <span className="text-[10px] uppercase text-white">Water Bags (5T/10T)</span>
+                            <span className="text-xs font-black text-emerald-500 font-mono">READY</span>
+                        </div>
+                    </div>
+
+                    <div className="glass p-6 rounded-[2.5rem] border-indigo-500/10">
+                        <p className="text-[8px] text-indigo-400 uppercase font-black mb-3 italic tracking-widest">Quality Assurance</p>
+                        <div className="flex justify-between items-center">
+                            <span className="text-[10px] uppercase text-white">ISO Manuals Sync</span>
+                            <span className="text-[10px] opacity-60 italic">Updated 2h ago</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="mt-10 p-5 glass rounded-3xl border border-dashed border-indigo-500/20 text-center">
+                    <p className="text-[8px] text-slate-500 uppercase font-black italic tracking-widest">Compliance Engine: MSC.532/107 Active</p>
+                </div>
+            </div>
+        );
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<OpsApp />);
+    </script>
+</body>
+</html>

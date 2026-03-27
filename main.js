@@ -15,7 +15,7 @@ const App = () => {
 
     const tiles = [
         { id: 'M1', name: 'UTM', icon: 'fa-layer-group', color: 'border-slate-500' },
-        { id: 'M2', name: 'T.A. ΠΛΟΙΩΝ', icon: 'fa-shield-halved', color: 'border-blue-600' },
+        { id: 'M2', name: 'SAFETY WATCH', icon: 'fa-shield-halved', color: 'border-blue-600' },
         { id: 'M3', name: 'LOAD TESTING', icon: 'fa-weight-hanging', color: 'border-orange-600' },
         { id: 'M4', name: 'ARRIVALS', icon: 'fa-radar', color: 'border-cyan-600' },
         { id: 'M5', name: 'WAR ROOM', icon: 'fa-gavel', color: 'border-red-600' },
@@ -29,7 +29,7 @@ const App = () => {
         { id: 'M13', name: 'MYKONOS', icon: 'fa-house-chimney', color: 'border-blue-300' }
     ];
 
-    const renderDivision = (id) => {
+    const renderView = () => {
         const components = {
             M1: window.M1_UTM,
             M2: window.M2_Safety,
@@ -45,24 +45,27 @@ const App = () => {
             M12: window.M12_StaffHub,
             M13: window.M13_Mykonos
         };
-        const ActiveComp = components[id];
+
+        const ActiveComp = components[view];
         if (ActiveComp) return <ActiveComp userRole={role} />;
+        
         return (
-            <div className="p-10 glass rounded-3xl text-center brand text-[10px] animate-pulse">
-                <i className="fa-solid fa-microchip mb-4 text-2xl text-blue-500"></i>
-                <p>{id} INITIALIZING... CHECK FILENAME & EXPORT</p>
+            <div className="p-10 glass rounded-[2.5rem] text-center italic border border-slate-800 animate-fade">
+                <i className="fa-solid fa-microchip mb-4 text-2xl text-blue-500 animate-pulse"></i>
+                <p className="text-[10px] uppercase font-black">{view} : STATION INITIALIZING...</p>
+                <p className="text-[8px] text-slate-500 mt-2 uppercase font-bold italic">Checking GitHub Archive for {view}.js</p>
             </div>
         );
     };
 
     if (!isAuthenticated) return (
-        <div className="h-screen flex items-center justify-center bg-slate-950 font-bold italic">
-            <form onSubmit={handleLogin} className="glass p-10 rounded-[3.5rem] w-full max-w-sm text-center">
-                <h1 className="brand text-xl text-white mb-8 uppercase tracking-widest">NTG COMMAND v3</h1>
+        <div className="h-screen flex items-center justify-center p-6 bg-slate-950 font-bold italic">
+            <form onSubmit={handleLogin} className="glass p-10 rounded-[3.5rem] w-full max-w-sm text-center shadow-2xl border border-slate-800">
+                <h1 className="brand text-xl text-white mb-8 uppercase tracking-widest italic font-black">NTG COMMAND v3</h1>
                 <input type="password" value={pin} onChange={(e) => setPin(e.target.value)}
                        className="w-full bg-slate-900 border border-slate-700 p-5 rounded-2xl text-center text-3xl mb-6 text-white outline-none focus:border-blue-500"
                        placeholder="PIN" maxLength="4" autoFocus />
-                <button type="submit" className="w-full bg-blue-600 p-5 rounded-2xl brand uppercase text-white shadow-lg">Unlock</button>
+                <button type="submit" className="w-full bg-blue-600 p-5 rounded-2xl brand uppercase text-white font-black active:scale-95 shadow-lg">Unlock</button>
             </form>
         </div>
     );
@@ -75,3 +78,26 @@ const App = () => {
                         <p className="brand text-sm uppercase italic">M. SYKINIOTIS</p>
                         <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_#10b981]"></div>
                     </div>
+                    <div className="grid grid-cols-3 gap-2 px-1">
+                        {tiles.map(tile => (
+                            <button key={tile.id} onClick={() => setView(tile.id)} 
+                                    className={`glass p-3 h-28 rounded-[1.8rem] border-b-4 ${tile.color} flex flex-col items-center justify-center gap-2 active:scale-95 shadow-xl transition-all`}>
+                                <i className={`fa-solid ${tile.icon} text-lg opacity-80`}></i>
+                                <span className="text-[7px] font-black uppercase brand text-center leading-tight tracking-tighter">{tile.name}</span>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            ) : (
+                <div className="animate-fade h-full">
+                    <button onClick={() => setView('HOME')} className="mb-6 text-[10px] text-slate-500 uppercase underline italic font-black tracking-widest">← Back</button>
+                    {renderView()}
+                </div>
+            )}
+        </div>
+    );
+};
+
+const container = document.getElementById('root');
+const root = ReactDOM.createRoot(container);
+root.render(<App />);

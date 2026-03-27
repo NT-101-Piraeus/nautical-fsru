@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>M7: XGR Startup Forge</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');
+        body { background-color: #020617; color: white; font-family: 'Orbitron', sans-serif; font-style: italic; font-weight: bold; }
+        .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState } = React;
+        const StartupApp = () => {
+            const projects = [
+                { name: "AI HULL CRAWLER", budget: "RE-INVEST", status: "R&D", icon: "fa-robot" },
+                { name: "XGR SMART SENSORS", budget: "SEED", status: "TESTING", icon: "fa-microchip" }
+            ];
+
+            return (
+                <div className="min-h-screen p-6 animate-fade bg-slate-950">
+                    <div className="flex justify-between items-center mb-8">
+                        <a href="index.html" className="text-[10px] uppercase underline opacity-60 font-black text-yellow-500">← HUB</a>
+                        <i className="fa-solid fa-rocket text-yellow-500 animate-bounce"></i>
+                    </div>
+                    
+                    <h1 className="brand text-yellow-500 text-lg uppercase mb-10 italic tracking-tighter">M7: XGR STARTUP FORGE</h1>
+                    
+                    <div className="grid grid-cols-1 gap-4">
+                        {projects.map(p => (
+                            <div key={p.name} className="glass p-6 rounded-[2.5rem] border-yellow-500/10">
+                                <div className="flex items-center gap-4 mb-4">
+                                    <div className="w-10 h-10 rounded-2xl bg-yellow-500/10 flex items-center justify-center border border-yellow-500/20">
+                                        <i className={`fa-solid ${p.icon} text-yellow-500`}></i>
+                                    </div>
+                                    <div>
+                                        <h3 className="text-[10px] font-black uppercase text-white leading-tight">{p.name}</h3>
+                                        <p className="text-[7px] text-yellow-500/60 uppercase font-black italic tracking-widest">{p.status}</p>
+                                    </div>
+                                </div>
+                                <div className="flex justify-between items-center border-t border-white/5 pt-4">
+                                    <span className="text-[8px] text-slate-500 uppercase">Funding Model</span>
+                                    <span className="text-[9px] font-black text-white italic">{p.budget}</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    <button className="w-full mt-10 bg-yellow-600/10 border border-yellow-600/30 p-5 rounded-3xl text-[9px] uppercase font-black text-yellow-500 active:scale-95 transition-all italic">
+                        Pitch New Venture ➕
+                    </button>
+                </div>
+            );
+        };
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<StartupApp />);
+    </script>
+</body>
+</html>

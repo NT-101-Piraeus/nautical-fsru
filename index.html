@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NauticalOS Master Hub</title>
+    <title>NauticalOS Hub v3.28</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -11,9 +11,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');
-        body { background-color: #020617; color: white; margin: 0; font-family: 'Orbitron', sans-serif; font-style: italic; font-weight: bold; }
+        body { background-color: #020617; color: white; margin: 0; font-family: 'Orbitron', sans-serif; font-style: italic; }
         .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
-        .brand { letter-spacing: 0.1em; }
+        .brand { letter-spacing: 0.1em; font-weight: 900; }
     </style>
 </head>
 <body>
@@ -22,45 +22,73 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        const MasterHub = () => {
+        const HubApp = () => {
             const [isAuth, setIsAuth] = useState(false);
-            const [role, setRole] = useState('');
             const [pin, setPin] = useState('');
 
-            // Έλεγχος αν υπάρχει ήδη ενεργό session (Shared Login)
+            // Έλεγχος αν είμαστε ήδη συνδεδεμένοι
             useEffect(() => {
-                const savedRole = localStorage.getItem('ntg_role');
-                if (savedRole) {
-                    setRole(savedRole);
-                    setIsAuth(true);
-                }
+                if (localStorage.getItem('ntg_auth') === 'true') setIsAuth(true);
             }, []);
 
-            const handleLogin = (e) => {
+            const login = (e) => {
                 e.preventDefault();
-                let userRole = '';
-                if (pin === '1234') userRole = 'DIRECTOR';
-                else if (pin === '0612') userRole = 'WORKER';
-                
-                if (userRole) {
-                    localStorage.setItem('ntg_role', userRole);
-                    setRole(userRole);
+                if (pin === '1234' || pin === '0612') {
+                    localStorage.setItem('ntg_auth', 'true');
                     setIsAuth(true);
                 } else {
-                    alert("ACCESS DENIED");
+                    alert("WRONG PIN");
                     setPin('');
                 }
             };
 
             const logout = () => {
-                localStorage.removeItem('ntg_role');
+                localStorage.removeItem('ntg_auth');
                 setIsAuth(false);
-                setPin('');
             };
 
+            // Λίστα με τα αυτόνομα Apps (HTML αρχεία)
             const apps = [
-                { id: 'terme', name: 'TERME INTEL', icon: 'fa-gavel', color: 'border-red-600', link: 'm5_terme.html', directorOnly: true },
-                { id: 'airbnb', name: 'AIRBNB MYK', icon: 'fa-house-chimney', color: 'border-blue-300', link: 'm13_mykonos.html', directorOnly: true },
-                { id: 'startup', name: 'XGR STARTUP', icon: 'fa-rocket', color: 'border-yellow-500', link: 'm7_startup.html', directorOnly: true },
-                { id: 'utm', name: 'UTM GAUGING', icon: 'fa-layer-group', color: 'border-slate-500', link: 'm1_utm.html', directorOnly: false },
-                { id: 'safety', name: 'SAFETY WATCH', icon: 'fa-shield-halved', color: 'border-blue-600', link: 'm2_safety.html', director
+                { name: 'SAFETY WATCH', icon: 'fa-shield-halved', color: 'border-blue-600', url: 'm2_safety.html' },
+                { name: 'LOAD TESTING', icon: 'fa-weight-hanging', color: 'border-orange-600', url: 'm3_loadtest.html' },
+                { name: 'WAR ROOM', icon: 'fa-gavel', color: 'border-red-600', url: 'm5_terme.html' },
+                { name: 'UTM GAUGING', icon: 'fa-layer-group', color: 'border-slate-500', url: 'm1_utm.html' }
+            ];
+
+            if (!isAuth) return (
+                <div className="h-screen flex items-center justify-center p-6 bg-slate-950 font-bold italic">
+                    <form onSubmit={login} className="glass p-10 rounded-[3.5rem] w-full max-w-sm text-center shadow-2xl border border-slate-800">
+                        <h1 className="brand text-xl text-blue-500 mb-8 uppercase italic">NTG COMMAND HUB</h1>
+                        <input type="password" value={pin} onChange={(e) => setPin(e.target.value)}
+                               className="w-full bg-slate-900 border border-slate-700 p-5 rounded-2xl text-center text-3xl mb-6 text-white outline-none focus:border-blue-500 transition-all"
+                               placeholder="PIN" maxLength="4" autoFocus />
+                        <button type="submit" className="w-full bg-blue-600 p-5 rounded-2xl brand uppercase text-white font-black active:scale-95 shadow-lg">Unlock Hub</button>
+                    </form>
+                </div>
+            );
+
+            return (
+                <div className="min-h-screen p-6 max-w-lg mx-auto animate-fade font-bold italic">
+                    <div className="flex justify-between items-center mb-10 pt-4">
+                        <h1 className="brand text-sm text-blue-500 uppercase tracking-tighter">NTG COMMAND HUB</h1>
+                        <button onClick={logout} className="text-[10px] text-red-500 uppercase underline">Logout</button>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        {apps.map(app => (
+                            <a key={app.name} href={app.url} 
+                               className={`glass p-6 rounded-[2.5rem] border-b-4 ${app.color} flex flex-col items-center justify-center gap-4 active:scale-95 shadow-xl transition-all`}>
+                                <i className={`fa-solid ${app.icon} text-2xl opacity-80`}></i>
+                                <span className="text-[8px] font-black uppercase text-center leading-tight tracking-widest">{app.name}</span>
+                            </a>
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<HubApp />);
+    </script>
+</body>
+</html>

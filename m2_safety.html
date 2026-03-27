@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>M2: Safety Watch</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');
+        body { background-color: #020617; color: white; margin: 0; font-family: 'Orbitron', sans-serif; font-style: italic; font-weight: bold; }
+        .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
+        .brand { letter-spacing: 0.1em; font-weight: 900; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState } = React;
+        const SafetyApp = () => {
+            const [sunMode, setSunMode] = useState(false);
+            return (
+                <div className={`min-h-screen p-6 transition-all ${sunMode ? 'bg-white text-black' : 'bg-slate-950 text-white'}`}>
+                    <div className="flex justify-between items-center mb-8">
+                        <a href="index.html" className="text-[10px] uppercase underline opacity-60">← HUB</a>
+                        <button onClick={() => setSunMode(!sunMode)} className="p-3 rounded-full border border-slate-700 bg-slate-800">
+                            <i className={`fa-solid ${sunMode ? 'fa-moon text-black' : 'fa-sun text-yellow-500'}`}></i>
+                        </button>
+                    </div>
+                    <h1 className="brand text-blue-500 text-lg uppercase mb-10">M2: SAFETY WATCH</h1>
+                    <div className="glass p-10 rounded-[3rem] text-center border border-blue-500/20 shadow-2xl">
+                        <i className="fa-solid fa-shield-halved text-4xl text-blue-500 mb-6 animate-pulse"></i>
+                        <p className="text-[10px] uppercase font-black">Safety Joblist Module Ready</p>
+                        <p className="text-[8px] opacity-60 mt-4 uppercase">Sync with Π.Δ. 70/90 Engine</p>
+                    </div>
+                </div>
+            );
+        };
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<SafetyApp />);
+    </script>
+</body>
+</html>

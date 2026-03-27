@@ -2,30 +2,15 @@ const { useState } = React;
 
 const App = () => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [role, setRole] = useState(null); 
     const [pin, setPin] = useState('');
     const [view, setView] = useState('HOME');
 
     const handleLogin = (e) => {
         e.preventDefault();
-        if (pin === '1234') { setIsAuthenticated(true); setRole('ADMIN'); }
-        else if (pin === '0612') { setIsAuthenticated(true); setRole('WORKER'); }
+        if (pin === '1234') setIsAuthenticated(true);
+        else if (pin === '0612') setIsAuthenticated(true);
         else { alert('ACCESS DENIED'); setPin(''); }
     };
-
-    if (!isAuthenticated) {
-        return (
-            <div className="h-screen flex items-center justify-center p-6 bg-slate-950">
-                <form onSubmit={handleLogin} className="glass p-10 rounded-[3rem] border border-slate-800 w-full max-w-sm text-center shadow-2xl">
-                    <h1 className="brand text-xl tracking-[0.3em] font-black text-white mb-8 italic uppercase font-bold tracking-tighter">NTG COMMAND v3</h1>
-                    <input type="password" value={pin} onChange={(e) => setPin(e.target.value)}
-                           className="w-full bg-slate-900 border border-slate-700 p-5 rounded-2xl text-center text-3xl tracking-[0.8em] mb-6 text-white outline-none focus:border-blue-500 font-bold italic"
-                           placeholder="PIN" maxLength="4" autoFocus />
-                    <button type="submit" className="w-full bg-blue-600 p-5 rounded-2xl brand font-bold uppercase tracking-widest text-sm active:scale-95 italic font-bold">Unlock Core</button>
-                </form>
-            </div>
-        );
-    }
 
     const tiles = [
         { id: 'M1', name: 'UTM', icon: 'fa-layer-group', color: 'border-slate-500' },
@@ -42,21 +27,35 @@ const App = () => {
         { id: 'M12', name: 'STAFF HUB', icon: 'fa-users', color: 'border-blue-400' }
     ];
 
+    if (!isAuthenticated) {
+        return (
+            <div className="h-screen flex items-center justify-center p-6 bg-slate-950">
+                <form onSubmit={handleLogin} className="glass p-10 rounded-[3rem] border border-slate-800 w-full max-w-sm text-center animate-fade">
+                    <h1 className="brand text-xl font-black text-white mb-8 italic uppercase tracking-widest">NTG COMMAND v3</h1>
+                    <input type="password" value={pin} onChange={(e) => setPin(e.target.value)}
+                           className="w-full bg-slate-900 border border-slate-700 p-5 rounded-2xl text-center text-3xl mb-6 text-white outline-none focus:border-blue-500"
+                           placeholder="PIN" maxLength="4" autoFocus />
+                    <button type="submit" className="w-full bg-blue-600 p-5 rounded-2xl brand font-bold uppercase active:scale-95 italic">Unlock Core</button>
+                </form>
+            </div>
+        );
+    }
+
     return (
         <div className="min-h-screen p-4 pb-28 max-w-lg mx-auto bg-slate-950 text-white font-bold italic">
             {view === 'HOME' ? (
-                <div className="space-y-6 animate-in fade-in duration-500">
+                <div className="space-y-6 animate-fade">
                     <div className="flex justify-between items-center px-4">
                         <div className="text-left font-bold italic">
                             <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Director Mode</span>
-                            <p className="brand text-sm text-white uppercase tracking-tighter">M. SYKINIOTIS</p>
+                            <p className="brand text-sm text-white uppercase tracking-tighter italic">M. SYKINIOTIS</p>
                         </div>
-                        <div className="h-2.5 w-2.5 rounded-full bg-emerald-500 shadow-[0_0_10px_#10b981] animate-pulse"></div>
+                        <div className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_#10b981]"></div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-3 px-1">
                         {tiles.map(tile => (
-                            <button key={tile.id} onClick={() => setView(tile.id)} className={`glass p-5 rounded-[2.2rem] border-b-4 ${tile.color} flex flex-col items-center gap-3 active:scale-95 transition-all shadow-lg`}>
+                            <button key={tile.id} onClick={() => setView(tile.id)} className={`glass p-5 rounded-[2.2rem] border-b-4 ${tile.color} flex flex-col items-center gap-3 active:scale-95 shadow-lg`}>
                                 <i className={`fa-solid ${tile.icon} text-xl opacity-80`}></i>
                                 <span className="text-[8px] font-black uppercase brand text-center leading-tight">{tile.name}</span>
                             </button>
@@ -64,13 +63,21 @@ const App = () => {
                     </div>
                 </div>
             ) : (
-                <div className="animate-in fade-in slide-in-from-right duration-500 h-full">
+                <div className="animate-fade h-full">
                     <button onClick={() => setView('HOME')} className="mb-6 text-[10px] text-slate-500 uppercase font-black underline italic">← Back to Bridge</button>
+                    
+                    {/* CONNECTED DIVISIONS */}
                     {view === 'M2' && window.M1_Safety && <window.M1_Safety setView={setView} />}
                     {view === 'M3' && window.M10LoadTesting && <window.M10LoadTesting setView={setView} />}
+                    {view === 'M5' && window.M5_Intel && <window.M5_Intel setView={setView} />}
                     {view === 'M12' && window.M12_StaffHub && <window.M12_StaffHub setView={setView} />}
-                    {['M1','M4','M5','M6','M7','M8','M9','M10','M11'].includes(view) && (
-                        <div className="p-10 glass rounded-3xl text-center brand text-[10px] uppercase font-bold">{view} : STATION INITIALIZING...</div>
+                    
+                    {/* PLACEHOLDERS (Removed M5 from here) */}
+                    {['M1','M4','M6','M7','M8','M9','M10','M11'].includes(view) && (
+                        <div className="p-10 glass rounded-3xl text-center brand text-[10px] uppercase font-bold border border-slate-800">
+                            <i className="fa-solid fa-microchip mb-4 text-2xl text-blue-500 animate-pulse"></i>
+                            <p>{view} : STATION INITIALIZING...</p>
+                        </div>
                     )}
                 </div>
             )}

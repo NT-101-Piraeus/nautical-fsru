@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>M2: Safety Watch</title>
+    <title>M2: Safety Watch v3.53</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -11,39 +11,35 @@
     <style>@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');body{background:#020617;color:white;font-family:'Orbitron',sans-serif;font-style:italic;font-weight:bold;}.glass{background:rgba(15,23,42,0.7);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.1);}</style>
 </head>
 <body><div id="root"></div><script type="text/babel">
-const SafetyApp=()=>{
+const SafetyApp = () => {
     const [sun, setSun] = React.useState(false);
-    const [logs, setLogs] = React.useState(JSON.parse(localStorage.getItem('ntg_safety_storage')) || []);
-    
-    const theme = sun ? "bg-white text-black" : "bg-slate-950 text-white";
-    const card = sun ? "bg-slate-100 border-slate-300" : "glass border-blue-500/20";
+    const [isLogging, setIsLogging] = React.useState(false);
+    const [tasks, setTasks] = React.useState([
+        { id: 1, text: "Έλεγχος αερισμού κλειστών χώρων (Π.Δ. 70/90)", done: false },
+        { id: 2, text: "Επιθεώρηση σκαλωσιάς & μέσων ατομικής προστασίας", done: false },
+        { id: 3, text: "Hot Works Permit - Fire Watch Check", done: false }
+    ]);
 
-    return(
-        <div className={`min-h-screen p-6 transition-all duration-500 ${theme}`}>
-            <div className="flex justify-between items-center mb-10">
-                <a href="index.html" className={`text-[10px] underline opacity-50 font-black ${sun?'text-black':'text-blue-400'}`}>← HUB</a>
-                <button onClick={()=>setSun(!sun)} className={`p-3 rounded-full border ${sun?'border-slate-300 bg-slate-200':'border-slate-800 bg-slate-900'}`}>
+    const toggleTask = (id) => {
+        setTasks(tasks.map(t => t.id === id ? {...t, done: !t.done} : t));
+    };
+
+    const theme = sun ? "bg-white text-black" : "bg-slate-950 text-white";
+    const card = sun ? "bg-slate-100 border-slate-300 shadow-xl" : "glass border-blue-500/20";
+
+    return (
+        <div className={`min-h-screen p-6 transition-all duration-300 ${theme}`}>
+            <div className="flex justify-between items-center mb-8">
+                <a href="index.html" className={`text-[10px] underline opacity-50 font-black ${sun?'text-black':'text-blue-400'}`}>← BACK TO HUB</a>
+                <button onClick={() => setSun(!sun)} className={`p-3 rounded-full border ${sun?'border-slate-300 bg-slate-200 shadow-md':'border-slate-800 bg-slate-900 shadow-inner'}`}>
                     <i className={`fa-solid ${sun?'fa-moon':'fa-sun text-yellow-500'}`}></i>
                 </button>
             </div>
-            
-            <h1 className="text-blue-600 text-lg uppercase mb-10 text-center italic tracking-tighter">M2: SAFETY WATCH</h1>
-            
-            <div className={`${card} p-8 rounded-[3rem] text-center shadow-2xl mb-10`}>
-                <i className="fa-solid fa-shield-halved text-4xl mb-6 text-blue-600 animate-pulse"></i>
-                <p className="text-[10px] uppercase font-black tracking-widest mb-6">Inspection Module Live</p>
-                <div className="space-y-4">
-                    <button className="w-full bg-blue-600 text-white p-5 rounded-3xl text-[10px] uppercase font-black shadow-lg">Start New Daily Log +</button>
-                    <button className="w-full border border-blue-600/30 p-5 rounded-3xl text-[10px] uppercase font-black opacity-60">View Archive</button>
-                </div>
-            </div>
 
-            <div className="p-4 border-l-2 border-blue-600 opacity-40">
-                <p className="text-[8px] uppercase tracking-[0.3em] font-black italic">Sync Status: Local Storage Only</p>
-                <p className="text-[7px] uppercase mt-1">Ready for Supabase cloud handshake</p>
-            </div>
-        </div>
-    );
-};
-ReactDOM.createRoot(document.getElementById('root')).render(<SafetyApp/>);
-</script></body></html>
+            <h1 className="text-blue-600 text-lg uppercase mb-8 text-center italic tracking-tighter">M2: SAFETY WATCH</h1>
+
+            {!isLogging ? (
+                <div className={`${card} p-10 rounded-[3rem] text-center shadow-2xl border-b-8 border-blue-600`}>
+                    <i className="fa-solid fa-clipboard-check text-5xl mb-6 text-blue-600"></i>
+                    <p className="text-[10px] uppercase font-black tracking-widest mb-8">Ready for Compliance Check</p>
+                    <button onClick={() => setIsLogging(true)} className="w-full bg-blue-600 text-white p-6 rounded-3xl text-[11px] uppercase font

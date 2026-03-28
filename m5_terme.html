@@ -2,27 +2,131 @@
 <html lang="el">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>M5: War Room Intel</title>
+    <title>M5: Dynamic War Room Intel</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <style>@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');body{background:#020617;color:white;font-family:'Orbitron',sans-serif;font-style:italic;font-weight:bold;}.glass{background:rgba(15,23,42,0.7);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.1);}</style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');
+        body { background: #020617; color: white; font-family: 'Orbitron', sans-serif; font-style: italic; font-weight: bold; }
+        .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
+    </style>
 </head>
-<body><div id="root"></div><script type="text/babel">
-const WarRoom=()=>{
-    return(
-        <div className="min-h-screen p-6 animate-fade bg-slate-950 font-bold italic">
-            <div className="flex justify-between items-center mb-8"><a href="index.html" className="text-[10px] underline opacity-50 text-red-600">← EXIT PANIC ROOM</a><span className="text-[9px] text-red-600 animate-pulse uppercase italic">SURVEILLANCE ACTIVE</span></div>
-            <h1 className="text-red-600 text-lg uppercase mb-10 text-center italic tracking-tighter">M5: TERME INTELLIGENCE</h1>
-            <div className="glass p-8 rounded-[3rem] border-red-500/20 text-center shadow-[0_0_30px_rgba(220,38,38,0.1)]">
-                <i className="fa-solid fa-satellite-dish text-4xl text-red-600 mb-6 animate-pulse"></i>
-                <p className="text-[10px] text-slate-400 uppercase tracking-widest mb-2 font-black">Establishing Secure Uplink...</p>
-                <p className="text-[7px] text-red-900 uppercase italic">SHA-256 Chain of Custody Locked</p>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState } = React;
+
+const WarRoom = () => {
+    const [selectedTarget, setSelectedTarget] = useState('Emir Öztürk');
+
+    // 1. DYNAMIC TARGET DATABASE
+    const targets = [
+        { id: 1, name: 'Emir Öztürk', role: 'Warsaw Proxy', ids: 'NIP: 5262587598', anomaly: 'NACE 49.32 (TAXI SERVICES)' },
+        { id: 2, name: 'Erkan Zorlu', role: 'Mastermind', ids: 'TR-ID: 123456789', anomaly: 'ASSET CONCEALMENT' },
+        { id: 3, name: 'İpek Banu Karaca', role: 'Associated Party', ids: 'TR-ID: 987654321', anomaly: 'MONEY FUNNEL' },
+        { id: 4, name: 'Alasund Shipbrokers', role: 'Financial Conduit', ids: 'ICE-REG: 456123', anomaly: 'WHITE-LABEL FUNDING' }
+    ];
+
+    // 2. LIVE ROSTER (GEOFENCE)
+    const roster = [
+        { vessel: 'S.V. NIKOLAY', status: 'DOCKING (0 kn) - SDN ALERT', since: '24h', alert: true },
+        { vessel: 'NB05 Hull', status: 'STATIC - ASSET FROZEN', since: '15d', alert: false }
+    ];
+
+    // 3. PDF EXPORT LOGIC (The Digital Affidavit)
+    const exportForensicPDF = () => {
+        const targetData = targets.find(t => t.name === selectedTarget);
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        const ts = new Date().toUTCString();
+        
+        // Mock Forensic Hash for the PDF
+        const fakeHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"; 
+
+        doc.setFontSize(16);
+        doc.text("CONFIDENTIAL OSINT REPORT - NAFTOTRADE ASSET RECOVERY", 105, 20, { align: "center" });
+        doc.setFontSize(8);
+        doc.text(`FORENSIC IDENTIFIER: ${fakeHash}`, 105, 30, { align: "center" });
+        
+        doc.setLineWidth(0.5);
+        doc.line(20, 35, 190, 35);
+
+        doc.setFontSize(12);
+        doc.text(`TARGET IDENTITY: ${targetData.name}`, 20, 50);
+        doc.text(`ROLE: ${targetData.role}`, 20, 60);
+        doc.text(`REGISTRY ID: ${targetData.ids}`, 20, 70);
+        
+        doc.setTextColor(220, 38, 38); // Red
+        doc.text(`CRITICAL ANOMALY: ${targetData.anomaly}`, 20, 80);
+        doc.setTextColor(0, 0, 0);
+
+        doc.setFontSize(10);
+        doc.text("CHAIN OF CUSTODY LEDGER:", 20, 110);
+        doc.setFontSize(8);
+        doc.text(`[TIMESTAMP]: ${ts} UTC`, 25, 120);
+        doc.text(`[PAYLOAD HASH]: ${fakeHash}`, 25, 130);
+        
+        doc.save(`LEGAL_DOSSIER_${targetData.name.replace(' ', '_')}.pdf`);
+    };
+
+    return (
+        <div className="min-h-screen p-6 animate-fade max-w-xl mx-auto pb-20">
+            <div className="flex justify-between items-center mb-6">
+                <a href="index.html" className="text-[10px] underline opacity-50 text-red-500 font-black">← EXIT PANIC ROOM</a>
+                <span className="text-[9px] text-red-600 animate-pulse uppercase italic">Dynamic Surveillance Active</span>
+            </div>
+
+            <h1 className="text-red-600 text-lg uppercase mb-8 text-center italic tracking-tighter shadow-[0_0_15px_rgba(220,38,38,0.2)]">M5: TERME INTELLIGENCE</h1>
+
+            {/* PANEL 1: TARGET SELECTION & EXPORT */}
+            <div className="glass p-6 rounded-[2.5rem] border-red-500/30 mb-6 shadow-[0_0_20px_rgba(220,38,38,0.1)]">
+                <p className="text-[8px] text-slate-400 uppercase tracking-widest mb-2"><i className="fa-solid fa-crosshairs text-red-500 mr-2"></i>Target Selection (Dossier Generator)</p>
+                <select 
+                    value={selectedTarget} 
+                    onChange={(e) => setSelectedTarget(e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-700 p-4 rounded-2xl text-white text-sm outline-none mb-4 cursor-pointer"
+                >
+                    {targets.map(t => <option key={t.id} value={t.name}>{t.name} ({t.ids})</option>)}
+                </select>
+                
+                <button onClick={exportForensicPDF} className="w-full bg-red-600 hover:bg-red-700 p-4 rounded-2xl text-[10px] uppercase font-black italic shadow-[0_0_15px_rgba(220,38,38,0.4)] transition-all active:scale-95">
+                    <i className="fa-solid fa-file-pdf mr-2"></i> Export Forensic Dossier (.PDF)
+                </button>
+            </div>
+
+            {/* PANEL 2: LIVE ROSTER */}
+            <div className="glass p-6 rounded-[2.5rem] border-cyan-500/20 mb-6">
+                <p className="text-[9px] text-cyan-500 uppercase tracking-widest mb-4 italic"><i className="fa-solid fa-anchor mr-2"></i>Live Roster: Terme Tersanesi</p>
+                <div className="space-y-3">
+                    {roster.map(v => (
+                        <div key={v.vessel} className={`flex justify-between items-center p-4 bg-black/40 rounded-xl border ${v.alert ? 'border-red-500/50' : 'border-white/5'}`}>
+                            <span className="text-[10px] text-white uppercase italic">{v.vessel}</span>
+                            <span className={`text-[8px] font-black uppercase tracking-widest ${v.alert ? 'text-red-500 animate-pulse' : 'text-cyan-400'}`}>{v.status}</span>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* PANEL 3: HISTORY LOG */}
+            <div className="glass p-6 rounded-[2.5rem] border-slate-700 opacity-90">
+                <p className="text-[9px] text-slate-400 uppercase tracking-widest mb-4 italic"><i className="fa-solid fa-clock-rotate-left mr-2"></i>Visitor History Log</p>
+                <div className="space-y-2 text-[8px] font-mono text-slate-400 italic">
+                    <p className="border-l-2 border-slate-600 pl-2">> 25/03: OCEAN PEACE (Departure Terme)</p>
+                    <p className="border-l-2 border-slate-600 pl-2">> 22/03: ALASUND TRAWLER 01 (Arrival Terme)</p>
+                    <p className="border-l-2 border-red-900 pl-2 text-red-500">> 18/03: S.V. NIKOLAY (Entry Geofence)</p>
+                </div>
             </div>
         </div>
     );
 };
-ReactDOM.createRoot(document.getElementById('root')).render(<WarRoom/>);
-</script></body></html>
+
+ReactDOM.createRoot(document.getElementById('root')).render(<WarRoom />);
+</script>
+</body>
+</html>

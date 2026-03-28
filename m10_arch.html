@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M10: Architect</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');body{background:#020617;color:white;font-family:'Orbitron',sans-serif;font-style:italic;font-weight:bold;}.glass{background:rgba(15,23,42,0.7);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.1);}</style>
+</head>
+<body><div id="root"></div><script type="text/babel">
+const Arch=()=>(
+    <div className="min-h-screen p-6 bg-slate-950">
+        <a href="index.html" className="text-[10px] underline opacity-50 text-indigo-400">← HUB</a>
+        <h1 className="text-indigo-400 text-lg mt-8 mb-10 text-center uppercase">M10: SYSTEM ARCHITECT</h1>
+        <div className="glass p-6 rounded-3xl border-indigo-500/20 mb-4">
+            <p className="text-[8px] uppercase text-indigo-400 mb-2 tracking-widest">Supabase Cloud</p>
+            <div className="flex justify-between items-center"><span className="text-[10px]">Connection Status</span><span className="text-emerald-500 text-[10px]">SECURE</span></div>
+        </div>
+        <div className="p-4 bg-black/50 rounded-2xl border border-white/5 font-mono text-[8px] text-indigo-300">
+            > Initializing NauticalOS v3.38...<br/>
+            > Authentication layers: LOCKED<br/>
+            > Fleet Modules: 13/13 ONLINE
+        </div>
+    </div>
+);
+ReactDOM.createRoot(document.getElementById('root')).render(<Arch/>);
+</script></body></html>

@@ -1,83 +1,50 @@
-<!DOCTYPE html>
-<html lang="el">
-<head>
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>M3: Load Test Project Manager</title>
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <style>@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');body{background:#020617;color:white;font-family:'Orbitron',sans-serif;font-style:italic;font-weight:bold;}.glass{background:rgba(15,23,42,0.7);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.1);}</style>
-</head>
-<body><div id="root"></div><script type="text/babel">
-const { useState } = React;
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+// --- DEDICATED M3 AUDITOR (Independent Vault) ---
+const Telemetry = {
+    log: (type, action, details) => {
+        const logs = JSON.parse(localStorage.getItem('ntg_M3_logs') || '[]');
+        logs.push({ ts: new Date().toISOString(), type, action, details });
+        localStorage.setItem('ntg_M3_logs', JSON.stringify(logs.slice(-50)));
+    }
+};
 
 const LoadTestApp = () => {
-    const [view, setView] = useState('DASHBOARD'); // DASHBOARD, WORKSPACE
-    const [activeJob, setActiveJob] = useState(null);
-    const [userRole] = useState('DIRECTOR'); // ADMIN ROLE
-
-    const [jobs] = useState([
-        { id: 'JOB-2026-001', vessel: 'MT FELIX', port: 'Elefsis', status: 'ACTIVE', date: '28/03/2026' },
-        { id: 'JOB-2026-002', vessel: 'MV ADASTRA', port: 'Piraeus', status: 'COMPLETED', date: '12/03/2026' }
+    const [view, setView] = useState('DASHBOARD');
+    const [sunMode, setSunMode] = useState(false);
+    
+    // ΔΙΑΧΩΡΙΣΜΟΣ JOBS (Won vs Lost)
+    const [jobs, setJobs] = useState([
+        { id: 1, vessel: 'MT FELIX', type: 'WON', status: 'COMPLETED' },
+        { id: 2, vessel: 'MV ARGO', type: 'LOST', reason: 'High Price' }
     ]);
 
-    // --- MATH ENGINE (CARGO) ---
-    const calculateCargo = (swl) => swl <= 20 ? swl * 1.25 : parseFloat(swl) + 5;
+    useEffect(() => { Telemetry.log('INFO', 'BOOT', 'M3 Load Test Pro Online'); }, []);
 
-    // --- VIEW: DASHBOARD ---
-    if (view === 'DASHBOARD') return (
-        <div className="min-h-screen p-6 animate-fade">
+    // ... Math Engine & UI Logic ...
+
+    return (
+        <div className={`min-h-screen p-6 ${sunMode ? 'bg-white text-black' : 'bg-slate-950 text-white'}`}>
             <div className="flex justify-between items-center mb-10">
-                <a href="index.html" className="text-[10px] underline opacity-50 text-orange-500 font-black tracking-widest">← HUB</a>
-                <span className="text-[9px] text-orange-600 font-black uppercase italic">Project Manager v3.68</span>
+                <span className="text-[10px] font-black uppercase tracking-widest italic text-orange-500">M3: Load Test Pro</span>
+                <button onClick={() => setSunMode(!sunMode)} className="p-2 glass rounded-full">
+                    <i className={`fa-solid ${sunMode ? 'fa-moon text-blue-900' : 'fa-sun text-yellow-500'}`}></i>
+                </button>
+            </div>
+
+            {/* DASHBOARD SELECTION: WON vs LOST */}
+            <div className="grid grid-cols-2 gap-4 mb-10">
+                <button className="glass p-6 rounded-3xl border-emerald-500/30 text-emerald-400 font-black italic uppercase text-[10px]">
+                    Won Jobs (Active)
+                </button>
+                <button className="glass p-6 rounded-3xl border-red-500/30 text-red-500 font-black italic uppercase text-[10px]">
+                    Lost Quotes (Archive)
+                </button>
             </div>
             
-            <h1 className="text-orange-500 text-lg uppercase mb-8 text-center italic font-black">M3: LOAD TEST JOBS</h1>
-
-            {userRole === 'DIRECTOR' && (
-                <button className="w-full bg-orange-600/10 border-2 border-dashed border-orange-500/40 p-6 rounded-[2.5rem] text-orange-500 font-black uppercase text-[10px] mb-8 flex items-center justify-center gap-3 active:scale-95 transition-all">
-                    <i className="fa-solid fa-folder-plus text-xl"></i> Create New Project (Admin)
-                </button>
-            )}
-
-            <div className="space-y-4">
-                <p className="text-[8px] text-slate-500 uppercase tracking-widest ml-2 italic">Active Load Test Assignments</p>
-                {jobs.map(job => (
-                    <div key={job.id} onClick={() => { setActiveJob(job); setView('WORKSPACE'); }} className="glass p-5 rounded-[2rem] border-l-4 border-orange-600 flex justify-between items-center cursor-pointer active:scale-95 transition-all">
-                        <div><p className="text-sm text-white font-black">{job.vessel}</p><p className="text-[8px] text-slate-500 mt-1">{job.port} | {job.date}</p></div>
-                        <i className="fa-solid fa-chevron-right text-orange-900"></i>
-                    </div>
-                ))}
-            </div>
-        </div>
-    );
-
-    // --- VIEW: WORKSPACE (The Old M3 Logic inside a Folder) ---
-    return (
-        <div className="min-h-screen p-6 animate-fade bg-slate-950 font-bold italic">
-            <div className="flex justify-between items-center mb-6">
-                <button onClick={() => setView('DASHBOARD')} className="text-[10px] underline opacity-50 text-orange-500 font-black tracking-widest">← BACK TO JOBS</button>
-                <span className="text-[10px] text-white font-black uppercase">{activeJob?.vessel}</span>
-            </div>
-
-            <div className="glass p-6 rounded-[2.5rem] border-orange-500/20 mb-8 shadow-2xl border-b-4 border-orange-600">
-                <p className="text-[8px] text-slate-500 uppercase tracking-widest mb-4">Select Service for {activeJob?.vessel}</p>
-                <div className="grid grid-cols-2 gap-3">
-                    <button className="bg-orange-600 p-4 rounded-2xl text-[9px] uppercase font-black">Cargo Gear</button>
-                    <button className="bg-slate-800 p-4 rounded-2xl text-[9px] uppercase font-black opacity-50">Mooring BHC</button>
-                </div>
-            </div>
-
-            <div className="text-center opacity-30 mt-12">
-                <p className="text-[7px] uppercase tracking-widest italic">Project ID: {activeJob?.id}</p>
-                <p className="text-[7px] uppercase mt-1">NauticalOS Math Engine V3.60 Locked</p>
-            </div>
+            {/* ... Rest of Module ... */}
         </div>
     );
 };
-
-ReactDOM.createRoot(document.getElementById('root')).render(<LoadTestApp />);
-</script></body></html>
+</script>

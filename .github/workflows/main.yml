@@ -1,0 +1,28 @@
+name: NauticalOS Legal Scraper
+
+on:
+  schedule:
+    - cron: '0 */12 * * *' # Εκτέλεση κάθε 12 ώρες
+  workflow_dispatch: # Σου επιτρέπει να το τρέχεις και χειροκίνητα για τεστ
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install Dependencies
+        run: |
+          pip install requests pandas supabase
+
+      - name: Run Legal Scraper
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: python scrapers/legal_engine.py

@@ -2,64 +2,32 @@
 <html lang="el">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>M3: Load Test Certifier</title>
+    <title>M3: Load Test</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');body{background:#020617;color:white;font-family:'Orbitron',sans-serif;font-style:italic;font-weight:bold;}.glass{background:rgba(15,23,42,0.7);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.1);}</style>
 </head>
 <body><div id="root"></div><script type="text/babel">
-const LoadTestApp = () => {
-    const [swl, setSwl] = React.useState('');
-    const [equip, setEquip] = React.useState('Crane No.1');
-    const [history, setHistory] = React.useState(JSON.parse(localStorage.getItem('ntg_loadtest_storage')) || []);
-
-    const calculateProof = (val) => {
-        const s = parseFloat(val);
-        if (!s) return 0;
-        if (s <= 20) return s * 1.25;
-        if (s > 20 && s <= 50) return s + 5;
-        return s * 1.1;
-    };
-
-    const proofLoad = calculateProof(swl);
-
-    const saveAndGen = () => {
-        if(!swl) return;
-        const newCert = { id: Date.now(), equip, swl, proof: proofLoad.toFixed(2), date: new Date().toLocaleDateString() };
-        const updated = [newCert, ...history];
-        setHistory(updated);
-        localStorage.setItem('ntg_loadtest_storage', JSON.stringify(updated));
-
-        // PDF Generation logic
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        doc.text("CERTIFICATE OF TEST - ILO 152", 105, 40, { align: "center" });
-        doc.text(`Equipment: ${equip}`, 20, 60);
-        doc.text(`SWL: ${swl} Tons`, 20, 70);
-        doc.text(`Proof Load: ${proofLoad.toFixed(2)} Tons`, 20, 80);
-        doc.text(`Date: ${newCert.date}`, 20, 90);
-        doc.save(`CERT_${equip}_${Date.now()}.pdf`);
-    };
-
-    return (
-        <div className="min-h-screen p-6 animate-fade">
-            <div className="flex justify-between items-center mb-8">
-                <a href="index.html" className="text-[10px] underline opacity-50 text-orange-400 font-black italic">← HUB</a>
-                <span className="text-[10px] text-orange-500 font-black uppercase tracking-widest italic border-b border-orange-900">ILO 152 Engine</span>
+const LoadTest=()=>{
+    const [swl,setSwl]=React.useState('');
+    const proof = swl ? (parseFloat(swl)<=20?swl*1.25:parseFloat(swl)+5):0;
+    return(
+        <div className="min-h-screen p-6 animate-fade bg-slate-950">
+            <div className="flex justify-between mb-8"><a href="index.html" className="text-[10px] underline opacity-50 text-orange-500">← HUB</a></div>
+            <h1 className="text-orange-500 text-lg mb-10 text-center uppercase">M3: LOAD TESTING</h1>
+            <div className="glass p-8 rounded-[3rem] border-orange-500/20 shadow-2xl">
+                <input type="number" value={swl} onChange={(e)=>setSwl(e.target.value)} className="w-full bg-black/40 p-6 rounded-2xl text-center text-4xl font-black text-white outline-none mb-6" placeholder="0.0" />
+                <div className="text-center">
+                    <p className="text-[9px] uppercase text-slate-400 italic">Target Test Load</p>
+                    <p className="text-4xl text-orange-500 font-black">{proof.toFixed(2)} T</p>
+                </div>
             </div>
-
-            <h1 className="text-orange-500 text-lg uppercase mb-10 text-center italic tracking-tighter">M3: LOAD TESTING</h1>
-
-            <div className="glass p-8 rounded-[3rem] border-orange-500/20 shadow-2xl mb-8">
-                <div className="space-y-6">
-                    <div>
-                        <label className="text-[8px] uppercase text-slate-500 block mb-2 tracking-widest">Equipment Identity</label>
-                        <input type="text" value={equip} onChange={(e)=>setEquip(e.target.value)}
-                               className="w-full bg-black/40 p-4 rounded-2xl border border-slate-800 text-sm outline-none focus:border-orange-500" />
-                    </div>
-                    <div>
-                        <label className="text-[8px] uppercase text-slate-500 block mb-2 tracking-widest">SWL (Tons)</label>
+        </div>
+    );
+};
+try { ReactDOM.createRoot(document.getElementById('root')).render(<LoadTest/>); } 
+catch(e) { document.body.innerHTML = '<div style="color:red;padding:20px">React Error: '+e.message+'</div>'; }
+</script></body></html>

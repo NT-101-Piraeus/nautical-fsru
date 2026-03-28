@@ -10,7 +10,37 @@ const Telemetry = {
     }
 };
 
-const LoadTestApp = () => {
+const LoadTestApp = () => {// 1. Forensic Logging Guard (V4 Compliant)
+function silentLog(action) {
+    try {
+        let logs = JSON.parse(localStorage.getItem('ntg_M3_logs')) || [];
+        // Lazy Load Logic: Κράτα μόνο τα τελευταία 50 logs για ταχύτητα
+        if (logs.length > 50) logs.shift(); 
+        
+        logs.push({
+            timestamp: new Date().toISOString(),
+            action: action,
+            device: "M3-CERT-TABLET"
+        });
+        localStorage.setItem('ntg_M3_logs', JSON.stringify(logs));
+    } catch (e) {
+        console.error("Audit Log Failure - Storage Full?");
+    }
+}
+
+// 2. Fat-Finger Calculation Engine
+function calculateProofLoad(swl) {
+    let proofLoad;
+    if (swl <= 20) {
+        proofLoad = swl * 1.25; // +25%
+    } else if (swl > 20 && swl <= 50) {
+        proofLoad = parseFloat(swl) + 5; // +5t
+    } else {
+        proofLoad = swl * 1.10; // +10%
+    }
+    silentLog(`Calculation for SWL ${swl}: Target ${proofLoad}t`);
+    return proofLoad.toFixed(2);
+}
     const [view, setView] = useState('DASHBOARD');
     const [sunMode, setSunMode] = useState(false);
     

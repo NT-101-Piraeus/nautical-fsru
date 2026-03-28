@@ -1,80 +1,13 @@
-<script type="text/babel">
-const { useState, useEffect } = React;
-
-// --- DEDICATED M3 AUDITOR (Independent Vault) ---
-const Telemetry = {
-    log: (type, action, details) => {
-        const logs = JSON.parse(localStorage.getItem('ntg_M3_logs') || '[]');
-        logs.push({ ts: new Date().toISOString(), type, action, details });
-        localStorage.setItem('ntg_M3_logs', JSON.stringify(logs.slice(-50)));
-    }
-};
-
-const LoadTestApp = () => {// 1. Forensic Logging Guard (V4 Compliant)
-function silentLog(action) {
-    try {
-        let logs = JSON.parse(localStorage.getItem('ntg_M3_logs')) || [];
-        // Lazy Load Logic: Κράτα μόνο τα τελευταία 50 logs για ταχύτητα
-        if (logs.length > 50) logs.shift(); 
-        
-        logs.push({
-            timestamp: new Date().toISOString(),
-            action: action,
-            device: "M3-CERT-TABLET"
-        });
-        localStorage.setItem('ntg_M3_logs', JSON.stringify(logs));
-    } catch (e) {
-        console.error("Audit Log Failure - Storage Full?");
-    }
-}
-
-// 2. Fat-Finger Calculation Engine
-function calculateProofLoad(swl) {
-    let proofLoad;
-    if (swl <= 20) {
-        proofLoad = swl * 1.25; // +25%
-    } else if (swl > 20 && swl <= 50) {
-        proofLoad = parseFloat(swl) + 5; // +5t
-    } else {
-        proofLoad = swl * 1.10; // +10%
-    }
-    silentLog(`Calculation for SWL ${swl}: Target ${proofLoad}t`);
-    return proofLoad.toFixed(2);
-}
-    const [view, setView] = useState('DASHBOARD');
-    const [sunMode, setSunMode] = useState(false);
-    
-    // ΔΙΑΧΩΡΙΣΜΟΣ JOBS (Won vs Lost)
-    const [jobs, setJobs] = useState([
-        { id: 1, vessel: 'MT FELIX', type: 'WON', status: 'COMPLETED' },
-        { id: 2, vessel: 'MV ARGO', type: 'LOST', reason: 'High Price' }
-    ]);
-
-    useEffect(() => { Telemetry.log('INFO', 'BOOT', 'M3 Load Test Pro Online'); }, []);
-
-    // ... Math Engine & UI Logic ...
-
-    return (
-        <div className={`min-h-screen p-6 ${sunMode ? 'bg-white text-black' : 'bg-slate-950 text-white'}`}>
-            <div className="flex justify-between items-center mb-10">
-                <span className="text-[10px] font-black uppercase tracking-widest italic text-orange-500">M3: Load Test Pro</span>
-                <button onClick={() => setSunMode(!sunMode)} className="p-2 glass rounded-full">
-                    <i className={`fa-solid ${sunMode ? 'fa-moon text-blue-900' : 'fa-sun text-yellow-500'}`}></i>
-                </button>
-            </div>
-
-            {/* DASHBOARD SELECTION: WON vs LOST */}
-            <div className="grid grid-cols-2 gap-4 mb-10">
-                <button className="glass p-6 rounded-3xl border-emerald-500/30 text-emerald-400 font-black italic uppercase text-[10px]">
-                    Won Jobs (Active)
-                </button>
-                <button className="glass p-6 rounded-3xl border-red-500/30 text-red-500 font-black italic uppercase text-[10px]">
-                    Lost Quotes (Archive)
-                </button>
-            </div>
-            
-            {/* ... Rest of Module ... */}
-        </div>
-    );
-};
-</script>
+<!DOCTYPE html>
+<html>
+<body style="background:#020617; color:white; font-family:sans-serif; text-align:center; padding:50px;">
+    <h1 style="color:#f97316;">M3 EMERGENCY STANDBY</h1>
+    <p>System is in Hard Isolation Mode.</p>
+    <button onclick="localStorage.clear(); alert('Memory Purged'); location.reload();" 
+            style="padding:20px; background:#ef4444; color:white; border:none; border-radius:15px; font-weight:bold;">
+        HARD RESET ALL DATA
+    </button>
+    <br><br>
+    <a href="index.html" style="color:#6366f1;">← BACK TO HUB</a>
+</body>
+</html>

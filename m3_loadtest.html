@@ -1,13 +1,167 @@
 <!DOCTYPE html>
-<html>
-<body style="background:#020617; color:white; font-family:sans-serif; text-align:center; padding:50px;">
-    <h1 style="color:#f97316;">M3 EMERGENCY STANDBY</h1>
-    <p>System is in Hard Isolation Mode.</p>
-    <button onclick="localStorage.clear(); alert('Memory Purged'); location.reload();" 
-            style="padding:20px; background:#ef4444; color:white; border:none; border-radius:15px; font-weight:bold;">
-        HARD RESET ALL DATA
-    </button>
-    <br><br>
-    <a href="index.html" style="color:#6366f1;">← BACK TO HUB</a>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>M3: Load Test Pro V4.0</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');
+        body { font-family: 'Orbitron', sans-serif; font-style: italic; font-weight: bold; }
+        .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .nautical-dark { background: #020617; color: white; }
+        .sun-mode { background: #f8fafc; color: #0f172a; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // --- M10 TELEMETRY ENGINE ---
+        const Telemetry = {
+            log: (action, details) => {
+                const logs = JSON.parse(localStorage.getItem('ntg_M3_logs') || '[]');
+                logs.push({ ts: new Date().toISOString(), action, details, user: "M. SYKINIOTIS" });
+                localStorage.setItem('ntg_M3_logs', JSON.stringify(logs.slice(-100)));
+            }
+        };
+
+        const M3App = () => {
+            const [sunMode, setSunMode] = useState(false);
+            const [view, setView] = useState('DASHBOARD'); // DASHBOARD, WON, LOST, ADD_JOB
+            const [pin, setPin] = useState('');
+            const [selectedReason, setSelectedReason] = useState('');
+
+            // --- STATE: JOBS (Lazy Load from Storage) ---
+            const [jobs, setJobs] = useState(() => {
+                const saved = localStorage.getItem('ntg_M3_jobs');
+                return saved ? JSON.parse(saved) : [
+                    { id: 1, vessel: 'MT FELIX', status: 'WON', date: '2026-03-28' },
+                    { id: 2, vessel: 'MV ARGO', status: 'LOST', reason: 'High Price', date: '2026-03-25' }
+                ];
+            });
+
+            useEffect(() => {
+                localStorage.setItem('ntg_M3_jobs', JSON.stringify(jobs));
+            }, [jobs]);
+
+            // --- ADMIN LOGIC ---
+            const handleAddJob = (name) => {
+                if (pin !== '1234') return alert("❌ ACCESS DENIED");
+                const newJob = { id: Date.now(), vessel: name.toUpperCase(), status: 'WON', date: new Date().toISOString().split('T')[0] };
+                setJobs([...jobs, newJob]);
+                Telemetry.log('ADD_JOB', name);
+                setView('DASHBOARD');
+                setPin('');
+            };
+
+            const markAsLost = (id, reason) => {
+                if (pin !== '1234') return alert("❌ ADMIN PIN REQUIRED");
+                const updated = jobs.map(j => j.id === id ? { ...j, status: 'LOST', reason } : j);
+                setJobs(updated);
+                Telemetry.log('LOST_QUOTE', `ID: ${id} | Reason: ${reason}`);
+                setPin('');
+            };
+
+            return (
+                <div className={`min-h-screen p-6 transition-all ${sunMode ? 'sun-mode' : 'nautical-dark'}`}>
+                    {/* HEADER */}
+                    <div className="flex justify-between items-center mb-8">
+                        <div className="flex flex-col">
+                            <span className="text-[10px] text-orange-500 font-black uppercase tracking-tighter">M3: Load Test Pro</span>
+                            <span className="text-[8px] opacity-50 uppercase italic">V4.0 Constitution Compliant</span>
+                        </div>
+                        <button onClick={() => setSunMode(!sunMode)} className="p-3 glass rounded-full border-orange-500/20">
+                            <i className={`fa-solid ${sunMode ? 'fa-moon' : 'fa-sun text-yellow-500'}`}></i>
+                        </button>
+                    </div>
+
+                    {/* DASHBOARD VIEW */}
+                    {view === 'DASHBOARD' && (
+                        <div className="animate-fade space-y-6">
+                            <div className="grid grid-cols-2 gap-4">
+                                <button onClick={() => setView('WON')} className="glass p-8 rounded-[2.5rem] border-emerald-500/30 text-center active:scale-95 transition-all">
+                                    <p className="text-[10px] text-emerald-500 uppercase font-black mb-2">Won Jobs</p>
+                                    <p className="text-4xl font-black">{jobs.filter(j=>j.status==='WON').length}</p>
+                                </button>
+                                <button onClick={() => setView('LOST')} className="glass p-8 rounded-[2.5rem] border-red-500/30 text-center active:scale-95 transition-all">
+                                    <p className="text-[10px] text-red-500 uppercase font-black mb-2">Lost Quotes</p>
+                                    <p className="text-4xl font-black">{jobs.filter(j=>j.status==='LOST').length}</p>
+                                </button>
+                            </div>
+
+                            <button onClick={() => setView('ADD_JOB')} className="w-full bg-orange-600/10 border-2 border-dashed border-orange-500/40 p-8 rounded-[2.5rem] text-orange-500 font-black uppercase text-[12px] flex items-center justify-center gap-4 active:scale-95 transition-all shadow-xl">
+                                <i className="fa-solid fa-folder-plus text-2xl"></i> Add New Project (Admin)
+                            </button>
+                        </div>
+                    )}
+
+                    {/* WON JOBS LIST */}
+                    {view === 'WON' && (
+                        <div className="animate-fade space-y-4">
+                            <button onClick={() => setView('DASHBOARD')} className="text-[10px] underline mb-4 opacity-50 uppercase italic">← Back to Hub</button>
+                            <h2 className="text-emerald-500 text-sm mb-6 italic uppercase">Won Jobs (Active Projects)</h2>
+                            {jobs.filter(j=>j.status==='WON').map(job => (
+                                <div key={job.id} className="glass p-5 rounded-3xl border-l-4 border-emerald-500 flex justify-between items-center shadow-lg">
+                                    <div>
+                                        <p className="text-lg font-black">{job.vessel}</p>
+                                        <p className="text-[9px] opacity-50 uppercase">{job.date}</p>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <button onClick={() => { setPin(prompt("Enter Admin PIN")); markAsLost(job.id, "Converted to Lost") }} className="p-3 bg-red-500/10 text-red-500 rounded-xl"><i className="fa-solid fa-xmark"></i></button>
+                                        <button className="p-3 bg-emerald-500 text-white rounded-xl"><i className="fa-solid fa-play"></i></button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* LOST QUOTES LIST */}
+                    {view === 'LOST' && (
+                        <div className="animate-fade space-y-4">
+                            <button onClick={() => setView('DASHBOARD')} className="text-[10px] underline mb-4 opacity-50 uppercase italic">← Back to Hub</button>
+                            <h2 className="text-red-500 text-sm mb-6 italic uppercase">Lost Quotes Archive</h2>
+                            {jobs.filter(j=>j.status==='LOST').map(job => (
+                                <div key={job.id} className="glass p-5 rounded-3xl border-l-4 border-red-500 opacity-70">
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <p className="text-lg font-black">{job.vessel}</p>
+                                            <p className="text-[9px] uppercase">{job.date}</p>
+                                        </div>
+                                        <span className="text-[8px] bg-red-500/20 text-red-500 px-2 py-1 rounded uppercase font-black">{job.reason}</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* ADD JOB MODAL (PIN PROTECTED) */}
+                    {view === 'ADD_JOB' && (
+                        <div className="animate-fade space-y-6 glass p-8 rounded-[3rem] border-orange-500/30">
+                            <h2 className="text-center text-orange-500 uppercase italic">Create New Project</h2>
+                            <input type="password" placeholder="ENTER ADMIN PIN" value={pin} onChange={(e)=>setPin(e.target.value)} className="w-full bg-black/40 p-5 rounded-2xl text-center text-xl tracking-[0.5rem] outline-none border border-white/10" />
+                            {pin === '1234' && (
+                                <div className="space-y-4 animate-fade">
+                                    <input id="vesselName" type="text" placeholder="VESSEL NAME" className="w-full bg-slate-900/50 p-5 rounded-2xl outline-none border border-white/5 uppercase" />
+                                    <button onClick={() => handleAddJob(document.getElementById('vesselName').value)} className="w-full bg-orange-600 p-6 rounded-3xl text-[12px] uppercase font-black italic shadow-2xl">Initialize Job Folder ⚓</button>
+                                </div>
+                            )}
+                            <button onClick={() => setView('DASHBOARD')} className="w-full text-[10px] opacity-50 uppercase mt-4">Cancel</button>
+                        </div>
+                    )}
+
+                    <p className="fixed bottom-6 left-0 right-0 text-[7px] text-center opacity-30 uppercase tracking-[0.3rem]">Nautical Technology Systems © 2026</p>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<M3App />);
+    </script>
 </body>
 </html>

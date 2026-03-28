@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NauticalOS Hub v3.61</title>
+    <title>NauticalOS: Command Hub v4.30</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -11,52 +11,92 @@
     <style>@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');body{background:#020617;color:white;font-family:'Orbitron',sans-serif;font-style:italic;font-weight:bold;}.glass{background:rgba(15,23,42,0.7);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.1);}</style>
 </head>
 <body><div id="root"></div><script type="text/babel">
-const Hub=()=>{
-    const apps=[
-        // ROW 1: THE CORE TECHNICALS
-        {id:'m1', row:1, name:'UTM', icon:'fa-layer-group', color:'border-slate-500', url:'m1_utm.html'},
-        {id:'m2', row:1, name:'SAFETY', icon:'fa-shield-halved', color:'border-blue-600', url:'m2_safety.html'},
-        {id:'m3', row:1, name:'LOAD TEST', icon:'fa-weight-hanging', color:'border-orange-600', url:'m3_loadtest.html'},
-        // ROW 2: STRATEGIC INTEL
-        {id:'m4', row:2, name:'RADAR', icon:'fa-radar', color:'border-cyan-600', url:'m4_radar.html'},
-        {id:'m5', row:2, name:'WAR ROOM', icon:'fa-gavel', color:'border-red-600', url:'m5_terme.html'},
-        // ROW 3: KNOWLEDGE & STAFF
-        {id:'m8', row:3, name:'ACADEMY', icon:'fa-graduation-cap', color:'border-emerald-600', url:'m8_academy.html'},
-        {id:'m12', row:3, name:'STAFF', icon:'fa-users', color:'border-blue-400', url:'m12_staff.html'},
-        {id:'m9', row:3, name:'OPERATION', icon:'fa-clipboard-check', color:'border-indigo-500', url:'m9_ops.html'},
-        // ROW 4: BUSINESS & STARTUP
-        {id:'m13', row:4, name:'MYKONOS', icon:'fa-house-chimney', color:'border-blue-300', url:'m13_mykonos.html'},
-        {id:'m7', row:4, name:'STARTUP', icon:'fa-rocket', color:'border-yellow-500', url:'m7_startup.html'},
-        // ROW 5: SYSTEMS & ANALYTICS
-        {id:'m11', row:5, name:'SENSORS', icon:'fa-satellite-dish', color:'border-pink-600', url:'m11_sensors.html'},
-        {id:'m10', row:5, name:'ARCHITECT', icon:'fa-microchip', color:'border-indigo-400', url:'m10_arch.html'},
-        {id:'m6', row:5, name:'CEO PULSE', icon:'fa-chart-line', color:'border-purple-600', url:'m6_ceo.html'}
-    ];
+const { useState, useEffect } = React;
 
-    const renderRow = (rowNum, cols) => (
-        <div className={`grid grid-cols-${cols} gap-2 mb-2`}>
-            {apps.filter(a => a.row === rowNum).map(app => (
-                <a key={app.id} href={app.url} className={`glass p-3 h-24 rounded-[1.8rem] border-b-4 ${app.color} flex flex-col items-center justify-center gap-1 active:scale-95 transition-all shadow-xl`}>
-                    <i className={`fa-solid ${app.icon} text-lg`}></i>
-                    <span className="text-[7px] font-black uppercase text-center leading-tight">{app.name}</span>
-                </a>
-            ))}
-        </div>
-    );
+const HubCommand = () => {
+    const [m3Stats, setM3Stats] = useState({ won: 0, lost: 0, pendingEvidence: 0 });
 
-    return(
-        <div className="min-h-screen p-4 max-w-xl mx-auto animate-fade">
-            <div className="flex justify-between items-center px-4 pt-6 mb-8">
-                <div className="text-left"><span className="text-[7px] text-slate-500 uppercase tracking-widest font-black">DIRECTOR MODE</span><p className="text-sm uppercase tracking-tighter text-blue-400 font-black">M. SYKINIOTIS</p></div>
-                <div className="h-2 w-2 bg-blue-500 rounded-full animate-pulse shadow-[0_0_10px_cyan]"></div>
+    useEffect(() => {
+        // Sync Logic: Reading from M3 Fortress
+        const jobs = JSON.parse(localStorage.getItem('ntg_M3_jobs') || '[]');
+        const won = jobs.filter(j => j.status === 'WON').length;
+        const lost = jobs.filter(j => j.status === 'LOST').length;
+        
+        // Simulation of log checking for evidence
+        setM3Stats({ won, lost, pendingEvidence: won > 0 ? 1 : 0 });
+    }, []);
+
+    return (
+        <div className="min-h-screen p-6 bg-slate-950 text-white italic">
+            {/* HEADER */}
+            <div className="mb-10 flex justify-between items-end border-b border-white/10 pb-6">
+                <div>
+                    <h1 className="text-2xl font-black tracking-tighter uppercase">NauticalOS Hub</h1>
+                    <p className="text-[9px] text-blue-400 uppercase tracking-widest font-black">Fleet Operations Command</p>
+                </div>
+                <div className="text-right">
+                    <p className="text-[8px] opacity-50 uppercase">Vessel: MT FELIX</p>
+                    <p className="text-[10px] font-black text-orange-500">ADMIN: 1234 ACTIVE</p>
+                </div>
             </div>
-            {renderRow(1, 3)}
-            {renderRow(2, 2)}
-            {renderRow(3, 3)}
-            {renderRow(4, 2)}
-            {renderRow(5, 3)}
+
+            {/* OPERATIONS DASHBOARD CARD (M3 SYNC) */}
+            <div className="mb-10 animate-fade">
+                <div className="glass p-8 rounded-[3rem] border-orange-500/30 relative overflow-hidden">
+                    <div className="flex justify-between items-start mb-6">
+                        <div>
+                            <p className="text-[10px] text-orange-500 font-black uppercase italic">M3 Load Test Insight</p>
+                            <h2 className="text-xl font-black uppercase">Live Operations</h2>
+                        </div>
+                        <i className="fa-solid fa-tower-broadcast text-orange-500 animate-pulse"></i>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-4">
+                        <div className="bg-emerald-500/10 p-4 rounded-2xl border border-emerald-500/20 text-center">
+                            <p className="text-[8px] text-emerald-500 uppercase font-black">Won</p>
+                            <p className="text-xl font-black">{m3Stats.won}</p>
+                        </div>
+                        <div className="bg-red-500/10 p-4 rounded-2xl border border-red-500/20 text-center">
+                            <p className="text-[8px] text-red-500 uppercase font-black">Lost</p>
+                            <p className="text-xl font-black">{m3Stats.lost}</p>
+                        </div>
+                        <div className="bg-orange-500/10 p-4 rounded-2xl border border-orange-500/20 text-center">
+                            <p className="text-[8px] text-orange-500 uppercase font-black italic">Alerts</p>
+                            <p className="text-xl font-black">{m3Stats.pendingEvidence}⚠️</p>
+                        </div>
+                    </div>
+
+                    {m3Stats.pendingEvidence > 0 && (
+                        <div className="mt-6 p-4 bg-orange-500/20 rounded-2xl text-center border border-orange-500/30">
+                            <p className="text-[9px] text-orange-400 uppercase font-black italic">Warning: Evidence missing on active jobs!</p>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* DIVISION SELECTOR */}
+            <div className="grid grid-cols-2 gap-4">
+                <button onClick={() => window.location.href='m2_safety.html'} className="glass p-10 rounded-[3rem] border-blue-500/30 text-center active:scale-95 transition-all">
+                    <i className="fa-solid fa-shield-halved text-3xl mb-4 text-blue-500"></i>
+                    <p className="text-[10px] font-black uppercase">M2 Safety</p>
+                </button>
+                <button onClick={() => window.location.href='m3_loadtest.html'} className="glass p-10 rounded-[3rem] border-orange-500/30 text-center active:scale-95 transition-all">
+                    <i className="fa-solid fa-anchor text-3xl mb-4 text-orange-500"></i>
+                    <p className="text-[10px] font-black uppercase">M3 Load Test</p>
+                </button>
+                <button className="glass p-10 rounded-[3rem] border-white/5 opacity-30 text-center grayscale">
+                    <i className="fa-solid fa-satellite-dish text-3xl mb-4"></i>
+                    <p className="text-[10px] font-black uppercase">M4 Radar</p>
+                </button>
+                <button className="glass p-10 rounded-[3rem] border-white/5 opacity-30 text-center grayscale">
+                    <i className="fa-solid fa-scale-balanced text-3xl mb-4"></i>
+                    <p className="text-[10px] font-black uppercase">M7 Legal</p>
+                </button>
+            </div>
+
+            <p className="fixed bottom-6 left-0 right-0 text-center text-[7px] opacity-30 tracking-[0.4rem] uppercase italic">Nautical Technology Systems Command Hub</p>
         </div>
     );
 };
-ReactDOM.createRoot(document.getElementById('root')).render(<Hub/>);
+ReactDOM.createRoot(document.getElementById('root')).render(<HubCommand />);
 </script></body></html>

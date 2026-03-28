@@ -1,72 +1,31 @@
 <!DOCTYPE html>
 <html lang="el">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>M5: Operation Panic Room LIVE</title>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M5: War Room</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');
-        body { background-color: #020617; color: white; font-family: 'Orbitron', sans-serif; font-style: italic; font-weight: bold; }
-        .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
-        .alert-glow { box-shadow: 0 0 15px rgba(220, 38, 38, 0.4); }
-    </style>
+    <style>@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');body{background:#020617;color:white;font-family:'Orbitron',sans-serif;font-style:italic;font-weight:bold;}.glass{background:rgba(15,23,42,0.7);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.1);}</style>
 </head>
-<body>
-    <div id="root"></div>
-
-    <script type="text/babel">
-        const { useState, useEffect } = React;
-
-        // --- SUPABASE CONFIG ---
-        // Captain, βάλε εδώ τα δικά σου στοιχεία από το Supabase Settings
-        const SUPABASE_URL = 'https://omdarjncczohpzfrqqhr.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_V-nfUDy5MxEG4SlXkisFBg_GBlD_4Y9';
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-        const TermeApp = () => {
-            const [alerts, setAlerts] = useState([]);
-            const [loading, setLoading] = useState(true);
-
-            // Fetch Alerts από τη βάση δεδομένων
-            const fetchAlerts = async () => {
-                const { data, error } = await supabase
-                    .from('osint_alerts')
-                    .select('*')
-                    .order('created_at', { ascending: false });
-                
-                if (error) console.error("Error fetching alerts:", error);
-                else setAlerts(data || []);
-                setLoading(false);
-            };
-
-            useEffect(() => {
-                fetchAlerts();
-                // Real-time subscription: Αν προστεθεί νέο alert, ανανέωσε την οθόνη
-                const subscription = supabase
-                    .channel('any')
-                    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'osint_alerts' }, fetchAlerts)
-                    .subscribe();
-
-                return () => supabase.removeChannel(subscription);
-            }, []);
-
-            return (
-                <div className="min-h-screen p-6 animate-fade">
-                    <div className="flex justify-between items-center mb-8">
-                        <a href="index.html" className="text-[10px] uppercase underline opacity-60 font-black text-red-500">← EXIT PANIC ROOM</a>
-                        <div className="flex items-center gap-2">
-                            <div className="w-2 h-2 bg-red-600 rounded-full animate-pulse shadow-[0_0_8px_red]"></div>
-                            <span className="text-[9px] text-red-500 font-black uppercase tracking-[0.2em]">Live Intel</span>
-                        </div>
-                    </div>
-                    
-                    <h1 className="brand text-red-600 text-lg uppercase mb-10 italic tracking-tighter text-center">M5: TERME INTELLIGENCE</h1>
-                    
-                    <div className="space-y-4">
-                        <p className="text-[8px] text-slate-500 uppercase tracking-wid
+<body><div id="root"></div><script type="text/babel">
+const WarRoom=()=>(
+    <div className="min-h-screen p-6 bg-slate-950">
+        <div className="flex justify-between mb-8"><a href="index.html" className="text-[10px] underline opacity-50 text-red-500">← EXIT</a><div className="w-2 h-2 bg-red-600 rounded-full animate-pulse shadow-[0_0_10px_red]"></div></div>
+        <h1 className="text-red-600 text-lg mb-10 text-center uppercase tracking-tighter">M5: TERME INTEL</h1>
+        <div className="space-y-4">
+            <div className="glass p-5 rounded-3xl border-red-500/20 italic">
+                <p className="text-[8px] text-red-500 mb-2 uppercase tracking-widest">Active Surveillance</p>
+                <p className="text-[11px] text-white">EMIR ÖZTÜRK: NO RECENT CHANGES IN POLISH REGISTRY (KRS)</p>
+            </div>
+            <div className="glass p-5 rounded-3xl border-red-500/20 italic opacity-50">
+                <p className="text-[8px] text-red-500 mb-2 uppercase tracking-widest">Scraper Status</p>
+                <p className="text-[11px] text-white italic">DORKING ENGINE RUNNING ON 12H CYCLE...</p>
+            </div>
+        </div>
+    </div>
+);
+ReactDOM.createRoot(document.getElementById('root')).render(<WarRoom/>);
+</script></body></html>

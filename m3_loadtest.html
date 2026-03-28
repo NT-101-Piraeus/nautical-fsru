@@ -1,136 +1,65 @@
 <!DOCTYPE html>
 <html lang="el">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>M3: Load Test Certifier</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');
-        body { background-color: #020617; color: white; margin: 0; font-family: 'Orbitron', sans-serif; font-style: italic; font-weight: bold; }
-        .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
-        .brand { letter-spacing: 0.1em; }
-    </style>
+    <style>@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');body{background:#020617;color:white;font-family:'Orbitron',sans-serif;font-style:italic;font-weight:bold;}.glass{background:rgba(15,23,42,0.7);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.1);}</style>
 </head>
-<body>
-    <div id="root"></div>
+<body><div id="root"></div><script type="text/babel">
+const LoadTestApp = () => {
+    const [swl, setSwl] = React.useState('');
+    const [equip, setEquip] = React.useState('Crane No.1');
+    const [history, setHistory] = React.useState(JSON.parse(localStorage.getItem('ntg_loadtest_storage')) || []);
 
-    <script type="text/babel">
-        const { useState, useEffect } = React;
+    const calculateProof = (val) => {
+        const s = parseFloat(val);
+        if (!s) return 0;
+        if (s <= 20) return s * 1.25;
+        if (s > 20 && s <= 50) return s + 5;
+        return s * 1.1;
+    };
 
-        // --- SUPABASE CONFIG ---
-        const SUPABASE_URL = 'https://omdarjncczohpzfrqqhr.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_V-nfUDy5MxEG4SlXkisFBg_GBlD_4Y9';
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const proofLoad = calculateProof(swl);
 
-        const LoadTestApp = () => {
-            const [vessel, setVessel] = useState('FELIX');
-            const [equipment, setEquipment] = useState('Crane No.1');
-            const [swl, setSwl] = useState('');
-            const [testDate] = useState(new Date().toLocaleDateString());
-            const inspector = localStorage.getItem('ntg_role') || 'CHIEF ENGINEER';
+    const saveAndGen = () => {
+        if(!swl) return;
+        const newCert = { id: Date.now(), equip, swl, proof: proofLoad.toFixed(2), date: new Date().toLocaleDateString() };
+        const updated = [newCert, ...history];
+        setHistory(updated);
+        localStorage.setItem('ntg_loadtest_storage', JSON.stringify(updated));
 
-            // ILO 152 Logic: Up to 20t (SWL * 1.25), 20t-50t (SWL + 5t), Over 50t (SWL * 1.1)
-            const calculateProof = (val) => {
-                const s = parseFloat(val);
-                if (!s) return 0;
-                if (s <= 20) return s * 1.25;
-                if (s > 20 && s <= 50) return s + 5;
-                return s * 1.1;
-            };
+        // PDF Generation logic
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        doc.text("CERTIFICATE OF TEST - ILO 152", 105, 40, { align: "center" });
+        doc.text(`Equipment: ${equip}`, 20, 60);
+        doc.text(`SWL: ${swl} Tons`, 20, 70);
+        doc.text(`Proof Load: ${proofLoad.toFixed(2)} Tons`, 20, 80);
+        doc.text(`Date: ${newCert.date}`, 20, 90);
+        doc.save(`CERT_${equip}_${Date.now()}.pdf`);
+    };
 
-            const proofLoad = calculateProof(swl);
+    return (
+        <div className="min-h-screen p-6 animate-fade">
+            <div className="flex justify-between items-center mb-8">
+                <a href="index.html" className="text-[10px] underline opacity-50 text-orange-400 font-black italic">← HUB</a>
+                <span className="text-[10px] text-orange-500 font-black uppercase tracking-widest italic border-b border-orange-900">ILO 152 Engine</span>
+            </div>
 
-            const generatePDF = () => {
-                const { jsPDF } = window.jspdf;
-                const doc = new jsPDF();
-                
-                doc.setFontSize(22);
-                doc.text("CERTIFICATE OF TEST", 105, 40, { align: "center" });
-                doc.setFontSize(12);
-                doc.text(`Vessel: ${vessel}`, 20, 60);
-                doc.text(`Equipment: ${equipment}`, 20, 70);
-                doc.text(`Safe Working Load (SWL): ${swl} Tons`, 20, 80);
-                doc.text(`Applied Proof Load: ${proofLoad.toFixed(2)} Tons`, 20, 90);
-                doc.text(`Date of Test: ${testDate}`, 20, 110);
-                doc.text(`Authorized Inspector: ${inspector}`, 20, 130);
-                doc.text("--------------------------------------------------", 20, 140);
-                doc.text("Status: COMPLIANT WITH ILO 152 / MEG4", 105, 160, { align: "center" });
-                
-                doc.save(`CERT_${vessel}_${equipment}.pdf`);
-            };
+            <h1 className="text-orange-500 text-lg uppercase mb-10 text-center italic tracking-tighter">M3: LOAD TESTING</h1>
 
-            const syncToCloud = async () => {
-                const { error } = await supabaseClient.from('load_tests').insert([{
-                    vessel_name: vessel,
-                    equipment: equipment,
-                    swl: parseFloat(swl),
-                    proof_load: proofLoad,
-                    inspector: inspector
-                }]);
-                if (!error) alert("CERTIFICATE DATA SYNCED TO CLOUD 🛰️");
-                else alert("Cloud Sync Failed: Check Connection");
-            };
-
-            return (
-                <div className="min-h-screen p-6 animate-fade">
-                    <div className="flex justify-between items-center mb-8">
-                        <a href="index.html" className="text-[10px] uppercase underline opacity-60">← HUB</a>
-                        <span className="text-[9px] text-orange-500 font-black uppercase tracking-widest italic">ILO 152 / MEG4</span>
+            <div className="glass p-8 rounded-[3rem] border-orange-500/20 shadow-2xl mb-8">
+                <div className="space-y-6">
+                    <div>
+                        <label className="text-[8px] uppercase text-slate-500 block mb-2 tracking-widest">Equipment Identity</label>
+                        <input type="text" value={equip} onChange={(e)=>setEquip(e.target.value)}
+                               className="w-full bg-black/40 p-4 rounded-2xl border border-slate-800 text-sm outline-none focus:border-orange-500" />
                     </div>
-
-                    <h1 className="brand text-orange-500 text-lg uppercase mb-10 text-center italic tracking-tighter">M3: LOAD TESTING</h1>
-
-                    <div className="space-y-4">
-                        <div className="glass p-5 rounded-[2.5rem] border-orange-500/20">
-                            <label className="text-[8px] text-slate-500 uppercase font-black mb-2 block">Vessel Selection</label>
-                            <select value={vessel} onChange={(e)=>setVessel(e.target.value)} className="w-full bg-transparent text-xl font-black outline-none border-b border-orange-500 italic">
-                                <option value="FELIX">FELIX</option>
-                                <option value="BADJI MOKHTAR III">BADJI MOKHTAR III</option>
-                                <option value="NAFTOCEMENT IV">NAFTOCEMENT IV</option>
-                            </select>
-                        </div>
-
-                        <div className="glass p-5 rounded-[2.5rem] border-orange-500/20">
-                            <label className="text-[8px] text-slate-500 uppercase font-black mb-2 block">Equipment Identity</label>
-                            <input type="text" value={equipment} onChange={(e)=>setEquipment(e.target.value)}
-                                   className="w-full bg-transparent text-xl font-black outline-none border-b border-orange-500 italic" />
-                        </div>
-
-                        <div className="glass p-8 rounded-[3rem] border-orange-500/20 text-center bg-orange-600/5">
-                            <label className="text-[9px] text-orange-500 uppercase font-black mb-4 block tracking-widest italic">SWL Input (Tons)</label>
-                            <input type="number" value={swl} onChange={(e)=>setSwl(e.target.value)}
-                                   className="w-full bg-black/40 p-6 rounded-2xl text-center text-4xl font-black text-white outline-none mb-6" placeholder="0.0" />
-                            
-                            <div className="py-4 border-t border-white/5">
-                                <p className="text-[8px] text-slate-500 uppercase mb-2">Required Proof Load</p>
-                                <p className="text-4xl text-orange-500 font-black">{proofLoad.toFixed(2)} <span className="text-sm">T</span></p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="mt-10 grid grid-cols-2 gap-4">
-                        <button onClick={syncToCloud} disabled={!swl} className="bg-slate-800 p-5 rounded-3xl text-[9px] uppercase font-black tracking-widest active:scale-95 transition-all opacity-80 border border-slate-700">
-                            Cloud Save 🛰️
-                        </button>
-                        <button onClick={generatePDF} disabled={!swl} className="bg-orange-600 p-5 rounded-3xl text-[9px] uppercase font-black tracking-widest active:scale-95 transition-all shadow-lg border-b-4 border-orange-900">
-                            Gen PDF 📄
-                        </button>
-                    </div>
-
-                    <p className="text-[7px] text-slate-600 text-center mt-12 uppercase italic tracking-widest">Nautical Technology Certification Engine v3.34</p>
-                </div>
-            );
-        };
-
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<LoadTestApp />);
-    </script>
-</body>
-</html>
+                    <div>
+                        <label className="text-[8px] uppercase text-slate-500 block mb-2 tracking-widest">SWL (Tons)</label>

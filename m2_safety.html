@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>M2: Safety & Watchlist</title>
+    <title>M2: Safety Watch & Schedule</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -15,27 +15,33 @@ const SafetyApp = () => {
     const vessels = [
         { id: 1, name: 'FELIX', time: '07:00 - 11:00', status: 'ACTIVE' },
         { id: 2, name: 'ARIADNI', time: '12:00 - 15:00', status: 'PENDING' },
-        { id: 3, name: 'NAFTOCEMENT IV', time: '16:00 - 18:00', status: 'PENDING' }
+        { id: 3, name: 'NAFTOCEMENT IV', time: '16:00 - 18:00', status: 'PENDING' },
+        { id: 4, name: 'RIGEL III', time: 'DOCKING', status: 'WAITING' }
     ];
 
     return (
         <div className="min-h-screen p-6 animate-fade bg-slate-950 font-bold italic">
-            <div className="flex justify-between items-center mb-8"><a href="index.html" className="text-[10px] underline opacity-50 text-blue-400">← HUB</a><span className="text-[9px] text-blue-500 font-black uppercase italic">Safety Ops</span></div>
+            <div className="flex justify-between items-center mb-8"><a href="index.html" className="text-[10px] underline opacity-50 text-blue-400">← HUB</a><span className="text-[9px] text-blue-500 font-black uppercase italic tracking-widest">Safety Division</span></div>
             
-            {/* SEPE TABLE (Moved here permanently) */}
+            {/* WATCHLIST / ΣΕΠΕ TABLE */}
             <div className="space-y-3 mb-10">
-                <p className="text-[8px] text-slate-500 uppercase tracking-widest ml-2 italic">SEPE Schedule (Tomorrow)</p>
+                <p className="text-[8px] text-slate-500 uppercase tracking-widest ml-2 italic font-black">Daily Schedule (SEPE Sync)</p>
                 {vessels.map(v => (
                     <div key={v.id} className="glass p-4 rounded-3xl border-l-4 border-blue-600 flex justify-between items-center shadow-xl">
-                        <div><p className="text-xs text-white uppercase font-black">{v.name}</p><p className="text-[8px] text-blue-500 mt-0.5">{v.time}</p></div>
-                        {v.status === 'ACTIVE' ? <span className="bg-emerald-900/30 text-emerald-500 text-[8px] px-3 py-1 rounded-full border border-emerald-500/20 italic animate-pulse">ACTIVE</span> : <span className="bg-slate-800 text-slate-500 text-[8px] px-3 py-1 rounded-full border border-slate-700">PENDING</span>}
+                        <div><p className="text-xs text-white uppercase">{v.name}</p><p className="text-[8px] text-blue-500 mt-0.5">{v.time}</p></div>
+                        {v.status === 'ACTIVE' ? <span className="bg-emerald-900/30 text-emerald-500 text-[8px] px-3 py-1 rounded-full border border-emerald-500/20 italic animate-pulse">ACTIVE</span> : <span className="text-slate-600 text-[8px] uppercase">{v.status}</span>}
                     </div>
                 ))}
             </div>
 
-            {/* FIELD LOG CONTROLS */}
-            <div className="glass p-6 rounded-[2.5rem] border-blue-500/20 shadow-2xl space-y-4">
-                <button className="w-full bg-blue-600 p-4 rounded-2xl text-[10px] uppercase font-black italic shadow-lg active:scale-95">Start Daily Log (P.D. 70/90) +</button>
+            {/* ACTION CENTER */}
+            <div className="glass p-6 rounded-[2.5rem] border-blue-500/20 shadow-2xl text-center">
+                <p className="text-[10px] text-blue-600 uppercase mb-6 font-black italic">Field Compliance Shield</p>
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                    <button className="bg-blue-600/10 border border-blue-600/30 p-4 rounded-2xl text-[9px] uppercase">Evidence</button>
+                    <button className="bg-slate-900 p-4 rounded-2xl text-[9px] uppercase opacity-30">Sign Log</button>
+                </div>
+                <p className="text-[7px] text-slate-500 uppercase">Π.Δ. 70/1990 Integrity Protected</p>
             </div>
         </div>
     );

@@ -1,31 +1,95 @@
 <!DOCTYPE html>
 <html lang="el">
 <head>
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>M5: War Room</title>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>M5: Dynamic War Room</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <style>@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');body{background:#020617;color:white;font-family:'Orbitron',sans-serif;font-style:italic;font-weight:bold;}.glass{background:rgba(15,23,42,0.7);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.1);}</style>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');
+        body { background-color: #020617; color: white; font-family: 'Orbitron', sans-serif; font-style: italic; font-weight: bold; }
+        .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
+        .red-alert { border-left: 4px solid #dc2626; }
+    </style>
 </head>
 <body><div id="root"></div><script type="text/babel">
-const WarRoom=()=>(
-    <div className="min-h-screen p-6 bg-slate-950">
-        <div className="flex justify-between mb-8"><a href="index.html" className="text-[10px] underline opacity-50 text-red-500">← EXIT</a><div className="w-2 h-2 bg-red-600 rounded-full animate-pulse shadow-[0_0_10px_red]"></div></div>
-        <h1 className="text-red-600 text-lg mb-10 text-center uppercase tracking-tighter">M5: TERME INTEL</h1>
-        <div className="space-y-4">
-            <div className="glass p-5 rounded-3xl border-red-500/20 italic">
-                <p className="text-[8px] text-red-500 mb-2 uppercase tracking-widest">Active Surveillance</p>
-                <p className="text-[11px] text-white">EMIR ÖZTÜRK: NO RECENT CHANGES IN POLISH REGISTRY (KRS)</p>
+const { useState } = React;
+
+const WarRoom = () => {
+    const [selectedTarget, setSelectedTarget] = useState('Erkan Zorlu');
+
+    // ΛΙΣΤΑ ΣΤΟΧΩΝ (ΘΑ ΕΡΧΕΤΑΙ ΑΠΟ SUPABASE TABLE 'targets')
+    const targets = [
+        { id: 1, name: 'Erkan Zorlu', role: 'Mastermind', ids: 'TR-ID: 123456...', logs: 12 },
+        { id: 2, name: 'Emir Öztürk', role: 'Warsaw Proxy', ids: 'NIP: 5262587598', logs: 45 },
+        { id: 3, name: 'İpek Banu Karaca', role: 'Associated Party', ids: 'TR-ID: 987654...', logs: 5 },
+        { id: 4, name: 'Tuğrul Karaca', role: 'Associated Party', ids: 'TR-ID: 456123...', logs: 3 }
+    ];
+
+    const roster = [
+        { vessel: 'S.V. NIKOLAY', status: 'DOCKING (0 kn)', since: '24h' },
+        { vessel: 'NB05 Hull', status: 'STATIC', since: '15d' }
+    ];
+
+    return (
+        <div className="min-h-screen p-4 animate-fade max-w-xl mx-auto">
+            <div className="flex justify-between items-center mb-6">
+                <a href="index.html" className="text-[10px] underline opacity-50 text-red-500 font-black">← EXIT PANIC ROOM</a>
+                <span className="text-[9px] text-red-600 animate-pulse uppercase italic">Dynamic Surveillance Active</span>
             </div>
-            <div className="glass p-5 rounded-3xl border-red-500/20 italic opacity-50">
-                <p className="text-[8px] text-red-500 mb-2 uppercase tracking-widest">Scraper Status</p>
-                <p className="text-[11px] text-white italic">DORKING ENGINE RUNNING ON 12H CYCLE...</p>
+
+            <h1 className="text-red-600 text-lg uppercase mb-8 text-center italic tracking-tighter">M5: TERME INTELLIGENCE</h1>
+
+            {/* 1. DYNAMIC TARGET SELECTION */}
+            <div className="glass p-6 rounded-[2.5rem] border-red-500/20 mb-6">
+                <p className="text-[8px] text-slate-500 uppercase tracking-widest mb-2">Select Target Dossier</p>
+                <select 
+                    value={selectedTarget} 
+                    onChange={(e) => setSelectedTarget(e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-700 p-4 rounded-2xl text-white text-sm outline-none mb-4"
+                >
+                    {targets.map(t => <option key={t.id} value={t.name}>{t.name}</option>)}
+                </select>
+                <div className="p-4 bg-red-900/10 rounded-2xl border border-red-900/30">
+                    <p className="text-[10px] text-white uppercase">{selectedTarget}</p>
+                    <p className="text-[8px] text-slate-500 italic mt-1">{targets.find(t => t.name === selectedTarget)?.ids}</p>
+                </div>
+                <button className="w-full mt-4 bg-red-600 p-4 rounded-2xl text-[10px] uppercase font-black italic shadow-lg">
+                    Export Forensic Dossier (.PDF) 📄
+                </button>
             </div>
+
+            {/* 2. TERME LIVE ROSTER (Ποιος είναι μέσα) */}
+            <div className="glass p-6 rounded-[2.5rem] border-cyan-500/20 mb-6">
+                <p className="text-[9px] text-cyan-500 uppercase tracking-widest mb-4 italic"><i className="fa-solid fa-anchor mr-2"></i>Live Roster: Terme Tersanesi</p>
+                <div className="space-y-2">
+                    {roster.map(v => (
+                        <div key={v.vessel} className="flex justify-between items-center p-3 bg-black/40 rounded-xl border border-white/5">
+                            <span className="text-[10px] text-white uppercase italic">{v.vessel}</span>
+                            <span className="text-[8px] text-cyan-400 font-black uppercase tracking-widest">{v.status}</span>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* 3. VISITOR HISTORY LOG */}
+            <div className="glass p-6 rounded-[2.5rem] border-slate-700 opacity-80">
+                <p className="text-[9px] text-slate-400 uppercase tracking-widest mb-4 italic"><i className="fa-solid fa-clock-rotate-left mr-2"></i>Visitor History Log</p>
+                <div className="space-y-2 text-[8px] font-mono text-slate-500 italic">
+                    <p>> 25/03: OCEAN PEACE (Departure Terme)</p>
+                    <p>> 22/03: ALASUND TRAWLER 01 (Arrival Terme)</p>
+                    <p>> 18/03: S.V. NIKOLAY (Entry Geofence)</p>
+                </div>
+            </div>
+            
+            <p className="text-[7px] text-red-900/60 text-center mt-10 uppercase italic tracking-widest italic">
+                Formula: $Hash = \text{SHA-256}(\text{Data} + \text{Timestamp} + \text{Salt})$
+            </p>
         </div>
-    </div>
-);
-ReactDOM.createRoot(document.getElementById('root')).render(<WarRoom/>);
+    );
+};
+ReactDOM.createRoot(document.getElementById('root')).render(<WarRoom />);
 </script></body></html>

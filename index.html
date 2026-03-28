@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NauticalOS Hub v3.28</title>
+    <title>NauticalOS Master Hub v3.38</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -11,9 +11,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');
-        body { background-color: #020617; color: white; margin: 0; font-family: 'Orbitron', sans-serif; font-style: italic; }
+        body { background-color: #020617; color: white; margin: 0; font-family: 'Orbitron', sans-serif; font-style: italic; font-weight: bold; overflow-x: hidden; }
         .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
-        .brand { letter-spacing: 0.1em; font-weight: 900; }
+        .brand { letter-spacing: 0.1em; }
+        .grid-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
     </style>
 </head>
 <body>
@@ -22,42 +23,54 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        const HubApp = () => {
+        const MasterHub = () => {
             const [isAuth, setIsAuth] = useState(false);
+            const [role, setRole] = useState('');
             const [pin, setPin] = useState('');
 
-            // Έλεγχος αν είμαστε ήδη συνδεδεμένοι
             useEffect(() => {
-                if (localStorage.getItem('ntg_auth') === 'true') setIsAuth(true);
+                const savedRole = localStorage.getItem('ntg_role');
+                if (savedRole) { setRole(savedRole); setIsAuth(true); }
             }, []);
 
-            const login = (e) => {
+            const handleLogin = (e) => {
                 e.preventDefault();
-                if (pin === '1234' || pin === '0612') {
-                    localStorage.setItem('ntg_auth', 'true');
+                let userRole = '';
+                if (pin === '1234') userRole = 'DIRECTOR';
+                else if (pin === '0612') userRole = 'WORKER';
+                
+                if (userRole) {
+                    localStorage.setItem('ntg_role', userRole);
+                    setRole(userRole);
                     setIsAuth(true);
-                } else {
-                    alert("WRONG PIN");
-                    setPin('');
-                }
+                } else { alert("ACCESS DENIED"); setPin(''); }
             };
 
             const logout = () => {
-                localStorage.removeItem('ntg_auth');
+                localStorage.removeItem('ntg_role');
                 setIsAuth(false);
+                setPin('');
             };
 
-            // Λίστα με τα αυτόνομα Apps (HTML αρχεία)
             const apps = [
-                { name: 'SAFETY WATCH', icon: 'fa-shield-halved', color: 'border-blue-600', url: 'm2_safety.html' },
-                { name: 'LOAD TESTING', icon: 'fa-weight-hanging', color: 'border-orange-600', url: 'm3_loadtest.html' },
-                { name: 'WAR ROOM', icon: 'fa-gavel', color: 'border-red-600', url: 'm5_terme.html' },
-                { name: 'UTM GAUGING', icon: 'fa-layer-group', color: 'border-slate-500', url: 'm1_utm.html' }
+                { id: 'm5', name: 'WAR ROOM', icon: 'fa-gavel', color: 'border-red-600', link: 'm5_terme.html', dir: true },
+                { id: 'm13', name: 'MYKONOS', icon: 'fa-house-chimney', color: 'border-blue-300', link: 'm13_mykonos.html', dir: true },
+                { id: 'm6', name: 'CEO PULSE', icon: 'fa-chart-line', color: 'border-purple-600', link: 'm6_ceo.html', dir: true },
+                { id: 'm7', name: 'XGR STARTUP', icon: 'fa-rocket', color: 'border-yellow-500', link: 'm7_startup.html', dir: true },
+                { id: 'm1', name: 'UTM', icon: 'fa-layer-group', color: 'border-slate-500', link: 'm1_utm.html', dir: false },
+                { id: 'm2', name: 'SAFETY', icon: 'fa-shield-halved', color: 'border-blue-600', link: 'm2_safety.html', dir: false },
+                { id: 'm3', name: 'LOAD TEST', icon: 'fa-weight-hanging', color: 'border-orange-600', link: 'm3_loadtest.html', dir: false },
+                { id: 'm4', name: 'RADAR', icon: 'fa-radar', color: 'border-cyan-600', link: 'm4_radar.html', dir: false },
+                { id: 'm9', name: 'OPS/QUALITY', icon: 'fa-clipboard-check', color: 'border-indigo-500', link: 'm9_ops.html', dir: false },
+                { id: 'm12', name: 'STAFF HUB', icon: 'fa-users', color: 'border-blue-400', link: 'm12_staff.html', dir: false },
+                { id: 'm8', name: 'ACADEMY', icon: 'fa-graduation-cap', color: 'border-emerald-600', link: 'm8_academy.html', dir: false },
+                { id: 'm11', name: 'SENSORS', icon: 'fa-satellite-dish', color: 'border-pink-600', link: 'm11_sensors.html', dir: false },
+                { id: 'm10', name: 'ARCHITECT', icon: 'fa-microchip', color: 'border-indigo-400', link: 'm10_arch.html', dir: true }
             ];
 
             if (!isAuth) return (
                 <div className="h-screen flex items-center justify-center p-6 bg-slate-950 font-bold italic">
-                    <form onSubmit={login} className="glass p-10 rounded-[3.5rem] w-full max-w-sm text-center shadow-2xl border border-slate-800">
+                    <form onSubmit={handleLogin} className="glass p-10 rounded-[3.5rem] w-full max-w-sm text-center shadow-2xl border border-slate-800">
                         <h1 className="brand text-xl text-blue-500 mb-8 uppercase italic">NTG COMMAND HUB</h1>
                         <input type="password" value={pin} onChange={(e) => setPin(e.target.value)}
                                className="w-full bg-slate-900 border border-slate-700 p-5 rounded-2xl text-center text-3xl mb-6 text-white outline-none focus:border-blue-500 transition-all"
@@ -68,27 +81,33 @@
             );
 
             return (
-                <div className="min-h-screen p-6 max-w-lg mx-auto animate-fade font-bold italic">
-                    <div className="flex justify-between items-center mb-10 pt-4">
-                        <h1 className="brand text-sm text-blue-500 uppercase tracking-tighter">NTG COMMAND HUB</h1>
-                        <button onClick={logout} className="text-[10px] text-red-500 uppercase underline">Logout</button>
+                <div className="min-h-screen p-4 pb-10 max-w-lg mx-auto animate-fade font-bold italic">
+                    <div className="flex justify-between items-center px-4 pt-6 mb-10">
+                        <div className="text-left">
+                            <span className="text-[7px] text-slate-500 uppercase tracking-widest italic">{role} MODE</span>
+                            <p className="text-sm uppercase tracking-tighter text-blue-400 italic font-black">M. SYKINIOTIS</p>
+                        </div>
+                        <button onClick={logout} className="text-[9px] text-red-500 uppercase underline font-black">Logout</button>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                        {apps.map(app => (
-                            <a key={app.name} href={app.url} 
-                               className={`glass p-6 rounded-[2.5rem] border-b-4 ${app.color} flex flex-col items-center justify-center gap-4 active:scale-95 shadow-xl transition-all`}>
-                                <i className={`fa-solid ${app.icon} text-2xl opacity-80`}></i>
-                                <span className="text-[8px] font-black uppercase text-center leading-tight tracking-widest">{app.name}</span>
-                            </a>
-                        ))}
+                    <div className="grid grid-cols-3 gap-2">
+                        {apps.map(app => {
+                            if (app.dir && role !== 'DIRECTOR') return null;
+                            return (
+                                <a key={app.id} href={app.link} 
+                                   className={`glass p-3 h-28 rounded-[1.8rem] border-b-4 ${app.color} flex flex-col items-center justify-center gap-2 active:scale-95 transition-all shadow-xl`}>
+                                    <i className={`fa-solid ${app.icon} text-lg opacity-80`}></i>
+                                    <span className="text-[7px] font-black uppercase text-center leading-tight tracking-tighter">{app.name}</span>
+                                </a>
+                            );
+                        })}
                     </div>
                 </div>
             );
         };
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<HubApp />);
+        root.render(<MasterHub />);
     </script>
 </body>
 </html>

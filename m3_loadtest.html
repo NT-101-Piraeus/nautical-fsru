@@ -1,167 +1,203 @@
 <!DOCTYPE html>
 <html lang="el">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>M3: Load Test Pro V4.0</title>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>M3: Load Test Pro v4.20</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');
-        body { font-family: 'Orbitron', sans-serif; font-style: italic; font-weight: bold; }
-        .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .nautical-dark { background: #020617; color: white; }
-        .sun-mode { background: #f8fafc; color: #0f172a; }
-    </style>
+    <style>@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');body{background:#020617;color:white;font-family:'Orbitron',sans-serif;font-style:italic;font-weight:bold;}.glass{background:rgba(15,23,42,0.7);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.1);}.animate-pulse-slow{animation:pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;}</style>
 </head>
-<body>
-    <div id="root"></div>
-    <script type="text/babel">
-        const { useState, useEffect } = React;
+<body><div id="root"></div><script type="text/babel">
+const { useState, useEffect } = React;
 
-        // --- M10 TELEMETRY ENGINE ---
-        const Telemetry = {
-            log: (action, details) => {
-                const logs = JSON.parse(localStorage.getItem('ntg_M3_logs') || '[]');
-                logs.push({ ts: new Date().toISOString(), action, details, user: "M. SYKINIOTIS" });
-                localStorage.setItem('ntg_M3_logs', JSON.stringify(logs.slice(-100)));
-            }
-        };
+// --- TELEMETRY SENSOR ---
+const Telemetry = {
+    log: (type, action, details) => {
+        const logs = JSON.parse(localStorage.getItem('ntg_M3_logs') || '[]');
+        logs.push({ ts: new Date().toISOString(), type, action, details });
+        localStorage.setItem('ntg_M3_logs', JSON.stringify(logs.slice(-50)));
+    }
+};
 
-        const M3App = () => {
-            const [sunMode, setSunMode] = useState(false);
-            const [view, setView] = useState('DASHBOARD'); // DASHBOARD, WON, LOST, ADD_JOB
-            const [pin, setPin] = useState('');
-            const [selectedReason, setSelectedReason] = useState('');
+const ACADEMY_DATA = {
+    GENERAL: ["1. Οπτικός έλεγχος σε πείρους, συρματόσχοινα.", "2. Calibration Load Cells.", "3. Clear the area!"],
+    CARGO: ["1. Στήσιμο Waterbags.", "2. Tare Load Cell.", "3. Σταδιακή πλήρωση.", "4. Brake Test (5 min)."],
+    MOORING: ["1. Μέτρηση L1.", "2. Μέτρηση L2.", "3. Πίεση στο 60% SDMBL.", "4. Έλεγχος slippage."]
+};
 
-            // --- STATE: JOBS (Lazy Load from Storage) ---
-            const [jobs, setJobs] = useState(() => {
-                const saved = localStorage.getItem('ntg_M3_jobs');
-                return saved ? JSON.parse(saved) : [
-                    { id: 1, vessel: 'MT FELIX', status: 'WON', date: '2026-03-28' },
-                    { id: 2, vessel: 'MV ARGO', status: 'LOST', reason: 'High Price', date: '2026-03-25' }
-                ];
-            });
+const M3App = () => {
+    const [view, setView] = useState('DASHBOARD');
+    const [sunMode, setSunMode] = useState(false);
+    const [academyView, setAcademyView] = useState(null);
+    const [calcType, setCalcType] = useState('CARGO');
+    const [inputs, setInputs] = useState({ swl: '', sdmbl: '', l1: '', l2: '' });
+    const [result, setResult] = useState(null);
+    const [photos, setPhotos] = useState([]); // Evidence Lock State
 
-            useEffect(() => {
-                localStorage.setItem('ntg_M3_jobs', JSON.stringify(jobs));
-            }, [jobs]);
+    const calculate = () => {
+        let resLabel = '', resVal = '';
+        if (calcType === 'CARGO') {
+            const swl = parseFloat(inputs.swl);
+            let target = swl <= 20 ? swl * 1.25 : (swl <= 50 ? swl + 5 : swl * 1.10);
+            resLabel = 'Target Proof Load';
+            resVal = target.toFixed(2) + ' t';
+        } else {
+            const force = 0.60 * parseFloat(inputs.sdmbl) * (parseFloat(inputs.l1) / parseFloat(inputs.l2));
+            resLabel = 'Required Jack Force';
+            resVal = force.toFixed(2) + ' t';
+        }
+        setResult({ label: resLabel, value: resVal });
+        Telemetry.log('ACTION', 'CALCULATION_PERFORMED', { type: calcType, result: resVal });
+    };
 
-            // --- ADMIN LOGIC ---
-            const handleAddJob = (name) => {
-                if (pin !== '1234') return alert("❌ ACCESS DENIED");
-                const newJob = { id: Date.now(), vessel: name.toUpperCase(), status: 'WON', date: new Date().toISOString().split('T')[0] };
-                setJobs([...jobs, newJob]);
-                Telemetry.log('ADD_JOB', name);
-                setView('DASHBOARD');
-                setPin('');
-            };
+    const handleCapture = () => {
+        const newPhoto = { id: Date.now(), ts: new Date().toISOString() };
+        setPhotos([...photos, newPhoto]);
+        Telemetry.log('ACTION', 'EVIDENCE_CAPTURED', `Photo ${photos.length + 1}`);
+    };
 
-            const markAsLost = (id, reason) => {
-                if (pin !== '1234') return alert("❌ ADMIN PIN REQUIRED");
-                const updated = jobs.map(j => j.id === id ? { ...j, status: 'LOST', reason } : j);
-                setJobs(updated);
-                Telemetry.log('LOST_QUOTE', `ID: ${id} | Reason: ${reason}`);
-                setPin('');
-            };
+    const generateCERT11 = () => {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        const date = new Date().toLocaleDateString('en-GB');
 
-            return (
-                <div className={`min-h-screen p-6 transition-all ${sunMode ? 'sun-mode' : 'nautical-dark'}`}>
-                    {/* HEADER */}
-                    <div className="flex justify-between items-center mb-8">
-                        <div className="flex flex-col">
-                            <span className="text-[10px] text-orange-500 font-black uppercase tracking-tighter">M3: Load Test Pro</span>
-                            <span className="text-[8px] opacity-50 uppercase italic">V4.0 Constitution Compliant</span>
-                        </div>
-                        <button onClick={() => setSunMode(!sunMode)} className="p-3 glass rounded-full border-orange-500/20">
-                            <i className={`fa-solid ${sunMode ? 'fa-moon' : 'fa-sun text-yellow-500'}`}></i>
-                        </button>
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(249, 115, 22);
+        doc.text("NAUTICAL TECHNOLOGY", 105, 20, null, null, "center");
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(14);
+        doc.text("CERTIFICATE OF TEST AND EXAMINATION (CERT 11)", 105, 30, null, null, "center");
+        doc.line(20, 35, 190, 35);
+        doc.setFontSize(11);
+        doc.setFont("helvetica", "normal");
+        doc.text(`Date of Service: ${date}`, 20, 50);
+        doc.text(`Inspection Type: ${calcType === 'CARGO' ? 'Cargo Gear (ILO 152)' : 'Mooring BHC (MEG4)'}`, 20, 60);
+        doc.rect(20, 70, 170, 40);
+        doc.setFont("helvetica", "bold");
+        doc.text("TEST PARAMETERS & RESULTS", 105, 78, null, null, "center");
+        doc.setFont("helvetica", "normal");
+        if (calcType === 'CARGO') {
+            doc.text(`SWL: ${inputs.swl} t`, 30, 90);
+            doc.text(`PROOF LOAD APPLIED: ${result.value}`, 30, 100);
+        } else {
+            doc.text(`SDMBL: ${inputs.sdmbl} t | L1: ${inputs.l1}mm | L2: ${inputs.l2}mm`, 30, 90);
+            doc.text(`JACK FORCE APPLIED: ${result.value}`, 30, 100);
+        }
+        doc.rect(20, 140, 80, 50);
+        doc.text("Surveyor Stamp & Sign", 60, 148, null, null, "center");
+        doc.setFontSize(9); doc.text("M. SYKINIOTIS", 60, 185, null, null, "center");
+        doc.rect(110, 140, 80, 50); doc.setFontSize(11);
+        doc.text("Master / Chief Officer", 150, 148, null, null, "center");
+        doc.setFontSize(9); doc.text("Stamp & Signature", 150, 185, null, null, "center");
+        
+        doc.save(`CERT11_${date.replace(/\//g, '-')}.pdf`);
+        Telemetry.log('ACTION', 'CERT11_GENERATED', `Result: ${result.value}`);
+    };
+
+    const theme = sunMode ? "bg-white text-black" : "bg-slate-950 text-white";
+
+    return (
+        <div className={`min-h-screen p-6 transition-all font-bold italic ${theme}`}>
+            {/* HEADER */}
+            <div className="flex justify-between items-center mb-8 border-b border-orange-500/20 pb-4">
+                <div className="flex flex-col">
+                    <span className="text-[10px] text-orange-500 font-black uppercase tracking-tighter italic">M3: Load Test Pro</span>
+                    <span className="text-[8px] opacity-50 uppercase tracking-widest">Evidence Lock v4.20</span>
+                </div>
+                <div className="flex gap-2">
+                    <button onClick={() => setAcademyView('GENERAL')} className="p-3 glass rounded-xl text-blue-400 border-blue-500/20"><i className="fa-solid fa-graduation-cap"></i></button>
+                    <button onClick={() => setSunMode(!sunMode)} className="p-3 glass rounded-xl border-orange-500/20"><i className={`fa-solid ${sunMode ? 'fa-moon' : 'fa-sun text-yellow-500'}`}></i></button>
+                </div>
+            </div>
+
+            {view === 'DASHBOARD' ? (
+                <div className="space-y-6 animate-fade">
+                    <div onClick={() => setView('CALCULATOR')} className="glass p-10 rounded-[3rem] border-orange-500/30 text-center shadow-2xl relative overflow-hidden active:scale-95 transition-all">
+                        <div className="absolute top-0 left-0 w-1.5 h-full bg-orange-500"></div>
+                        <i className="fa-solid fa-calculator text-4xl mb-4 text-orange-500"></i>
+                        <p className="text-[10px] text-orange-400 uppercase font-black mb-1 italic">Launch Engine</p>
+                        <p className="text-xl font-black text-white uppercase italic tracking-tighter">Load Test Calculator</p>
+                    </div>
+                </div>
+            ) : (
+                <div className="animate-fade pb-32">
+                    <button onClick={() => setView('DASHBOARD')} className="text-[10px] text-orange-500 underline mb-8 uppercase">← Dashboard</button>
+                    
+                    {/* TYPE SELECTOR */}
+                    <div className="flex gap-2 mb-8">
+                        <button onClick={() => setCalcType('CARGO')} className={`flex-1 p-4 rounded-2xl text-[9px] uppercase font-black border transition-all ${calcType==='CARGO'?'bg-orange-600 border-orange-400':'glass border-white/5 opacity-50'}`}>Cargo Gear</button>
+                        <button onClick={() => setCalcType('MOORING')} className={`flex-1 p-4 rounded-2xl text-[9px] uppercase font-black border transition-all ${calcType==='MOORING'?'bg-orange-600 border-orange-400':'glass border-white/5 opacity-50'}`}>Mooring BHC</button>
                     </div>
 
-                    {/* DASHBOARD VIEW */}
-                    {view === 'DASHBOARD' && (
-                        <div className="animate-fade space-y-6">
-                            <div className="grid grid-cols-2 gap-4">
-                                <button onClick={() => setView('WON')} className="glass p-8 rounded-[2.5rem] border-emerald-500/30 text-center active:scale-95 transition-all">
-                                    <p className="text-[10px] text-emerald-500 uppercase font-black mb-2">Won Jobs</p>
-                                    <p className="text-4xl font-black">{jobs.filter(j=>j.status==='WON').length}</p>
-                                </button>
-                                <button onClick={() => setView('LOST')} className="glass p-8 rounded-[2.5rem] border-red-500/30 text-center active:scale-95 transition-all">
-                                    <p className="text-[10px] text-red-500 uppercase font-black mb-2">Lost Quotes</p>
-                                    <p className="text-4xl font-black">{jobs.filter(j=>j.status==='LOST').length}</p>
+                    {/* INPUTS */}
+                    <div className="glass p-8 rounded-[3rem] border-white/5 space-y-6 mb-8">
+                        {calcType === 'CARGO' ? (
+                            <input type="number" value={inputs.swl} onChange={(e)=>setInputs({...inputs, swl: e.target.value})} className="w-full bg-black/50 p-6 rounded-2xl text-center text-3xl font-black outline-none border border-orange-500/20 text-orange-500" placeholder="SWL (t)" />
+                        ) : (
+                            <div className="space-y-4">
+                                <input type="number" placeholder="SDMBL (t)" value={inputs.sdmbl} onChange={(e)=>setInputs({...inputs, sdmbl: e.target.value})} className="w-full bg-black/50 p-4 rounded-xl text-center text-xl outline-none border border-white/10" />
+                                <div className="grid grid-cols-2 gap-4">
+                                    <input type="number" placeholder="L1" value={inputs.l1} onChange={(e)=>setInputs({...inputs, l1: e.target.value})} className="bg-black/50 p-4 rounded-xl text-center text-xs outline-none border border-white/10" />
+                                    <input type="number" placeholder="L2" value={inputs.l2} onChange={(e)=>setInputs({...inputs, l2: e.target.value})} className="bg-black/50 p-4 rounded-xl text-center text-xs outline-none border border-white/10" />
+                                </div>
+                            </div>
+                        )}
+                        <button onClick={calculate} className="w-full bg-orange-600 p-6 rounded-[2rem] text-[10px] uppercase font-black italic">Calculate</button>
+                    </div>
+
+                    {/* RESULT & EVIDENCE LOCK UI */}
+                    {result && (
+                        <div className="space-y-6 animate-fade">
+                            <div className="glass p-8 rounded-[3rem] border-emerald-500/30 text-center animate-pulse-slow">
+                                <p className="text-[10px] text-emerald-500 uppercase font-black mb-2 italic tracking-widest">{result.label}</p>
+                                <p className="text-5xl font-black text-white tracking-tighter">{result.value}</p>
+                            </div>
+
+                            {/* EVIDENCE CAPTURE SECTION */}
+                            <div className="glass p-6 rounded-[2.5rem] border-blue-500/20 space-y-4">
+                                <div className="flex justify-between items-center">
+                                    <p className="text-[9px] uppercase text-blue-400 italic font-black tracking-widest">Evidence Required (Min 2)</p>
+                                    <span className={`text-[10px] font-black ${photos.length >= 2 ? 'text-emerald-500' : 'text-orange-500'}`}>{photos.length}/2</span>
+                                </div>
+                                <button onClick={handleCapture} className="w-full bg-blue-600/10 border border-blue-500/30 p-5 rounded-2xl flex items-center justify-center gap-3">
+                                    <i className="fa-solid fa-camera text-blue-500 text-xl"></i>
+                                    <span className="text-[9px] uppercase font-black italic">Capture Test Photo</span>
                                 </button>
                             </div>
 
-                            <button onClick={() => setView('ADD_JOB')} className="w-full bg-orange-600/10 border-2 border-dashed border-orange-500/40 p-8 rounded-[2.5rem] text-orange-500 font-black uppercase text-[12px] flex items-center justify-center gap-4 active:scale-95 transition-all shadow-xl">
-                                <i className="fa-solid fa-folder-plus text-2xl"></i> Add New Project (Admin)
+                            {/* GENERATE BUTTON (LOCKED) */}
+                            <button 
+                                disabled={photos.length < 2}
+                                onClick={generateCERT11}
+                                className={`w-full p-6 rounded-[2rem] text-[10px] uppercase font-black italic transition-all flex items-center justify-center gap-3 ${photos.length >= 2 ? 'bg-emerald-600 shadow-xl shadow-emerald-900/40 text-white active:scale-95' : 'bg-slate-800 opacity-20 cursor-not-allowed'}`}>
+                                <i className={`fa-solid ${photos.length >= 2 ? 'fa-file-pdf' : 'fa-lock'} text-xl`}></i> 
+                                {photos.length >= 2 ? 'Generate & Print CERT 11' : 'Lock Active: Take 2 Photos'}
                             </button>
                         </div>
                     )}
-
-                    {/* WON JOBS LIST */}
-                    {view === 'WON' && (
-                        <div className="animate-fade space-y-4">
-                            <button onClick={() => setView('DASHBOARD')} className="text-[10px] underline mb-4 opacity-50 uppercase italic">← Back to Hub</button>
-                            <h2 className="text-emerald-500 text-sm mb-6 italic uppercase">Won Jobs (Active Projects)</h2>
-                            {jobs.filter(j=>j.status==='WON').map(job => (
-                                <div key={job.id} className="glass p-5 rounded-3xl border-l-4 border-emerald-500 flex justify-between items-center shadow-lg">
-                                    <div>
-                                        <p className="text-lg font-black">{job.vessel}</p>
-                                        <p className="text-[9px] opacity-50 uppercase">{job.date}</p>
-                                    </div>
-                                    <div className="flex gap-2">
-                                        <button onClick={() => { setPin(prompt("Enter Admin PIN")); markAsLost(job.id, "Converted to Lost") }} className="p-3 bg-red-500/10 text-red-500 rounded-xl"><i className="fa-solid fa-xmark"></i></button>
-                                        <button className="p-3 bg-emerald-500 text-white rounded-xl"><i className="fa-solid fa-play"></i></button>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-
-                    {/* LOST QUOTES LIST */}
-                    {view === 'LOST' && (
-                        <div className="animate-fade space-y-4">
-                            <button onClick={() => setView('DASHBOARD')} className="text-[10px] underline mb-4 opacity-50 uppercase italic">← Back to Hub</button>
-                            <h2 className="text-red-500 text-sm mb-6 italic uppercase">Lost Quotes Archive</h2>
-                            {jobs.filter(j=>j.status==='LOST').map(job => (
-                                <div key={job.id} className="glass p-5 rounded-3xl border-l-4 border-red-500 opacity-70">
-                                    <div className="flex justify-between items-start">
-                                        <div>
-                                            <p className="text-lg font-black">{job.vessel}</p>
-                                            <p className="text-[9px] uppercase">{job.date}</p>
-                                        </div>
-                                        <span className="text-[8px] bg-red-500/20 text-red-500 px-2 py-1 rounded uppercase font-black">{job.reason}</span>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-
-                    {/* ADD JOB MODAL (PIN PROTECTED) */}
-                    {view === 'ADD_JOB' && (
-                        <div className="animate-fade space-y-6 glass p-8 rounded-[3rem] border-orange-500/30">
-                            <h2 className="text-center text-orange-500 uppercase italic">Create New Project</h2>
-                            <input type="password" placeholder="ENTER ADMIN PIN" value={pin} onChange={(e)=>setPin(e.target.value)} className="w-full bg-black/40 p-5 rounded-2xl text-center text-xl tracking-[0.5rem] outline-none border border-white/10" />
-                            {pin === '1234' && (
-                                <div className="space-y-4 animate-fade">
-                                    <input id="vesselName" type="text" placeholder="VESSEL NAME" className="w-full bg-slate-900/50 p-5 rounded-2xl outline-none border border-white/5 uppercase" />
-                                    <button onClick={() => handleAddJob(document.getElementById('vesselName').value)} className="w-full bg-orange-600 p-6 rounded-3xl text-[12px] uppercase font-black italic shadow-2xl">Initialize Job Folder ⚓</button>
-                                </div>
-                            )}
-                            <button onClick={() => setView('DASHBOARD')} className="w-full text-[10px] opacity-50 uppercase mt-4">Cancel</button>
-                        </div>
-                    )}
-
-                    <p className="fixed bottom-6 left-0 right-0 text-[7px] text-center opacity-30 uppercase tracking-[0.3rem]">Nautical Technology Systems © 2026</p>
                 </div>
-            );
-        };
+            )}
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<M3App />);
-    </script>
-</body>
-</html>
+            {/* ACADEMY OVERLAY */}
+            {academyView && (
+                <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-3xl p-8 animate-fade flex flex-col">
+                    <div className="flex justify-between items-center mb-10 text-blue-500">
+                        <h2 className="text-lg font-black italic uppercase"><i className="fa-solid fa-graduation-cap mr-3"></i>Academy: {academyView}</h2>
+                        <button onClick={() => setAcademyView(null)} className="w-12 h-12 glass rounded-full flex items-center justify-center text-white"><i className="fa-solid fa-xmark"></i></button>
+                    </div>
+                    <div className="space-y-4 overflow-y-auto">
+                        {ACADEMY_DATA[academyView].map((step, i) => (
+                            <div key={i} className="glass p-6 rounded-3xl border-l-4 border-blue-600 uppercase text-[11px] text-slate-200">{step}</div>
+                        ))}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+ReactDOM.createRoot(document.getElementById('root')).render(<M3App />);
+</script></body></html>

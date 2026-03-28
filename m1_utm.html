@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="el">
 <head>
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>M1: UTM Gauging</title>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M1: Safety Watchlist</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -11,52 +11,39 @@
     <style>@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');body{background:#020617;color:white;font-family:'Orbitron',sans-serif;font-style:italic;font-weight:bold;}.glass{background:rgba(15,23,42,0.7);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.1);}</style>
 </head>
 <body><div id="root"></div><script type="text/babel">
-const UTMApp=()=>{
-    const [measurements, setMeasurements] = React.useState(JSON.parse(localStorage.getItem('ntg_utm_storage')) || []);
-    const [point, setPoint] = React.useState('');
-    const [val, setVal] = React.useState('');
+const Watchlist = () => {
+    const [appointments, setAppointments] = React.useState([
+        { id: 1, vessel: 'FELIX', time: '07:00 - 11:00', status: 'ACTIVE', sepe: 'Ref: 8823/2026' },
+        { id: 2, vessel: 'ARIADNI', time: '12:00 - 15:00', status: 'PENDING', sepe: 'Ref: 8824/2026' }
+    ]);
 
-    const addEntry = () => {
-        if(!point || !val) return;
-        const newEntry = { id: Date.now(), point, val, date: new Date().toLocaleDateString() };
-        const updated = [newEntry, ...measurements];
-        setMeasurements(updated);
-        localStorage.setItem('ntg_utm_storage', JSON.stringify(updated));
-        setPoint(''); setVal('');
-    };
-
-    return(
-        <div className="min-h-screen p-6 animate-fade">
+    return (
+        <div className="min-h-screen p-6 animate-fade bg-slate-950">
             <div className="flex justify-between items-center mb-10">
-                <a href="index.html" className="text-[10px] underline opacity-50 text-slate-400 font-black tracking-widest">← BACK TO HUB</a>
-                <i className="fa-solid fa-layer-group text-slate-500"></i>
+                <a href="index.html" className="text-[10px] underline opacity-50 text-slate-400">← HUB</a>
+                <span className="text-[9px] text-emerald-500 font-black uppercase italic tracking-widest">ΣΕΠΕ LIVE SYNC</span>
             </div>
-            
-            <h1 className="text-slate-400 text-lg uppercase mb-8 text-center italic tracking-tighter">M1: UTM MEASUREMENTS</h1>
-            
-            <div className="glass p-6 rounded-[2.5rem] border-slate-500/20 mb-8 shadow-2xl">
-                <div className="space-y-4">
-                    <input type="text" placeholder="POINT LOCATION (e.g. FR 45)" value={point} onChange={(e)=>setPoint(e.target.value)}
-                           className="w-full bg-black/50 p-4 rounded-2xl border border-slate-800 text-xs text-white outline-none focus:border-slate-500" />
-                    <div className="flex gap-3">
-                        <input type="number" placeholder="MM" value={val} onChange={(e)=>setVal(e.target.value)}
-                               className="flex-1 bg-black/50 p-4 rounded-2xl border border-slate-800 text-2xl text-white outline-none focus:border-slate-500 text-center" />
-                        <button onClick={addEntry} className="bg-slate-700 px-6 rounded-2xl active:scale-95 transition-all"><i className="fa-solid fa-plus"></i></button>
-                    </div>
-                </div>
-            </div>
-
-            <div className="space-y-3">
-                <p className="text-[8px] uppercase text-slate-500 tracking-[0.2em] ml-2">Historical Logs</p>
-                {measurements.map(m => (
-                    <div key={m.id} className="glass p-4 rounded-2xl flex justify-between items-center border border-white/5 opacity-80">
-                        <span className="text-[10px] uppercase font-black">{m.point}</span>
-                        <span className="text-lg font-black text-slate-400 font-mono">{m.val} <small className="text-[8px]">mm</small></span>
+            <h1 className="text-slate-400 text-lg uppercase mb-8 text-center italic tracking-tighter font-black">M1: SAFETY WATCHLIST</h1>
+            <div className="space-y-4">
+                {appointments.map(app => (
+                    <div key={app.id} className="glass p-5 rounded-[2.5rem] border-l-4 border-slate-500 flex justify-between items-center shadow-xl">
+                        <div>
+                            <p className="text-sm text-white font-black">{app.vessel}</p>
+                            <p className="text-[9px] text-slate-500 uppercase mt-1">{app.time}</p>
+                            <p className="text-[7px] text-blue-500 mt-1 italic tracking-widest">{app.sepe}</p>
+                        </div>
+                        <div className="text-right">
+                            {app.status === 'ACTIVE' ? 
+                                <span className="bg-emerald-900/30 text-emerald-500 text-[8px] px-3 py-1 rounded-full border border-emerald-500/20 italic animate-pulse">ACTIVE</span> :
+                                <span className="bg-slate-800 text-slate-500 text-[8px] px-3 py-1 rounded-full border border-slate-700 italic">PENDING</span>
+                            }
+                        </div>
                     </div>
                 ))}
             </div>
+            <button className="w-full mt-10 p-5 glass rounded-3xl border-dashed border-slate-700 text-[9px] uppercase text-slate-500 italic">Add Appointment from SEPE +</button>
         </div>
     );
 };
-ReactDOM.createRoot(document.getElementById('root')).render(<UTMApp/>);
+ReactDOM.createRoot(document.getElementById('root')).render(<Watchlist />);
 </script></body></html>

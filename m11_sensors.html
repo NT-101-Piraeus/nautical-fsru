@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M11: Sensors</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');body{background:#020617;color:white;font-family:'Orbitron',sans-serif;font-style:italic;font-weight:bold;}.glass{background:rgba(15,23,42,0.7);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.1);}</style>
+</head>
+<body><div id="root"></div><script type="text/babel">
+const Sensors=()=>(
+    <div className="min-h-screen p-6 bg-slate-950">
+        <a href="index.html" className="text-[10px] underline opacity-50 text-pink-500">← HUB</a>
+        <h1 className="text-pink-500 text-lg mt-8 mb-10 text-center uppercase tracking-tighter">M11: RIGEL III SENSORS</h1>
+        <div className="grid grid-cols-2 gap-4">
+            <div className="glass p-6 rounded-3xl border-pink-500/20 text-center">
+                <i className="fa-solid fa-temperature-half mb-2 text-pink-500"></i>
+                <p className="text-[8px] uppercase text-slate-500">Garage Temp</p>
+                <p className="text-xl font-black">22°C</p>
+            </div>
+            <div className="glass p-6 rounded-3xl border-pink-500/20 text-center">
+                <i className="fa-solid fa-droplet mb-2 text-pink-500"></i>
+                <p className="text-[8px] uppercase text-slate-500">Humidity</p>
+                <p className="text-xl font-black">55%</p>
+            </div>
+        </div>
+    </div>
+);
+ReactDOM.createRoot(document.getElementById('root')).render(<Sensors/>);
+</script></body></html>

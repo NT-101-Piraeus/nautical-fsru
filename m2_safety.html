@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>M2: Compliance Shield v3.69 (Admin)</title>
+    <title>M2: Compliance Shield v3.70</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -20,17 +20,28 @@ const SafetyApp = () => {
     const [pin, setPin] = useState('');
     const [newVessel, setNewVessel] = useState({ name: '', imo: '', shift: '' });
     
-    // Φόρτωση πλοίων από το LocalStorage ή χρήση των αρχικών
-    const [vessels, setVessels] = useState(JSON.parse(localStorage.getItem('ntg_vessels')) || [
-        { id: 1, name: 'FELIX', imo: '9513191', shift: '07:00 - 11:00', status: 'ACTIVE' },
-        { id: 2, name: 'ARIADNI', imo: '9513192', shift: '12:00 - 15:00', status: 'PENDING' }
-    ]);
+    // 🛠️ ΣΩΣΤΟΣ ΤΡΟΠΟΣ ΦΟΡΤΩΣΗΣ (Lazy Initial State)
+    const [vessels, setVessels] = useState(() => {
+        const saved = localStorage.getItem('ntg_vessels');
+        if (saved) return JSON.parse(saved);
+        return [
+            { id: 1, name: 'FELIX', imo: '9513191', shift: '07:00 - 11:00', status: 'ACTIVE' },
+            { id: 2, name: 'ARIADNI', imo: '9513192', shift: '12:00 - 15:00', status: 'PENDING' }
+        ];
+    });
 
+    // 🛠️ ΑΥΤΟΜΑΤΟΣ ΣΥΓΧΡΟΝΙΣΜΟΣ LOCAL CACHE
     useEffect(() => {
         localStorage.setItem('ntg_vessels', JSON.stringify(vessels));
     }, [vessels]);
 
     const handleAddProject = () => {
+        // Validation: Αποφυγή κενών εγγραφών
+        if (!newVessel.name || !newVessel.imo) {
+            alert("⚠️ Σφάλμα: Συμπληρώστε Όνομα Πλοίου και IMO!");
+            return;
+        }
+
         if (pin === '1234') {
             const project = { ...newVessel, id: Date.now(), status: 'PENDING' };
             setVessels([...vessels, project]);
@@ -42,21 +53,21 @@ const SafetyApp = () => {
         }
     };
 
-    // --- VIEW 1: WATCHLIST (ΠΙΝΑΚΑΣ ΠΛΟΙΩΝ) ---
+    // --- VIEW 1: WATCHLIST ---
     if (view === 'WATCHLIST') return (
         <div className="min-h-screen p-6 animate-fade bg-slate-950 font-bold italic">
             <div className="flex justify-between items-center mb-10">
-                <a href="index.html" className="text-[10px] underline opacity-50 text-slate-400 font-black tracking-widest">← HUB</a>
-                <span className="text-[9px] text-blue-500 font-black uppercase tracking-widest italic animate-pulse">ΣΕΠΕ LIVE SYNC</span>
+                <a href="index.html" className="text-[10px] underline opacity-50 text-slate-400">← HUB</a>
+                <span className="text-[9px] text-blue-500 font-black uppercase tracking-widest italic animate-pulse">ΣΕΠΕ SYNC ACTIVE</span>
             </div>
 
             <h1 className="text-blue-600 text-lg uppercase mb-8 text-center italic tracking-tighter">M2: SAFETY WATCHLIST</h1>
             
             <div className="space-y-4 mb-10">
                 {vessels.map(v => (
-                    <div key={v.id} onClick={() => { setActiveVessel(v); setView('INSPECTION'); }} className="glass p-5 rounded-[2.5rem] border-l-4 border-slate-700 flex justify-between items-center shadow-xl cursor-pointer active:scale-95 transition-all group">
+                    <div key={v.id} onClick={() => { setActiveVessel(v); setView('INSPECTION'); }} className="glass p-5 rounded-[2.5rem] border-l-4 border-slate-700 flex justify-between items-center shadow-xl cursor-pointer active:scale-95 transition-all">
                         <div>
-                            <p className="text-sm text-white font-black group-hover:text-blue-400">{v.name}</p>
+                            <p className="text-sm text-white font-black">{v.name}</p>
                             <p className="text-[9px] text-slate-500 uppercase mt-1">IMO: {v.imo} • SHIFT: {v.shift}</p>
                         </div>
                         <i className="fa-solid fa-chevron-right text-slate-800"></i>
@@ -64,42 +75,40 @@ const SafetyApp = () => {
                 ))}
             </div>
 
-            {/* ADMIN BUTTON */}
-            <button onClick={() => setShowAdminModal(true)} className="w-full bg-blue-600/10 border-2 border-dashed border-blue-500/40 p-6 rounded-[2.5rem] text-blue-500 font-black uppercase text-[10px] flex items-center justify-center gap-3 active:scale-95 transition-all">
-                <i className="fa-solid fa-folder-plus text-xl"></i> Add New Project (Admin Only)
+            <button onClick={() => setShowAdminModal(true)} className="w-full bg-blue-600/10 border-2 border-dashed border-blue-500/40 p-6 rounded-[2.5rem] text-blue-500 font-black uppercase text-[10px] flex items-center justify-center gap-3">
+                <i className="fa-solid fa-folder-plus text-xl"></i> Add New Project (Admin)
             </button>
 
-            {/* ADMIN MODAL (PIN LOCK) */}
             {showAdminModal && (
-                <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-6">
+                <div className="fixed inset-0 bg-black/95 backdrop-blur-xl z-50 flex items-center justify-center p-6">
                     <div className="glass w-full p-8 rounded-[3rem] border-blue-500/30 space-y-6">
-                        <p className="text-center text-[10px] text-blue-500 uppercase tracking-widest mb-4">Admin Security Check</p>
-                        <input type="password" placeholder="ENTER 4-DIGIT PIN" value={pin} onChange={(e)=>setPin(e.target.value)} className="w-full bg-black/50 p-5 rounded-2xl text-center text-2xl tracking-[1rem] outline-none border border-white/10" />
+                        <p className="text-center text-[10px] text-blue-500 uppercase tracking-widest mb-4 font-black">Admin Security Access</p>
+                        <input type="password" placeholder="PIN" value={pin} onChange={(e)=>setPin(e.target.value)} className="w-full bg-black/50 p-5 rounded-2xl text-center text-2xl tracking-[1rem] outline-none border border-white/10" />
                         
                         {pin === '1234' && (
                             <div className="space-y-4 animate-fade">
-                                <input type="text" placeholder="VESSEL NAME" value={newVessel.name} onChange={(e)=>setNewVessel({...newVessel, name: e.target.value.toUpperCase()})} className="w-full bg-slate-900/50 p-4 rounded-xl text-xs outline-none border border-white/5" />
+                                <input type="text" placeholder="NAME (e.g. FSRU AVALON)" value={newVessel.name} onChange={(e)=>setNewVessel({...newVessel, name: e.target.value.toUpperCase()})} className="w-full bg-slate-900/50 p-4 rounded-xl text-xs outline-none border border-white/5" />
                                 <input type="text" placeholder="IMO NUMBER" value={newVessel.imo} onChange={(e)=>setNewVessel({...newVessel, imo: e.target.value})} className="w-full bg-slate-900/50 p-4 rounded-xl text-xs outline-none border border-white/5" />
-                                <input type="text" placeholder="SHIFT (e.g. 07:00-11:00)" value={newVessel.shift} onChange={(e)=>setNewVessel({...newVessel, shift: e.target.value})} className="w-full bg-slate-900/50 p-4 rounded-xl text-xs outline-none border border-white/5" />
-                                <button onClick={handleAddProject} className="w-full bg-blue-600 p-5 rounded-2xl text-[10px] uppercase font-black italic">Save Project to Watchlist</button>
+                                <input type="text" placeholder="SHIFT" value={newVessel.shift} onChange={(e)=>setNewVessel({...newVessel, shift: e.target.value})} className="w-full bg-slate-900/50 p-4 rounded-xl text-xs outline-none border border-white/5" />
+                                <button onClick={handleAddProject} className="w-full bg-blue-600 p-5 rounded-2xl text-[10px] uppercase font-black italic">Save to Watchlist</button>
                             </div>
                         )}
-                        <button onClick={() => {setShowAdminModal(false); setPin('');}} className="w-full text-[9px] text-slate-500 uppercase mt-4">Cancel</button>
+                        <button onClick={() => {setShowAdminModal(false); setPin('');}} className="w-full text-[9px] text-slate-600 uppercase mt-4">Cancel Access</button>
                     </div>
                 </div>
             )}
         </div>
     );
 
-    // --- VIEW 2: INSPECTION MODULE (Όπως το φτιάξαμε πριν) ---
+    // --- VIEW 2: INSPECTION MODULE ---
     return (
         <div className="min-h-screen p-6 bg-slate-950 font-bold italic animate-fade">
-            <button onClick={() => setView('WATCHLIST')} className="text-[10px] underline text-blue-400 mb-8 font-black tracking-widest">← BACK TO SHIPS</button>
+            <button onClick={() => setView('WATCHLIST')} className="text-[10px] underline text-blue-400 mb-8 font-black">← BACK TO LIST</button>
             <h2 className="text-xl text-white mb-10 text-center uppercase tracking-tighter">PROJECT: {activeVessel.name}</h2>
             <div className="glass p-10 rounded-[3rem] border-blue-500/20 text-center">
                 <i className="fa-solid fa-clipboard-check text-4xl text-blue-600 mb-6"></i>
-                <p className="text-[10px] text-slate-400 uppercase tracking-widest mb-8">Ready for P.D. 70/90 Inspection</p>
-                <button className="w-full bg-blue-600 p-5 rounded-3xl text-[10px] uppercase font-black italic shadow-lg">Start Daily Log +</button>
+                <p className="text-[10px] text-slate-400 uppercase tracking-widest mb-8">Ready for P.D. 70/90 Compliance Audit</p>
+                <button className="w-full bg-blue-600 p-5 rounded-3xl text-[10px] uppercase font-black italic">Start Daily Log +</button>
             </div>
         </div>
     );

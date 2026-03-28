@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NauticalOS Hub v3.40</title>
+    <title>NauticalOS v3: THE HAMMER</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -10,101 +10,93 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');
-        body { background-color: #020617; color: white; margin: 0; font-family: 'Orbitron', sans-serif; font-style: italic; font-weight: bold; }
+        body { background-color: #020617; color: white; font-family: 'Orbitron', sans-serif; font-style: italic; font-weight: bold; }
         .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
-        .brand { letter-spacing: 0.1em; }
+        .red-alert { border-left: 4px solid #dc2626; background: rgba(220, 38, 38, 0.05); }
+        .cyan-alert { border-left: 4px solid #0891b2; background: rgba(8, 145, 178, 0.05); }
     </style>
 </head>
-<body>
-    <div id="root"></div>
+<body><div id="root"></div><script type="text/babel">
+const Hub = () => {
+    // ΣΤΑΤΙΚΑ ΔΕΔΟΜΕΝΑ ΓΙΑ ΤΟ UI - ΘΑ ΕΡΧΟΝΤΑΙ ΑΠΟ ΤΟ SUPABASE
+    const blacklist = [
+        { name: 'Emir Öztürk', role: 'NIP 5262587598', juris: 'Poland', sync: '12h ago', intel: 'Active' },
+        { name: 'Erkan Zorlu', role: 'Key Target', juris: 'Turkey/IT', sync: '2h ago', intel: 'Watching' }
+    ];
+    const radar = [
+        { vessel: 'S.V. NIKOLAY', status: 'SDN ALERT', imo: '9123456', ping: 'Terme Geofence' },
+        { vessel: 'DEMIRHAN', status: 'CLEAR', imo: '9876543', ping: 'En Route' }
+    ];
 
-    <script type="text/babel">
-        const { useState, useEffect } = React;
-
-        const Hub = () => {
-            const [auth, setAuth] = useState(localStorage.getItem('ntg_auth') === 'true');
-            const [pin, setPin] = useState('');
-            const role = localStorage.getItem('ntg_role') || 'WORKER';
-
-            const handleLogin = (e) => {
-                e.preventDefault();
-                let userRole = '';
-                if (pin === '1234') userRole = 'DIRECTOR';
-                else if (pin === '0612') userRole = 'WORKER';
-                
-                if (userRole) {
-                    localStorage.setItem('ntg_auth', 'true');
-                    localStorage.setItem('ntg_role', userRole);
-                    setAuth(true);
-                } else { alert("ACCESS DENIED"); setPin(''); }
-            };
-
-            const logout = () => {
-                localStorage.removeItem('ntg_auth');
-                localStorage.removeItem('ntg_role');
-                setAuth(false);
-            };
-
-            // Η ΙΕΡΑΡΧΙΑ ΠΟΥ ΖΗΤΗΣΕΣ: ΤΑ 3 ΠΡΩΤΑ ΕΙΝΑΙ Η ΔΟΥΛΕΙΑ ΣΟΥ
-            const apps = [
-                { id: 'm1', name: 'UTM', icon: 'fa-layer-group', color: 'border-slate-500', url: 'm1_utm.html', dir: false },
-                { id: 'm2', name: 'SAFETY', icon: 'fa-shield-halved', color: 'border-blue-600', url: 'm2_safety.html', dir: false },
-                { id: 'm3', name: 'LOAD TEST', icon: 'fa-weight-hanging', color: 'border-orange-600', url: 'm3_loadtest.html', dir: false },
-                
-                { id: 'm8', name: 'ACADEMY', icon: 'fa-graduation-cap', color: 'border-emerald-600', url: 'm8_academy.html', dir: false },
-                { id: 'm5', name: 'WAR ROOM', icon: 'fa-gavel', color: 'border-red-600', url: 'm5_terme.html', dir: true },
-                { id: 'm13', name: 'MYKONOS', icon: 'fa-house-chimney', color: 'border-blue-300', url: 'm13_mykonos.html', dir: true },
-                
-                { id: 'm4', name: 'RADAR', icon: 'fa-radar', color: 'border-cyan-600', url: 'm4_radar.html', dir: false },
-                { id: 'm7', name: 'STARTUP', icon: 'fa-rocket', color: 'border-yellow-500', url: 'm7_startup.html', dir: true },
-                { id: 'm9', name: 'OPS/QUALITY', icon: 'fa-clipboard-check', color: 'border-indigo-500', url: 'm9_ops.html', dir: false },
-                
-                { id: 'm12', name: 'STAFF', icon: 'fa-users', color: 'border-blue-400', url: 'm12_staff.html', dir: false },
-                { id: 'm11', name: 'SENSORS', icon: 'fa-satellite-dish', color: 'border-pink-600', url: 'm11_sensors.html', dir: false },
-                { id: 'm6', name: 'CEO', icon: 'fa-chart-line', color: 'border-purple-600', url: 'm6_ceo.html', dir: true }
-            ];
-
-            if (!auth) return (
-                <div className="h-screen flex items-center justify-center p-6 bg-slate-950 font-bold italic">
-                    <form onSubmit={handleLogin} className="glass p-10 rounded-[3.5rem] w-full max-w-sm text-center shadow-2xl border border-slate-800">
-                        <h1 className="text-blue-500 mb-8 uppercase italic font-black brand">NTG COMMAND</h1>
-                        <input type="password" value={pin} onChange={(e) => setPin(e.target.value)}
-                               className="w-full bg-slate-900 border border-slate-700 p-5 rounded-2xl text-center text-3xl mb-6 text-white outline-none"
-                               placeholder="PIN" maxLength="4" autoFocus />
-                        <button type="submit" className="w-full bg-blue-600 p-5 rounded-2xl uppercase font-black">Unlock Hub</button>
-                    </form>
+    return (
+        <div className="min-h-screen p-4 max-w-xl mx-auto animate-fade font-bold italic">
+            <div className="flex justify-between items-center mb-10 pt-4 px-2">
+                <div>
+                    <span className="text-[7px] text-red-600 uppercase tracking-[0.3em]">Directive: THE HAMMER</span>
+                    <p className="text-sm text-blue-400 font-black italic">M. SYKINIOTIS / LEGAL GEM</p>
                 </div>
-            );
+                <div className="h-2 w-2 bg-red-600 rounded-full animate-pulse shadow-[0_0_10px_red]"></div>
+            </div>
 
-            return (
-                <div className="min-h-screen p-4 pb-10 max-w-lg mx-auto animate-fade">
-                    <div className="flex justify-between items-center px-4 pt-6 mb-8">
-                        <div className="text-left">
-                            <span className="text-[7px] text-slate-500 uppercase tracking-widest italic">{role} MODE</span>
-                            <p className="text-sm uppercase tracking-tighter text-blue-400 italic font-black">M. SYKINIOTIS</p>
+            {/* TOP 3 COMMANDS */}
+            <div className="grid grid-cols-3 gap-2 mb-10">
+                <a href="m1_utm.html" className="glass p-4 rounded-3xl border-b-2 border-slate-500 text-center active:scale-95 transition-all">
+                    <i className="fa-solid fa-layer-group text-slate-400 mb-1"></i>
+                    <p className="text-[7px] uppercase">UTM</p>
+                </a>
+                <a href="m2_safety.html" className="glass p-4 rounded-3xl border-b-2 border-blue-600 text-center active:scale-95 transition-all">
+                    <i className="fa-solid fa-shield-halved text-blue-500 mb-1"></i>
+                    <p className="text-[7px] uppercase">SAFETY</p>
+                </a>
+                <a href="m3_loadtest.html" className="glass p-4 rounded-3xl border-b-2 border-orange-600 text-center active:scale-95 transition-all">
+                    <i className="fa-solid fa-weight-hanging text-orange-500 mb-1"></i>
+                    <p className="text-[7px] uppercase">LOAD TEST</p>
+                </a>
+            </div>
+
+            {/* MODULE A: THE BLACKLIST */}
+            <div className="mb-10">
+                <p className="text-[9px] text-red-600 uppercase tracking-widest mb-4 italic ml-2"><i className="fa-solid fa-gavel mr-2"></i>Module A: The Blacklist</p>
+                <div className="space-y-2">
+                    {blacklist.map(t => (
+                        <div key={t.name} className="glass p-4 rounded-2xl red-alert flex justify-between items-center">
+                            <div>
+                                <p className="text-[10px] text-white uppercase font-black">{t.name}</p>
+                                <p className="text-[7px] text-slate-500 italic uppercase">{t.role} | {t.juris}</p>
+                            </div>
+                            <div className="text-right">
+                                <p className="text-[7px] text-red-500 font-black uppercase">{t.intel}</p>
+                                <p className="text-[6px] text-slate-600 uppercase italic">Sync: {t.sync}</p>
+                            </div>
                         </div>
-                        <button onClick={logout} className="text-[9px] text-red-500 uppercase underline font-black">Logout</button>
-                    </div>
-
-                    {/* 3 ΣΤΗΛΕΣ ΓΙΑ ΝΑ ΕΙΝΑΙ ΤΟ TOP-3 ΣΤΗΝ ΠΡΩΤΗ ΣΕΙΡΑ */}
-                    <div className="grid grid-cols-3 gap-2">
-                        {apps.map(app => {
-                            if (app.dir && role !== 'DIRECTOR') return null;
-                            return (
-                                <a key={app.id} href={app.url} 
-                                   className={`glass p-3 h-28 rounded-[1.8rem] border-b-4 ${app.color} flex flex-col items-center justify-center gap-2 active:scale-95 transition-all shadow-xl`}>
-                                    <i className={`fa-solid ${app.icon} text-lg opacity-80`}></i>
-                                    <span className="text-[7px] font-black uppercase text-center leading-tight tracking-tighter">{app.name}</span>
-                                </a>
-                            );
-                        })}
-                    </div>
+                    ))}
                 </div>
-            );
-        };
+            </div>
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<Hub />);
-    </script>
-</body>
-</html>
+            {/* MODULE B: VESSEL RADAR */}
+            <div>
+                <p className="text-[9px] text-cyan-500 uppercase tracking-widest mb-4 italic ml-2"><i className="fa-solid fa-radar mr-2"></i>Module B: Vessel Radar</p>
+                <div className="space-y-2">
+                    {radar.map(v => (
+                        <div key={v.vessel} className="glass p-4 rounded-2xl cyan-alert flex justify-between items-center">
+                            <div>
+                                <p className="text-[10px] text-white uppercase font-black">{v.vessel}</p>
+                                <p className="text-[7px] text-slate-500 italic uppercase">IMO: {v.imo}</p>
+                            </div>
+                            <div className="text-right">
+                                <p className={`text-[7px] font-black uppercase ${v.status.includes('ALERT') ? 'text-red-500' : 'text-cyan-500'}`}>{v.status}</p>
+                                <p className="text-[6px] text-slate-600 uppercase italic">{v.ping}</p>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            <div className="mt-12 text-center opacity-30">
+                <a href="m5_terme.html" className="text-[8px] uppercase underline tracking-widest">Open Intelligence Deep-Dive (M5)</a>
+            </div>
+        </div>
+    );
+};
+ReactDOM.createRoot(document.getElementById('root')).render(<Hub />);
+</script></body></html>

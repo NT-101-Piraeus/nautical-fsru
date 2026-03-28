@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>M2: Compliance Shield (Dry Run)</title>
+    <title>M2: Compliance Shield v3.58</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -11,16 +11,25 @@
     <style>@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');body{background:#020617;color:white;font-family:'Orbitron',sans-serif;font-style:italic;font-weight:bold;}.glass{background:rgba(15,23,42,0.7);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.1);}</style>
 </head>
 <body><div id="root"></div><script type="text/babel">
-const SafetyDryRun = () => {
+const SafetyAction = () => {
     const [sun, setSun] = React.useState(false);
     const [hasPhoto, setHasPhoto] = React.useState(false);
     const [joblist, setJoblist] = React.useState([]);
     const [area, setArea] = React.useState('Main Deck');
     const [task, setTask] = React.useState('Hot Works');
+    const [checks, setChecks] = React.useState({ gasFree: false, fireBlanket: false, ppe: false });
+
+    // Δυναμικά Checkboxes βάσει Π.Δ. 70/90 
+    const getRequirements = () => {
+        if (task === 'Hot Works') return ["Gas-Free Certificate", "Fire Blanket / Extinguisher", "PPE Check"];
+        if (task === 'Confined Space') return ["Oxygen/LEL Levels", "Stand-by Person", "Ventilation Status"];
+        return ["General Safety Inspection", "PPE Check"];
+    };
 
     const addJob = () => {
-        const newJob = { id: Date.now(), area, task, time: new Date().toLocaleTimeString() };
+        const newJob = { id: Date.now(), area, task, time: new Date().toLocaleTimeString(), verified: Object.values(checks).every(v => v) };
         setJoblist([newJob, ...joblist]);
+        setChecks({ gasFree: false, fireBlanket: false, ppe: false }); // Reset for next
     };
 
     const theme = sun ? "bg-white text-black" : "bg-slate-950 text-white";
@@ -31,13 +40,13 @@ const SafetyDryRun = () => {
             <div className="flex justify-between items-center mb-6">
                 <a href="index.html" className={`text-[10px] underline opacity-50 ${sun?'text-black':'text-blue-400'}`}>← HUB</a>
                 <button onClick={() => setSun(!sun)} className="p-3 glass rounded-full border border-blue-500/10 shadow-lg">
-                    <i className={`fa-solid ${sun?'fa-moon text-blue-900':'fa-sun text-yellow-500'}`}></i>
+                    <i className={`fa-solid ${sun?'fa-moon':'fa-sun text-yellow-500'}`}></i>
                 </button>
             </div>
 
             <h1 className="text-blue-600 text-lg uppercase mb-8 text-center italic font-black">M2: COMPLIANCE SHIELD</h1>
 
-            {/* BUILDER */}
+            {/* JOBLIST BUILDER [cite: 103] */}
             <div className={`${card} p-5 rounded-[2.5rem] mb-6 space-y-4 shadow-2xl`}>
                 <div className="grid grid-cols-2 gap-2">
                     <select value={area} onChange={(e)=>setArea(e.target.value)} className="bg-black/20 p-4 rounded-2xl text-[10px] outline-none border border-white/5">
@@ -47,39 +56,47 @@ const SafetyDryRun = () => {
                         <option>Hot Works</option><option>Confined Space</option><option>Scaffolding</option><option>Lifting Ops</option>
                     </select>
                 </div>
-                <button onClick={addJob} className="w-full bg-blue-600/20 border border-blue-600/40 p-4 rounded-2xl text-[9px] uppercase font-black italic shadow-md active:scale-95">Add to Daily Log +</button>
+
+                {/* DYNAMIC P.D. 70/90 CHECKBOXES  */}
+                <div className="p-4 bg-blue-600/5 rounded-2xl space-y-2 border border-blue-500/10">
+                    <p className="text-[7px] text-blue-500 uppercase tracking-widest mb-2 font-black italic">P.D. 70/90 REQUIREMENTS</p>
+                    {getRequirements().map((req, idx) => (
+                        <div key={idx} className="flex items-center gap-3">
+                            <input type="checkbox" className="w-3 h-3 accent-blue-600" onChange={(e) => setChecks({...checks, [idx]: e.target.checked})} />
+                            <span className="text-[9px] uppercase">{req}</span>
+                        </div>
+                    ))}
+                </div>
+
+                <button onClick={addJob} className="w-full bg-blue-600/20 border border-blue-600/40 p-4 rounded-2xl text-[9px] uppercase font-black italic shadow-md active:scale-95">Add Task to Shift +</button>
             </div>
 
             {/* LOG FEED */}
-            <div className="space-y-3 mb-10 overflow-y-auto max-h-48 pr-2">
-                {joblist.length === 0 && <p className="text-[8px] text-center opacity-30 uppercase italic">No tasks added to shift yet</p>}
+            <div className="space-y-3 mb-10 overflow-y-auto max-h-48 pr-2 italic">
                 {joblist.map(j => (
-                    <div key={j.id} className={`${card} p-4 rounded-2xl border-l-4 border-blue-500 flex justify-between items-center animate-fade shadow-lg`}>
-                        <div><p className="text-[10px] font-black uppercase tracking-tighter">{j.task}</p><p className="text-[7px] text-slate-500 uppercase">{j.area} | {j.time}</p></div>
-                        <i className="fa-solid fa-check-circle text-blue-500/30"></i>
+                    <div key={j.id} className={`${card} p-4 rounded-2xl border-l-4 border-blue-500 flex justify-between items-center shadow-lg`}>
+                        <div><p className="text-[10px] font-black uppercase">{j.task}</p><p className="text-[7px] text-slate-500 uppercase">{j.area} | {j.time}</p></div>
+                        <i className={`fa-solid fa-circle-check text-emerald-500 ${j.verified ? 'opacity-100' : 'opacity-20'}`}></i>
                     </div>
                 ))}
             </div>
 
-            {/* THE EVIDENCE LOCK */}
+            {/* THE EVIDENCE LOCK  */}
             <div className="fixed bottom-8 left-0 right-0 px-6 max-w-xl mx-auto">
                 <div className="flex gap-4">
-                    <button onClick={() => {alert("Camera Accessed"); setHasPhoto(true)}} 
-                            className={`flex-1 p-6 rounded-[2.5rem] flex flex-col items-center gap-2 border-2 ${hasPhoto ? 'border-emerald-500 bg-emerald-500/10' : 'border-slate-700 border-dashed bg-black/20'}`}>
+                    <button onClick={() => setHasPhoto(true)} className={`flex-1 p-6 rounded-[2.5rem] flex flex-col items-center gap-2 border-2 ${hasPhoto ? 'border-emerald-500 bg-emerald-500/10' : 'border-slate-700 border-dashed bg-black/20'}`}>
                         <i className={`fa-solid fa-camera text-2xl ${hasPhoto ? 'text-emerald-500' : 'text-slate-600'}`}></i>
                         <span className="text-[8px] uppercase font-black italic">Capture Evidence</span>
                     </button>
-                    
-                    <button disabled={!hasPhoto || joblist.length === 0}
-                            className={`flex-1 p-6 rounded-[2.5rem] flex flex-col items-center gap-2 border-2 ${hasPhoto && joblist.length > 0 ? 'border-blue-600 bg-blue-600 text-white shadow-[0_0_20px_rgba(37,99,235,0.4)]' : 'border-slate-800 opacity-20 grayscale cursor-not-allowed'}`}>
+                    <button disabled={!hasPhoto || joblist.length === 0} className={`flex-1 p-6 rounded-[2.5rem] flex flex-col items-center gap-2 border-2 ${hasPhoto && joblist.length > 0 ? 'border-blue-600 bg-blue-600 text-white shadow-xl' : 'border-slate-800 opacity-20 grayscale cursor-not-allowed'}`}>
                         <i className="fa-solid fa-signature text-2xl"></i>
-                        <span className="text-[8px] uppercase font-black italic tracking-widest">Sign Log</span>
+                        <span className="text-[8px] uppercase font-black italic tracking-widest tracking-widest">Sign Log</span>
                     </button>
                 </div>
-                {!hasPhoto && joblist.length > 0 && <p className="text-[7px] text-red-500 text-center uppercase mt-3 animate-pulse font-black">Signature Locked: Evidence Required</p>}
+                {!hasPhoto && joblist.length > 0 && <p className="text-[7px] text-red-500 text-center uppercase mt-3 animate-pulse font-black italic">Signature Locked: Evidence & Checkboxes Required</p>}
             </div>
         </div>
     );
 };
-ReactDOM.createRoot(document.getElementById('root')).render(<SafetyDryRun />);
+ReactDOM.createRoot(document.getElementById('root')).render(<SafetyAction />);
 </script></body></html>

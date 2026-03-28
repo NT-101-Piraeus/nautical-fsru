@@ -2,147 +2,82 @@
 <html lang="el">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>M3: Load Test Certifier v3.60</title>
+    <title>M3: Load Test Project Manager</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');
-        body { background-color: #020617; color: white; font-family: 'Orbitron', sans-serif; font-style: italic; font-weight: bold; }
-        .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
-    </style>
+    <style>@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');body{background:#020617;color:white;font-family:'Orbitron',sans-serif;font-style:italic;font-weight:bold;}.glass{background:rgba(15,23,42,0.7);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.1);}</style>
 </head>
 <body><div id="root"></div><script type="text/babel">
-const LoadCertifier = () => {
-    const [mode, setMode] = React.useState('CARGO');
-    const [swl, setSwl] = React.useState('');
-    const [sdmbl, setSdmbl] = React.useState('');
-    const [l1, setL1] = React.useState('');
-    const [l2, setL2] = React.useState('');
+const { useState } = React;
 
-    // --- MATH ENGINE ---
-    const cargoProof = swl ? (parseFloat(swl) <= 20 ? swl * 1.25 : parseFloat(swl) + 5) : 0;
-    const mooringJack = (sdmbl && l1 && l2) ? (0.60 * sdmbl * l1) / l2 : 0;
+const LoadTestApp = () => {
+    const [view, setView] = useState('DASHBOARD'); // DASHBOARD, WORKSPACE
+    const [activeJob, setActiveJob] = useState(null);
+    const [userRole] = useState('DIRECTOR'); // ADMIN ROLE
 
-    // --- PDF GENERATOR ---
-    const generatePDF = () => {
-        if (!window.jspdf) {
-            alert("⚠️ Το PDF Engine φορτώνει, παρακαλώ περιμένετε...");
-            return;
-        }
+    const [jobs] = useState([
+        { id: 'JOB-2026-001', vessel: 'MT FELIX', port: 'Elefsis', status: 'ACTIVE', date: '28/03/2026' },
+        { id: 'JOB-2026-002', vessel: 'MV ADASTRA', port: 'Piraeus', status: 'COMPLETED', date: '12/03/2026' }
+    ]);
 
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        const dateToday = new Date().toLocaleDateString('en-GB');
+    // --- MATH ENGINE (CARGO) ---
+    const calculateCargo = (swl) => swl <= 20 ? swl * 1.25 : parseFloat(swl) + 5;
 
-        // HEADER
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(22);
-        doc.setTextColor(249, 115, 22); // Orange NTG
-        doc.text("NAUTICAL TECHNOLOGY", 105, 20, null, null, "center");
-        
-        doc.setFontSize(14);
-        doc.setTextColor(50, 50, 50);
-        doc.text("CERTIFICATE OF TEST AND EXAMINATION (CERT 11)", 105, 30, null, null, "center");
-        doc.setLineWidth(0.5);
-        doc.line(20, 35, 190, 35);
+    // --- VIEW: DASHBOARD ---
+    if (view === 'DASHBOARD') return (
+        <div className="min-h-screen p-6 animate-fade">
+            <div className="flex justify-between items-center mb-10">
+                <a href="index.html" className="text-[10px] underline opacity-50 text-orange-500 font-black tracking-widest">← HUB</a>
+                <span className="text-[9px] text-orange-600 font-black uppercase italic">Project Manager v3.68</span>
+            </div>
+            
+            <h1 className="text-orange-500 text-lg uppercase mb-8 text-center italic font-black">M3: LOAD TEST JOBS</h1>
 
-        // GENERAL INFO
-        doc.setFontSize(12);
-        doc.setFont("helvetica", "normal");
-        doc.setTextColor(0, 0, 0);
-        doc.text(`Date: ${dateToday}`, 20, 45);
-        doc.text(`Inspection Mode: ${mode === 'CARGO' ? 'CARGO GEAR (ILO 152)' : 'MOORING WINCHES (MEG4)'}`, 20, 55);
+            {userRole === 'DIRECTOR' && (
+                <button className="w-full bg-orange-600/10 border-2 border-dashed border-orange-500/40 p-6 rounded-[2.5rem] text-orange-500 font-black uppercase text-[10px] mb-8 flex items-center justify-center gap-3 active:scale-95 transition-all">
+                    <i className="fa-solid fa-folder-plus text-xl"></i> Create New Project (Admin)
+                </button>
+            )}
 
-        // DYNAMIC DATA BOX
-        doc.setFillColor(245, 245, 245);
-        doc.rect(20, 65, 170, 45, "F");
-        doc.rect(20, 65, 170, 45, "S");
+            <div className="space-y-4">
+                <p className="text-[8px] text-slate-500 uppercase tracking-widest ml-2 italic">Active Load Test Assignments</p>
+                {jobs.map(job => (
+                    <div key={job.id} onClick={() => { setActiveJob(job); setView('WORKSPACE'); }} className="glass p-5 rounded-[2rem] border-l-4 border-orange-600 flex justify-between items-center cursor-pointer active:scale-95 transition-all">
+                        <div><p className="text-sm text-white font-black">{job.vessel}</p><p className="text-[8px] text-slate-500 mt-1">{job.port} | {job.date}</p></div>
+                        <i className="fa-solid fa-chevron-right text-orange-900"></i>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
 
-        doc.setFont("helvetica", "bold");
-        if (mode === 'CARGO') {
-            if (!swl) return alert("⚠️ Εισάγετε SWL!");
-            doc.text(`Safe Working Load (SWL): ${swl} Tons`, 25, 75);
-            doc.setTextColor(0, 100, 0);
-            doc.text(`Applied Proof Load (Target): ${cargoProof.toFixed(2)} Tons`, 25, 90);
-        } else {
-            if (!sdmbl || !l1 || !l2) return alert("⚠️ Συμπληρώστε SDMBL, L1 και L2!");
-            doc.text(`Ship Design Minimum Breaking Load (SDMBL): ${sdmbl} Tons`, 25, 75);
-            doc.text(`L1: ${l1} mm | L2: ${l2} mm`, 25, 85);
-            doc.setTextColor(0, 100, 0);
-            doc.text(`Required Jack Force (60%): ${mooringJack.toFixed(2)} Tons`, 25, 100);
-        }
-
-        // FOOTER / SIGNATURES
-        doc.setTextColor(0, 0, 0);
-        doc.setFontSize(10);
-        doc.rect(20, 150, 70, 40);
-        doc.text("Tested by / Surveyor:", 25, 158);
-        doc.text("M. SYKINIOTIS", 25, 180);
-        doc.text("(Sign & Company Stamp)", 25, 185);
-
-        doc.rect(120, 150, 70, 40);
-        doc.text("Acknowledged by Master:", 125, 158);
-        doc.text("(Sign & Ship's Stamp)", 125, 185);
-
-        doc.save(`NTG_CERT_11_${mode}_${Date.now()}.pdf`);
-    };
-
+    // --- VIEW: WORKSPACE (The Old M3 Logic inside a Folder) ---
     return (
         <div className="min-h-screen p-6 animate-fade bg-slate-950 font-bold italic">
-            <div className="flex justify-between items-center mb-8">
-                <a href="index.html" className="text-[10px] underline opacity-50 text-orange-500">← BACK TO HUB</a>
-                <div className="h-2 w-2 bg-orange-600 rounded-full animate-pulse shadow-[0_0_10px_orange]"></div>
+            <div className="flex justify-between items-center mb-6">
+                <button onClick={() => setView('DASHBOARD')} className="text-[10px] underline opacity-50 text-orange-500 font-black tracking-widest">← BACK TO JOBS</button>
+                <span className="text-[10px] text-white font-black uppercase">{activeJob?.vessel}</span>
             </div>
 
-            <h1 className="text-orange-500 text-lg mb-8 text-center uppercase tracking-tighter italic font-black">M3: LOAD CERTIFIER</h1>
-
-            {/* SWITCHER */}
-            <div className="flex gap-2 mb-6">
-                <button onClick={() => setMode('CARGO')} className={`flex-1 p-4 rounded-2xl text-[9px] border transition-all ${mode==='CARGO'?'border-orange-500 bg-orange-500/20 text-white shadow-lg':'border-slate-800 text-slate-500 opacity-50'}`}>CARGO GEAR (ILO)</button>
-                <button onClick={() => setMode('MOORING')} className={`flex-1 p-4 rounded-2xl text-[9px] border transition-all ${mode==='MOORING'?'border-orange-500 bg-orange-500/20 text-white shadow-lg':'border-slate-800 text-slate-500 opacity-50'}`}>MOORING (MEG4)</button>
+            <div className="glass p-6 rounded-[2.5rem] border-orange-500/20 mb-8 shadow-2xl border-b-4 border-orange-600">
+                <p className="text-[8px] text-slate-500 uppercase tracking-widest mb-4">Select Service for {activeJob?.vessel}</p>
+                <div className="grid grid-cols-2 gap-3">
+                    <button className="bg-orange-600 p-4 rounded-2xl text-[9px] uppercase font-black">Cargo Gear</button>
+                    <button className="bg-slate-800 p-4 rounded-2xl text-[9px] uppercase font-black opacity-50">Mooring BHC</button>
+                </div>
             </div>
 
-            <div className="glass p-8 rounded-[3rem] border-orange-500/20 shadow-2xl space-y-8">
-                {mode === 'CARGO' ? (
-                    <div className="animate-fade">
-                        <label className="text-[8px] uppercase text-slate-500 mb-2 block tracking-widest">Safe Working Load (Tons)</label>
-                        <input type="number" value={swl} onChange={(e)=>setSwl(e.target.value)} className="w-full bg-black/40 p-6 rounded-2xl text-center text-4xl text-white outline-none border border-orange-500/20" placeholder="0.0" />
-                        <div className="mt-10 text-center">
-                            <p className="text-[10px] text-slate-400 uppercase mb-2 italic">Target Proof Load</p>
-                            <p className="text-6xl text-orange-500 font-black tracking-tighter shadow-orange-500/20">{cargoProof.toFixed(2)}<span className="text-sm ml-2 opacity-50">T</span></p>
-                        </div>
-                    </div>
-                ) : (
-                    <div className="animate-fade space-y-6">
-                        <div className="space-y-4">
-                            <div><label className="text-[7px] text-slate-500 uppercase tracking-widest">SDMBL (Tons)</label><input type="number" value={sdmbl} onChange={(e)=>setSdmbl(e.target.value)} className="w-full bg-black/40 p-4 rounded-xl text-center text-xl text-white outline-none border border-orange-500/10" /></div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div><label className="text-[7px] text-slate-500 uppercase tracking-widest">L1 (mm)</label><input type="number" value={l1} onChange={(e)=>setL1(e.target.value)} className="w-full bg-black/40 p-4 rounded-xl text-center text-xl text-white outline-none border border-orange-500/10" /></div>
-                                <div><label className="text-[7px] text-slate-500 uppercase tracking-widest">L2 (mm)</label><input type="number" value={l2} onChange={(e)=>setL2(e.target.value)} className="w-full bg-black/40 p-4 rounded-xl text-center text-xl text-white outline-none border border-orange-500/10" /></div>
-                            </div>
-                        </div>
-                        <div className="mt-8 text-center pt-8 border-t border-white/5">
-                            <p className="text-[10px] text-slate-400 uppercase mb-2 italic tracking-widest">Required Jack Force (60%)</p>
-                            <p className="text-5xl text-orange-500 font-black tracking-tighter">{mooringJack.toFixed(2)}<span className="text-sm ml-2 opacity-50">T</span></p>
-                        </div>
-                    </div>
-                )}
-
-                <button onClick={generatePDF} className="w-full bg-orange-600 p-6 rounded-3xl text-[11px] uppercase font-black italic shadow-xl shadow-orange-900/30 active:scale-95 transition-all hover:bg-orange-500 border-t border-white/20">
-                    Generate CERT 11 Draft 📄
-                </button>
-            </div>
-
-            <div className="mt-12 text-center opacity-30">
-                <p className="text-[7px] uppercase tracking-widest">Compliance Engine: ILO 152 | MEG4 | CERT 11</p>
-                <p className="text-[6px] uppercase mt-1 italic">Nautical Technology OS v3.60 | Secure Deployment</p>
+            <div className="text-center opacity-30 mt-12">
+                <p className="text-[7px] uppercase tracking-widest italic">Project ID: {activeJob?.id}</p>
+                <p className="text-[7px] uppercase mt-1">NauticalOS Math Engine V3.60 Locked</p>
             </div>
         </div>
     );
 };
-ReactDOM.createRoot(document.getElementById('root')).render(<LoadCertifier />);
+
+ReactDOM.createRoot(document.getElementById('root')).render(<LoadTestApp />);
 </script></body></html>

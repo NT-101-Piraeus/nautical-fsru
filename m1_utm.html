@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>M1: Safety Watchlist</title>
+    <title>M1: UTM Gauging</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -11,40 +11,17 @@
     <style>@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');body{background:#020617;color:white;font-family:'Orbitron',sans-serif;font-style:italic;font-weight:bold;}.glass{background:rgba(15,23,42,0.7);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.1);}</style>
 </head>
 <body><div id="root"></div><script type="text/babel">
-const Watchlist = () => {
-    const vessels = [
-        { id: 1, name: 'FELIX', imo: '9513191', time: '07:00 - 11:00', status: 'ACTIVE', ref: 'Ref: 8823/2026' },
-        { id: 2, name: 'ARIADNI', imo: '9513192', time: '12:00 - 15:00', status: 'PENDING', ref: 'Ref: 8824/2026' },
-        { id: 3, name: 'NAFTOCEMENT IV', imo: '9513193', time: '16:00 - 18:00', status: 'PENDING', ref: 'Ref: 8825/2026' },
-        { id: 4, name: 'RIGEL III', imo: '9513194', time: 'N/A', status: 'DOCKING', ref: 'Ref: 8826/2026' }
-    ];
-
-    return (
-        <div className="min-h-screen p-6 animate-fade bg-slate-950 font-bold italic">
-            <div className="flex justify-between items-center mb-10">
-                <a href="index.html" className="text-[10px] underline opacity-50 text-slate-400">← BACK TO HUB</a>
-                <span className="text-[9px] text-emerald-500 font-black uppercase tracking-widest italic">ΣΕΠΕ SYNC ACTIVE</span>
-            </div>
-            <h1 className="text-slate-400 text-lg uppercase mb-8 text-center italic tracking-tighter">M1: SAFETY WATCHLIST</h1>
-            <div className="space-y-4">
-                {vessels.map(v => (
-                    <div key={v.id} className="glass p-5 rounded-[2.5rem] border-l-4 border-slate-500 flex justify-between items-center shadow-xl">
-                        <div>
-                            <p className="text-sm text-white font-black">{v.name}</p>
-                            <p className="text-[9px] text-slate-500 uppercase mt-1">{v.time}</p>
-                            <p className="text-[7px] text-blue-500 mt-1 italic tracking-widest">{v.ref}</p>
-                        </div>
-                        <div className="text-right">
-                            {v.status === 'ACTIVE' ? 
-                                <span className="bg-emerald-900/30 text-emerald-500 text-[8px] px-3 py-1 rounded-full border border-emerald-500/20 italic animate-pulse font-black">ACTIVE</span> :
-                                <span className="bg-slate-800 text-slate-500 text-[8px] px-3 py-1 rounded-full border border-slate-700 italic font-black">{v.status}</span>
-                            }
-                        </div>
-                    </div>
-                ))}
+const UtmApp=()=>{
+    return(
+        <div className="min-h-screen p-6 animate-fade bg-slate-950">
+            <div className="flex justify-between items-center mb-8"><a href="index.html" className="text-[10px] underline opacity-50 text-slate-400">← HUB</a></div>
+            <h1 className="text-slate-400 text-lg uppercase mb-10 text-center italic tracking-tighter">M1: UTM GAUGING</h1>
+            <div className="glass p-10 rounded-[3rem] border-slate-800 text-center opacity-40">
+                <i className="fa-solid fa-microchip text-4xl mb-4"></i>
+                <p className="text-[8px] uppercase tracking-widest">Waiting for UTM GEM Protocol Integration</p>
             </div>
         </div>
     );
 };
-ReactDOM.createRoot(document.getElementById('root')).render(<Watchlist />);
+ReactDOM.createRoot(document.getElementById('root')).render(<UtmApp/>);
 </script></body></html>

@@ -1,41 +1,27 @@
-const exportForensicPDF = (targetData, forensicHash) => {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    const ts = new Date().toUTCString();
-
-    // HEADER - LEGAL SEAL
-    doc.setFontSize(18);
-    doc.text("DIGITAL AFFIDAVIT - NAUTICAL TECHNOLOGY OS", 105, 20, { align: "center" });
-    doc.setFontSize(8);
-    doc.text(`FORENSIC IDENTIFIER: ${forensicHash}`, 105, 30, { align: "center" });
-    
-    doc.setLineWidth(0.5);
-    doc.line(20, 35, 190, 35);
-
-    // TARGET DATA
-    doc.setFontSize(12);
-    doc.text(`TARGET IDENTITY: ${targetData.name}`, 20, 50);
-    doc.text(`REGISTRY ID (NIP/TR-ID): ${targetData.ids}`, 20, 60);
-    doc.setTextColor(220, 38, 38); // Red color for the "Taxi" red flag
-    doc.text(`CRITICAL ANOMALY: NACE CODE 49.32 (TAXI SERVICES)`, 20, 70);
-    doc.setTextColor(0, 0, 0);
-
-    // EVIDENCE BODY
-    doc.setFontSize(10);
-    doc.text("LEGAL STATEMENT:", 20, 90);
-    doc.text("This document constitutes a forensic capture of public registry data.", 20, 100);
-    doc.text(`The data was pulled on ${ts} (UTC) and verified via SHA-256 Hashing.`, 20, 110);
-    
-    // FORENSIC LEDGER
-    doc.text("CHAIN OF CUSTODY LEDGER:", 20, 130);
-    doc.setFontSize(7);
-    doc.text(`[TIMESTAMP]: ${ts}`, 25, 140);
-    doc.text(`[PAYLOAD HASH]: ${forensicHash}`, 25, 145);
-    doc.text(`[SALT STATUS]: SECURED/NTG_FORENSIC_2026`, 25, 150);
-
-    // FOOTER
-    doc.setFontSize(8);
-    doc.text("CERTIFIED BY NAFTOTRADE LEGAL INTELLIGENCE UNIT", 105, 280, { align: "center" });
-    
-    doc.save(`LEGAL_DOSSIER_${targetData.name.replace(' ', '_')}.pdf`);
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M5: Terme Intel</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');body{background:#020617;color:white;font-family:'Orbitron',sans-serif;font-style:italic;font-weight:bold;}.glass{background:rgba(15,23,42,0.7);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.1);}</style>
+</head>
+<body><div id="root"></div><script type="text/babel">
+const WarRoom=()=>{
+    return(
+        <div className="min-h-screen p-6 animate-fade bg-slate-950 font-bold italic">
+            <div className="flex justify-between items-center mb-8"><a href="index.html" className="text-[10px] underline opacity-50 text-red-500">← EXIT PANIC ROOM</a><span className="text-[9px] text-red-600 animate-pulse uppercase italic">SURVEILLANCE ACTIVE</span></div>
+            <h1 className="text-red-600 text-lg uppercase mb-10 text-center italic tracking-tighter">M5: TERME INTELLIGENCE</h1>
+            <div className="glass p-8 rounded-[3rem] border-red-500/20 text-center">
+                <i className="fa-solid fa-satellite-dish text-4xl text-red-600 mb-4 animate-pulse"></i>
+                <p className="text-[10px] text-slate-400 uppercase tracking-widest">Scanning Registry Logs...</p>
+            </div>
+        </div>
+    );
 };
+ReactDOM.createRoot(document.getElementById('root')).render(<WarRoom/>);
+</script></body></html>

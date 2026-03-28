@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NauticalOS Hub v3.51</title>
+    <title>NauticalOS Hub v3.61</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -12,71 +12,49 @@
 </head>
 <body><div id="root"></div><script type="text/babel">
 const Hub=()=>{
-    // Χρήση sessionStorage: Ζητάει PIN κάθε φορά που κλείνεις/ανοίγεις ή ανανεώνεις
-    const [auth,setAuth]=React.useState(sessionStorage.getItem('ntg_auth')==='true');
-    const [role,setRole]=React.useState(sessionStorage.getItem('ntg_role') || '');
-    const [pin,setPin]=React.useState('');
-
-    const login=(e)=>{
-        e.preventDefault();
-        let r = pin==='1234'?'DIRECTOR':(pin==='0612'?'WORKER':'');
-        if(r){
-            sessionStorage.setItem('ntg_auth','true');
-            sessionStorage.setItem('ntg_role',r);
-            setRole(r); setAuth(true);
-        } else { alert("ACCESS DENIED"); setPin(''); }
-    };
-
     const apps=[
-        {id:'m1',name:'UTM',icon:'fa-layer-group',color:'border-slate-500',url:'m1_utm.html',dir:false},
-        {id:'m2',name:'SAFETY',icon:'fa-shield-halved',color:'border-blue-600',url:'m2_safety.html',dir:false},
-        {id:'m3',name:'LOAD TEST',icon:'fa-weight-hanging',color:'border-orange-600',url:'m3_loadtest.html',dir:false},
-        {id:'m8',name:'ACADEMY',icon:'fa-graduation-cap',color:'border-emerald-600',url:'m8_academy.html',dir:false},
-        {id:'m4',name:'RADAR',icon:'fa-radar',color:'border-cyan-600',url:'m4_radar.html',dir:false},
-        {id:'m9',name:'OPS/QUALITY',icon:'fa-clipboard-check',color:'border-indigo-500',url:'m9_ops.html',dir:false},
-        {id:'m12',name:'STAFF',icon:'fa-users',color:'border-blue-400',url:'m12_staff.html',dir:false},
-        {id:'m11',name:'SENSORS',icon:'fa-satellite-dish',color:'border-pink-600',url:'m11_sensors.html',dir:false},
-        {id:'m5',name:'WAR ROOM',icon:'fa-gavel',color:'border-red-600',url:'m5_terme.html',dir:true},
-        {id:'m13',name:'MYKONOS',icon:'fa-house-chimney',color:'border-blue-300',url:'m13_mykonos.html',dir:true},
-        {id:'m7',name:'STARTUP',icon:'fa-rocket',color:'border-yellow-500',url:'m7_startup.html',dir:true},
-        {id:'m6',name:'CEO',icon:'fa-chart-line',color:'border-purple-600',url:'m6_ceo.html',dir:true},
-        {id:'m10',name:'ARCHITECT',icon:'fa-microchip',color:'border-indigo-400',url:'m10_arch.html',dir:true}
+        // ROW 1: THE CORE TECHNICALS
+        {id:'m1', row:1, name:'UTM', icon:'fa-layer-group', color:'border-slate-500', url:'m1_utm.html'},
+        {id:'m2', row:1, name:'SAFETY', icon:'fa-shield-halved', color:'border-blue-600', url:'m2_safety.html'},
+        {id:'m3', row:1, name:'LOAD TEST', icon:'fa-weight-hanging', color:'border-orange-600', url:'m3_loadtest.html'},
+        // ROW 2: STRATEGIC INTEL
+        {id:'m4', row:2, name:'RADAR', icon:'fa-radar', color:'border-cyan-600', url:'m4_radar.html'},
+        {id:'m5', row:2, name:'WAR ROOM', icon:'fa-gavel', color:'border-red-600', url:'m5_terme.html'},
+        // ROW 3: KNOWLEDGE & STAFF
+        {id:'m8', row:3, name:'ACADEMY', icon:'fa-graduation-cap', color:'border-emerald-600', url:'m8_academy.html'},
+        {id:'m12', row:3, name:'STAFF', icon:'fa-users', color:'border-blue-400', url:'m12_staff.html'},
+        {id:'m9', row:3, name:'OPERATION', icon:'fa-clipboard-check', color:'border-indigo-500', url:'m9_ops.html'},
+        // ROW 4: BUSINESS & STARTUP
+        {id:'m13', row:4, name:'MYKONOS', icon:'fa-house-chimney', color:'border-blue-300', url:'m13_mykonos.html'},
+        {id:'m7', row:4, name:'STARTUP', icon:'fa-rocket', color:'border-yellow-500', url:'m7_startup.html'},
+        // ROW 5: SYSTEMS & ANALYTICS
+        {id:'m11', row:5, name:'SENSORS', icon:'fa-satellite-dish', color:'border-pink-600', url:'m11_sensors.html'},
+        {id:'m10', row:5, name:'ARCHITECT', icon:'fa-microchip', color:'border-indigo-400', url:'m10_arch.html'},
+        {id:'m6', row:5, name:'CEO PULSE', icon:'fa-chart-line', color:'border-purple-600', url:'m6_ceo.html'}
     ];
 
-    if(!auth) return(
-        <div className="h-screen flex items-center justify-center p-6 bg-slate-950 font-bold italic">
-            <form onSubmit={login} className="glass p-10 rounded-[3.5rem] w-full max-w-sm text-center shadow-2xl border border-slate-800">
-                <h1 className="text-blue-500 mb-8 uppercase italic font-black">COMMAND HUB</h1>
-                <input type="password" value={pin} onChange={(e)=>setPin(e.target.value)} className="w-full bg-slate-900 border border-slate-700 p-5 rounded-2xl text-center text-3xl mb-6 text-white outline-none" placeholder="PIN" maxLength="4" autoFocus />
-                <button type="submit" className="w-full bg-blue-600 p-5 rounded-2xl uppercase font-black">Unlock</button>
-            </form>
+    const renderRow = (rowNum, cols) => (
+        <div className={`grid grid-cols-${cols} gap-2 mb-2`}>
+            {apps.filter(a => a.row === rowNum).map(app => (
+                <a key={app.id} href={app.url} className={`glass p-3 h-24 rounded-[1.8rem] border-b-4 ${app.color} flex flex-col items-center justify-center gap-1 active:scale-95 transition-all shadow-xl`}>
+                    <i className={`fa-solid ${app.icon} text-lg`}></i>
+                    <span className="text-[7px] font-black uppercase text-center leading-tight">{app.name}</span>
+                </a>
+            ))}
         </div>
     );
 
     return(
         <div className="min-h-screen p-4 max-w-xl mx-auto animate-fade">
             <div className="flex justify-between items-center px-4 pt-6 mb-8">
-                <div className="text-left"><span className="text-[7px] text-slate-500 uppercase tracking-widest">{role} MODE</span><p className="text-sm uppercase tracking-tighter text-blue-400 font-black">M. SYKINIOTIS</p></div>
-                <button onClick={()=>{sessionStorage.clear();location.reload()}} className="text-[9px] text-red-500 uppercase underline">Logout</button>
+                <div className="text-left"><span className="text-[7px] text-slate-500 uppercase tracking-widest font-black">DIRECTOR MODE</span><p className="text-sm uppercase tracking-tighter text-blue-400 font-black">M. SYKINIOTIS</p></div>
+                <div className="h-2 w-2 bg-blue-500 rounded-full animate-pulse shadow-[0_0_10px_cyan]"></div>
             </div>
-            
-            {/* FULL GRID 13 APPS */}
-            <div className="grid grid-cols-3 gap-2 mb-10">
-                {apps.map(app => (app.dir && role !== 'DIRECTOR') ? null : (
-                    <a key={app.id} href={app.url} className={`glass p-3 h-24 rounded-[1.8rem] border-b-4 ${app.color} flex flex-col items-center justify-center gap-1 active:scale-95 transition-all shadow-xl`}>
-                        <i className={`fa-solid ${app.icon} text-lg`}></i>
-                        <span className="text-[7px] font-black uppercase text-center leading-tight">{app.name}</span>
-                    </a>
-                ))}
-            </div>
-
-            {/* LEGAL HAMMER PANELS */}
-            <div className="space-y-4">
-                <p className="text-[9px] text-red-600 uppercase italic ml-2"><i className="fa-solid fa-gavel mr-2"></i>Module A: The Blacklist</p>
-                <div className="glass p-4 rounded-2xl border-l-4 border-red-600 flex justify-between items-center opacity-80">
-                    <span className="text-[10px]">EMIR ÖZTÜRK</span><span className="text-[8px] text-red-500">ACTIVE INTEL</span>
-                </div>
-            </div>
+            {renderRow(1, 3)}
+            {renderRow(2, 2)}
+            {renderRow(3, 3)}
+            {renderRow(4, 2)}
+            {renderRow(5, 3)}
         </div>
     );
 };

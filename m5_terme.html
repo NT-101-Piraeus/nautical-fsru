@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>M5: Terme Intel</title>
+    <title>M5: War Room Intel</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -14,11 +14,12 @@
 const WarRoom=()=>{
     return(
         <div className="min-h-screen p-6 animate-fade bg-slate-950 font-bold italic">
-            <div className="flex justify-between items-center mb-8"><a href="index.html" className="text-[10px] underline opacity-50 text-red-500">← EXIT PANIC ROOM</a><span className="text-[9px] text-red-600 animate-pulse uppercase italic">SURVEILLANCE ACTIVE</span></div>
+            <div className="flex justify-between items-center mb-8"><a href="index.html" className="text-[10px] underline opacity-50 text-red-600">← EXIT PANIC ROOM</a><span className="text-[9px] text-red-600 animate-pulse uppercase italic">SURVEILLANCE ACTIVE</span></div>
             <h1 className="text-red-600 text-lg uppercase mb-10 text-center italic tracking-tighter">M5: TERME INTELLIGENCE</h1>
-            <div className="glass p-8 rounded-[3rem] border-red-500/20 text-center">
-                <i className="fa-solid fa-satellite-dish text-4xl text-red-600 mb-4 animate-pulse"></i>
-                <p className="text-[10px] text-slate-400 uppercase tracking-widest">Scanning Registry Logs...</p>
+            <div className="glass p-8 rounded-[3rem] border-red-500/20 text-center shadow-[0_0_30px_rgba(220,38,38,0.1)]">
+                <i className="fa-solid fa-satellite-dish text-4xl text-red-600 mb-6 animate-pulse"></i>
+                <p className="text-[10px] text-slate-400 uppercase tracking-widest mb-2 font-black">Establishing Secure Uplink...</p>
+                <p className="text-[7px] text-red-900 uppercase italic">SHA-256 Chain of Custody Locked</p>
             </div>
         </div>
     );

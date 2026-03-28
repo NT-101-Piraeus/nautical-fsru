@@ -12,36 +12,37 @@
 </head>
 <body><div id="root"></div><script type="text/babel">
 const Watchlist = () => {
-    const [appointments, setAppointments] = React.useState([
-        { id: 1, vessel: 'FELIX', time: '07:00 - 11:00', status: 'ACTIVE', sepe: 'Ref: 8823/2026' },
-        { id: 2, vessel: 'ARIADNI', time: '12:00 - 15:00', status: 'PENDING', sepe: 'Ref: 8824/2026' }
-    ]);
+    const vessels = [
+        { id: 1, name: 'FELIX', imo: '9513191', time: '07:00 - 11:00', status: 'ACTIVE', ref: 'Ref: 8823/2026' },
+        { id: 2, name: 'ARIADNI', imo: '9513192', time: '12:00 - 15:00', status: 'PENDING', ref: 'Ref: 8824/2026' },
+        { id: 3, name: 'NAFTOCEMENT IV', imo: '9513193', time: '16:00 - 18:00', status: 'PENDING', ref: 'Ref: 8825/2026' },
+        { id: 4, name: 'RIGEL III', imo: '9513194', time: 'N/A', status: 'DOCKING', ref: 'Ref: 8826/2026' }
+    ];
 
     return (
-        <div className="min-h-screen p-6 animate-fade bg-slate-950">
+        <div className="min-h-screen p-6 animate-fade bg-slate-950 font-bold italic">
             <div className="flex justify-between items-center mb-10">
-                <a href="index.html" className="text-[10px] underline opacity-50 text-slate-400">← HUB</a>
-                <span className="text-[9px] text-emerald-500 font-black uppercase italic tracking-widest">ΣΕΠΕ LIVE SYNC</span>
+                <a href="index.html" className="text-[10px] underline opacity-50 text-slate-400">← BACK TO HUB</a>
+                <span className="text-[9px] text-emerald-500 font-black uppercase tracking-widest italic">ΣΕΠΕ SYNC ACTIVE</span>
             </div>
-            <h1 className="text-slate-400 text-lg uppercase mb-8 text-center italic tracking-tighter font-black">M1: SAFETY WATCHLIST</h1>
+            <h1 className="text-slate-400 text-lg uppercase mb-8 text-center italic tracking-tighter">M1: SAFETY WATCHLIST</h1>
             <div className="space-y-4">
-                {appointments.map(app => (
-                    <div key={app.id} className="glass p-5 rounded-[2.5rem] border-l-4 border-slate-500 flex justify-between items-center shadow-xl">
+                {vessels.map(v => (
+                    <div key={v.id} className="glass p-5 rounded-[2.5rem] border-l-4 border-slate-500 flex justify-between items-center shadow-xl">
                         <div>
-                            <p className="text-sm text-white font-black">{app.vessel}</p>
-                            <p className="text-[9px] text-slate-500 uppercase mt-1">{app.time}</p>
-                            <p className="text-[7px] text-blue-500 mt-1 italic tracking-widest">{app.sepe}</p>
+                            <p className="text-sm text-white font-black">{v.name}</p>
+                            <p className="text-[9px] text-slate-500 uppercase mt-1">{v.time}</p>
+                            <p className="text-[7px] text-blue-500 mt-1 italic tracking-widest">{v.ref}</p>
                         </div>
                         <div className="text-right">
-                            {app.status === 'ACTIVE' ? 
-                                <span className="bg-emerald-900/30 text-emerald-500 text-[8px] px-3 py-1 rounded-full border border-emerald-500/20 italic animate-pulse">ACTIVE</span> :
-                                <span className="bg-slate-800 text-slate-500 text-[8px] px-3 py-1 rounded-full border border-slate-700 italic">PENDING</span>
+                            {v.status === 'ACTIVE' ? 
+                                <span className="bg-emerald-900/30 text-emerald-500 text-[8px] px-3 py-1 rounded-full border border-emerald-500/20 italic animate-pulse font-black">ACTIVE</span> :
+                                <span className="bg-slate-800 text-slate-500 text-[8px] px-3 py-1 rounded-full border border-slate-700 italic font-black">{v.status}</span>
                             }
                         </div>
                     </div>
                 ))}
             </div>
-            <button className="w-full mt-10 p-5 glass rounded-3xl border-dashed border-slate-700 text-[9px] uppercase text-slate-500 italic">Add Appointment from SEPE +</button>
         </div>
     );
 };

@@ -1,203 +1,126 @@
 <!DOCTYPE html>
 <html lang="el">
 <head>
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>M3: Load Test Pro v4.20</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>M3: Load Test Pro v5.50</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <style>@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');body{background:#020617;color:white;font-family:'Orbitron',sans-serif;font-style:italic;font-weight:bold;}.glass{background:rgba(15,23,42,0.7);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.1);}.animate-pulse-slow{animation:pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;}</style>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');
+        body { background: #020617; color: white; font-family: 'Orbitron', sans-serif; font-style: italic; }
+        .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .sun-mode { background: #ffffff !important; color: #000000 !important; }
+        .sun-mode .glass { background: #f8fafc !important; border: 1px solid #cbd5e1 !important; color: #000000 !important; }
+        .fat-finger-input { height: 80px; text-align: center; font-size: 2rem; font-weight: 900; background: rgba(0,0,0,0.3); border-radius: 1.5rem; border: 1px solid rgba(255,255,255,0.1); outline: none; }
+        .fat-finger-button { height: 80px; font-weight: 900; text-transform: uppercase; border-radius: 1.5rem; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .fat-finger-button:active { transform: scale(0.95); }
+    </style>
 </head>
-<body><div id="root"></div><script type="text/babel">
-const { useState, useEffect } = React;
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState, useEffect } = React;
 
-// --- TELEMETRY SENSOR ---
-const Telemetry = {
-    log: (type, action, details) => {
-        const logs = JSON.parse(localStorage.getItem('ntg_M3_logs') || '[]');
-        logs.push({ ts: new Date().toISOString(), type, action, details });
-        localStorage.setItem('ntg_M3_logs', JSON.stringify(logs.slice(-50)));
-    }
-};
+        const M3LoadTest = () => {
+            const [view, setView] = useState('HUB');
+            const [sunMode, setSunMode] = useState(false);
+            const [mathType, setMathType] = useState(null); // ILO or MEG4
+            const [data, setData] = useState({ swl: '', sdmbl: '', l1: '', l2: '' });
+            const [targetResult, setTargetResult] = useState(null);
 
-const ACADEMY_DATA = {
-    GENERAL: ["1. Οπτικός έλεγχος σε πείρους, συρματόσχοινα.", "2. Calibration Load Cells.", "3. Clear the area!"],
-    CARGO: ["1. Στήσιμο Waterbags.", "2. Tare Load Cell.", "3. Σταδιακή πλήρωση.", "4. Brake Test (5 min)."],
-    MOORING: ["1. Μέτρηση L1.", "2. Μέτρηση L2.", "3. Πίεση στο 60% SDMBL.", "4. Έλεγχος slippage."]
-};
+            // [Art. 2] Security Gate
+            useEffect(() => {
+                if (sessionStorage.getItem('ntg_global_auth') !== 'true') {
+                    window.location.href = 'index.html';
+                }
+            }, []);
 
-const M3App = () => {
-    const [view, setView] = useState('DASHBOARD');
-    const [sunMode, setSunMode] = useState(false);
-    const [academyView, setAcademyView] = useState(null);
-    const [calcType, setCalcType] = useState('CARGO');
-    const [inputs, setInputs] = useState({ swl: '', sdmbl: '', l1: '', l2: '' });
-    const [result, setResult] = useState(null);
-    const [photos, setPhotos] = useState([]); // Evidence Lock State
+            // [M3 Math Engine] ILO 152 & MEG4 Logic [cite: 147, 149]
+            const calculateTarget = () => {
+                if (mathType === 'ILO') {
+                    const swl = parseFloat(data.swl);
+                    let target = 0;
+                    if (swl < 20) target = swl * 1.25; // SWL + 25% [cite: 48]
+                    else if (swl <= 50) target = swl + 5; // SWL + 5t [cite: 49]
+                    setTargetResult(target.toFixed(2) + " t");
+                } else if (mathType === 'MEG4') {
+                    const res = 0.60 * parseFloat(data.sdmbl) * (parseFloat(data.l1) / parseFloat(data.l2)); // 
+                    setTargetResult(res.toFixed(2) + " t");
+                }
+                // Silent Logging [cite: 141]
+                const log = JSON.parse(localStorage.getItem('ntg_M3_logs') || '[]');
+                log.push({ action: 'MATH_CALC', type: mathType, timestamp: new Date().toISOString() });
+                localStorage.setItem('ntg_M3_logs', JSON.stringify(log));
+            };
 
-    const calculate = () => {
-        let resLabel = '', resVal = '';
-        if (calcType === 'CARGO') {
-            const swl = parseFloat(inputs.swl);
-            let target = swl <= 20 ? swl * 1.25 : (swl <= 50 ? swl + 5 : swl * 1.10);
-            resLabel = 'Target Proof Load';
-            resVal = target.toFixed(2) + ' t';
-        } else {
-            const force = 0.60 * parseFloat(inputs.sdmbl) * (parseFloat(inputs.l1) / parseFloat(inputs.l2));
-            resLabel = 'Required Jack Force';
-            resVal = force.toFixed(2) + ' t';
-        }
-        setResult({ label: resLabel, value: resVal });
-        Telemetry.log('ACTION', 'CALCULATION_PERFORMED', { type: calcType, result: resVal });
-    };
+            const handleBack = () => { setView('HUB'); setTargetResult(null); setData({ swl: '', sdmbl: '', l1: '', l2: '' }); };
 
-    const handleCapture = () => {
-        const newPhoto = { id: Date.now(), ts: new Date().toISOString() };
-        setPhotos([...photos, newPhoto]);
-        Telemetry.log('ACTION', 'EVIDENCE_CAPTURED', `Photo ${photos.length + 1}`);
-    };
+            if (view === 'HUB') return (
+                <div className={`min-h-screen p-6 transition-all ${sunMode ? 'sun-mode' : ''}`}>
+                    <header className="flex justify-between items-center mb-10 glass p-6 rounded-[2rem]">
+                        <h1 className="text-sm uppercase font-black tracking-widest text-orange-500 italic">M3: Load Test Pro</h1>
+                        <div className="flex gap-3">
+                            <button onClick={() => setSunMode(!sunMode)} className="p-4 glass rounded-2xl"><i className="fa-solid fa-sun text-orange-400"></i></button>
+                            <a href="index.html" className="p-4 glass rounded-2xl"><i className="fa-solid fa-house"></i></a>
+                        </div>
+                    </header>
 
-    const generateCERT11 = () => {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        const date = new Date().toLocaleDateString('en-GB');
-
-        doc.setFont("helvetica", "bold");
-        doc.setTextColor(249, 115, 22);
-        doc.text("NAUTICAL TECHNOLOGY", 105, 20, null, null, "center");
-        doc.setTextColor(0, 0, 0);
-        doc.setFontSize(14);
-        doc.text("CERTIFICATE OF TEST AND EXAMINATION (CERT 11)", 105, 30, null, null, "center");
-        doc.line(20, 35, 190, 35);
-        doc.setFontSize(11);
-        doc.setFont("helvetica", "normal");
-        doc.text(`Date of Service: ${date}`, 20, 50);
-        doc.text(`Inspection Type: ${calcType === 'CARGO' ? 'Cargo Gear (ILO 152)' : 'Mooring BHC (MEG4)'}`, 20, 60);
-        doc.rect(20, 70, 170, 40);
-        doc.setFont("helvetica", "bold");
-        doc.text("TEST PARAMETERS & RESULTS", 105, 78, null, null, "center");
-        doc.setFont("helvetica", "normal");
-        if (calcType === 'CARGO') {
-            doc.text(`SWL: ${inputs.swl} t`, 30, 90);
-            doc.text(`PROOF LOAD APPLIED: ${result.value}`, 30, 100);
-        } else {
-            doc.text(`SDMBL: ${inputs.sdmbl} t | L1: ${inputs.l1}mm | L2: ${inputs.l2}mm`, 30, 90);
-            doc.text(`JACK FORCE APPLIED: ${result.value}`, 30, 100);
-        }
-        doc.rect(20, 140, 80, 50);
-        doc.text("Surveyor Stamp & Sign", 60, 148, null, null, "center");
-        doc.setFontSize(9); doc.text("M. SYKINIOTIS", 60, 185, null, null, "center");
-        doc.rect(110, 140, 80, 50); doc.setFontSize(11);
-        doc.text("Master / Chief Officer", 150, 148, null, null, "center");
-        doc.setFontSize(9); doc.text("Stamp & Signature", 150, 185, null, null, "center");
-        
-        doc.save(`CERT11_${date.replace(/\//g, '-')}.pdf`);
-        Telemetry.log('ACTION', 'CERT11_GENERATED', `Result: ${result.value}`);
-    };
-
-    const theme = sunMode ? "bg-white text-black" : "bg-slate-950 text-white";
-
-    return (
-        <div className={`min-h-screen p-6 transition-all font-bold italic ${theme}`}>
-            {/* HEADER */}
-            <div className="flex justify-between items-center mb-8 border-b border-orange-500/20 pb-4">
-                <div className="flex flex-col">
-                    <span className="text-[10px] text-orange-500 font-black uppercase tracking-tighter italic">M3: Load Test Pro</span>
-                    <span className="text-[8px] opacity-50 uppercase tracking-widest">Evidence Lock v4.20</span>
-                </div>
-                <div className="flex gap-2">
-                    <button onClick={() => setAcademyView('GENERAL')} className="p-3 glass rounded-xl text-blue-400 border-blue-500/20"><i className="fa-solid fa-graduation-cap"></i></button>
-                    <button onClick={() => setSunMode(!sunMode)} className="p-3 glass rounded-xl border-orange-500/20"><i className={`fa-solid ${sunMode ? 'fa-moon' : 'fa-sun text-yellow-500'}`}></i></button>
-                </div>
-            </div>
-
-            {view === 'DASHBOARD' ? (
-                <div className="space-y-6 animate-fade">
-                    <div onClick={() => setView('CALCULATOR')} className="glass p-10 rounded-[3rem] border-orange-500/30 text-center shadow-2xl relative overflow-hidden active:scale-95 transition-all">
-                        <div className="absolute top-0 left-0 w-1.5 h-full bg-orange-500"></div>
-                        <i className="fa-solid fa-calculator text-4xl mb-4 text-orange-500"></i>
-                        <p className="text-[10px] text-orange-400 uppercase font-black mb-1 italic">Launch Engine</p>
-                        <p className="text-xl font-black text-white uppercase italic tracking-tighter">Load Test Calculator</p>
+                    <div className="grid grid-cols-1 gap-6 max-w-md mx-auto">
+                        <button onClick={() => { setView('ENGINE'); setMathType('ILO'); }} className="fat-finger-button bg-orange-600/10 border border-orange-500/30">
+                            <i className="fa-solid fa-crane"></i> Cargo Gear (ILO 152)
+                        </button>
+                        <button onClick={() => { setView('ENGINE'); setMathType('MEG4'); }} className="fat-finger-button bg-blue-600/10 border border-blue-500/30">
+                            <i className="fa-solid fa-anchor"></i> Mooring Winches (MEG4)
+                        </button>
+                        <div className="mt-10 p-6 glass rounded-[2rem] opacity-50 text-center">
+                            <p className="text-[10px] uppercase font-black tracking-[0.3em]">Business Intelligence Feed Active</p>
+                        </div>
                     </div>
                 </div>
-            ) : (
-                <div className="animate-fade pb-32">
-                    <button onClick={() => setView('DASHBOARD')} className="text-[10px] text-orange-500 underline mb-8 uppercase">← Dashboard</button>
+            );
+
+            return (
+                <div className={`min-h-screen p-6 transition-all ${sunMode ? 'sun-mode' : ''}`}>
+                    <button onClick={handleBack} className="text-[10px] uppercase underline mb-8 opacity-50">← Back to M3 Hub</button>
                     
-                    {/* TYPE SELECTOR */}
-                    <div className="flex gap-2 mb-8">
-                        <button onClick={() => setCalcType('CARGO')} className={`flex-1 p-4 rounded-2xl text-[9px] uppercase font-black border transition-all ${calcType==='CARGO'?'bg-orange-600 border-orange-400':'glass border-white/5 opacity-50'}`}>Cargo Gear</button>
-                        <button onClick={() => setCalcType('MOORING')} className={`flex-1 p-4 rounded-2xl text-[9px] uppercase font-black border transition-all ${calcType==='MOORING'?'bg-orange-600 border-orange-400':'glass border-white/5 opacity-50'}`}>Mooring BHC</button>
-                    </div>
-
-                    {/* INPUTS */}
-                    <div className="glass p-8 rounded-[3rem] border-white/5 space-y-6 mb-8">
-                        {calcType === 'CARGO' ? (
-                            <input type="number" value={inputs.swl} onChange={(e)=>setInputs({...inputs, swl: e.target.value})} className="w-full bg-black/50 p-6 rounded-2xl text-center text-3xl font-black outline-none border border-orange-500/20 text-orange-500" placeholder="SWL (t)" />
+                    <div className="glass p-8 rounded-[3rem] max-w-md mx-auto space-y-6">
+                        <h2 className="text-xl font-black uppercase text-center text-orange-500">{mathType} Math Engine</h2>
+                        
+                        {mathType === 'ILO' ? (
+                            <input type="number" placeholder="Enter SWL (tons)" value={data.swl} onChange={(e) => setData({...data, swl: e.target.value})} className="fat-finger-input w-full text-white" />
                         ) : (
                             <div className="space-y-4">
-                                <input type="number" placeholder="SDMBL (t)" value={inputs.sdmbl} onChange={(e)=>setInputs({...inputs, sdmbl: e.target.value})} className="w-full bg-black/50 p-4 rounded-xl text-center text-xl outline-none border border-white/10" />
+                                <input type="number" placeholder="SDMBL" value={data.sdmbl} onChange={(e) => setData({...data, sdmbl: e.target.value})} className="fat-finger-input w-full" />
                                 <div className="grid grid-cols-2 gap-4">
-                                    <input type="number" placeholder="L1" value={inputs.l1} onChange={(e)=>setInputs({...inputs, l1: e.target.value})} className="bg-black/50 p-4 rounded-xl text-center text-xs outline-none border border-white/10" />
-                                    <input type="number" placeholder="L2" value={inputs.l2} onChange={(e)=>setInputs({...inputs, l2: e.target.value})} className="bg-black/50 p-4 rounded-xl text-center text-xs outline-none border border-white/10" />
+                                    <input type="number" placeholder="L1" value={data.l1} onChange={(e) => setData({...data, l1: e.target.value})} className="fat-finger-input w-full text-sm" />
+                                    <input type="number" placeholder="L2" value={data.l2} onChange={(e) => setData({...data, l2: e.target.value})} className="fat-finger-input w-full text-sm" />
                                 </div>
                             </div>
                         )}
-                        <button onClick={calculate} className="w-full bg-orange-600 p-6 rounded-[2rem] text-[10px] uppercase font-black italic">Calculate</button>
-                    </div>
 
-                    {/* RESULT & EVIDENCE LOCK UI */}
-                    {result && (
-                        <div className="space-y-6 animate-fade">
-                            <div className="glass p-8 rounded-[3rem] border-emerald-500/30 text-center animate-pulse-slow">
-                                <p className="text-[10px] text-emerald-500 uppercase font-black mb-2 italic tracking-widest">{result.label}</p>
-                                <p className="text-5xl font-black text-white tracking-tighter">{result.value}</p>
+                        <button onClick={calculateTarget} className="fat-finger-button w-full bg-orange-600 shadow-lg shadow-orange-900/20">Calculate Target</button>
+
+                        {targetResult && (
+                            <div className="mt-6 p-6 glass rounded-2xl border-emerald-500/30 text-center animate-pulse">
+                                <p className="text-[10px] uppercase font-black opacity-50 mb-2 italic">Target Proof Load [cite: 147, 149]</p>
+                                <p className="text-5xl font-black text-emerald-500 tracking-tighter">{targetResult}</p>
                             </div>
+                        )}
 
-                            {/* EVIDENCE CAPTURE SECTION */}
-                            <div className="glass p-6 rounded-[2.5rem] border-blue-500/20 space-y-4">
-                                <div className="flex justify-between items-center">
-                                    <p className="text-[9px] uppercase text-blue-400 italic font-black tracking-widest">Evidence Required (Min 2)</p>
-                                    <span className={`text-[10px] font-black ${photos.length >= 2 ? 'text-emerald-500' : 'text-orange-500'}`}>{photos.length}/2</span>
-                                </div>
-                                <button onClick={handleCapture} className="w-full bg-blue-600/10 border border-blue-500/30 p-5 rounded-2xl flex items-center justify-center gap-3">
-                                    <i className="fa-solid fa-camera text-blue-500 text-xl"></i>
-                                    <span className="text-[9px] uppercase font-black italic">Capture Test Photo</span>
-                                </button>
-                            </div>
-
-                            {/* GENERATE BUTTON (LOCKED) */}
-                            <button 
-                                disabled={photos.length < 2}
-                                onClick={generateCERT11}
-                                className={`w-full p-6 rounded-[2rem] text-[10px] uppercase font-black italic transition-all flex items-center justify-center gap-3 ${photos.length >= 2 ? 'bg-emerald-600 shadow-xl shadow-emerald-900/40 text-white active:scale-95' : 'bg-slate-800 opacity-20 cursor-not-allowed'}`}>
-                                <i className={`fa-solid ${photos.length >= 2 ? 'fa-file-pdf' : 'fa-lock'} text-xl`}></i> 
-                                {photos.length >= 2 ? 'Generate & Print CERT 11' : 'Lock Active: Take 2 Photos'}
-                            </button>
-                        </div>
-                    )}
-                </div>
-            )}
-
-            {/* ACADEMY OVERLAY */}
-            {academyView && (
-                <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-3xl p-8 animate-fade flex flex-col">
-                    <div className="flex justify-between items-center mb-10 text-blue-500">
-                        <h2 className="text-lg font-black italic uppercase"><i className="fa-solid fa-graduation-cap mr-3"></i>Academy: {academyView}</h2>
-                        <button onClick={() => setAcademyView(null)} className="w-12 h-12 glass rounded-full flex items-center justify-center text-white"><i className="fa-solid fa-xmark"></i></button>
-                    </div>
-                    <div className="space-y-4 overflow-y-auto">
-                        {ACADEMY_DATA[academyView].map((step, i) => (
-                            <div key={i} className="glass p-6 rounded-3xl border-l-4 border-blue-600 uppercase text-[11px] text-slate-200">{step}</div>
-                        ))}
+                        {/* Evidence Lock Sign Button  */}
+                        <button disabled={!targetResult} className={`fat-finger-button w-full mt-10 ${!targetResult ? 'bg-slate-900 opacity-20' : 'bg-emerald-600'}`}>
+                            <i className="fa-solid fa-signature"></i> {targetResult ? "Sign CERT 11" : "Locked: Need Math Data"}
+                        </button>
                     </div>
                 </div>
-            )}
-        </div>
-    );
-};
-ReactDOM.createRoot(document.getElementById('root')).render(<M3App />);
-</script></body></html>
+            );
+        };
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<M3LoadTest />);
+    </script>
+</body>
+</html>

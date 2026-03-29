@@ -1,71 +1,134 @@
-<script type="text/babel">
-const { useState, useEffect } = React;
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>M4 RADAR | Vessel Hunter</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #020617; color: white; font-family: 'Inter', sans-serif; }
+        .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .sun-mode { background: #ffffff !important; color: #000000 !important; }
+        .sun-mode .glass { background: #f8fafc !important; border: 1px solid #cbd5e1 !important; color: #000000 !important; }
+        .target-lock { border-left: 5px solid #f97316; animation: scan 2s infinite; }
+        @keyframes scan { 0% { border-left-color: #f97316; } 50% { border-left-color: #fb923c; } 100% { border-left-color: #f97316; } }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
 
-const M4Radar = () => {
-    const [vessels, setVessels] = useState([]);
-    const [loading, setLoading] = useState(true);
+    <script type="text/babel">
+        const { useState, useEffect } = React;
 
-    // [Art. 2] Security Gate: Έλεγχος αν ο χρήστης πέρασε από το Hub
-    useEffect(() => {
-        if (sessionStorage.getItem('ntg_global_auth') !== 'true') {
-            window.location.href = 'index.html';
-        }
-    }, []);
+        const M4Radar = () => {
+            const [vessels, setVessels] = useState([]);
+            const [sunMode, setSunMode] = useState(false);
+            const [isAdding, setIsAdding] = useState(false);
+            const [newVessel, setNewVessel] = useState({ name: '', sector: 'Piraeus', status: 'EXPECTED' });
 
-    // [Art. 1] Safe-Parser Patch: Αποφυγή Λευκής Οθόνης
-    useEffect(() => {
-        try {
-            const saved = localStorage.getItem('ntg_M4_radar');
-            // Αν το data είναι null/undefined/corrupted, επιστρέφει άδειο πίνακα []
-            const parsedData = saved ? JSON.parse(saved) : [];
-            setVessels(Array.isArray(parsedData) ? parsedData : []);
-        } catch (error) {
-            console.error("CRITICAL: Data Corruption in M4. Resetting to safe state.");
-            setVessels([]); 
-        } finally {
-            setLoading(false);
-        }
-    }, []);
+            // [Art. 2] Security Gate & Global Iron Gate
+            useEffect(() => {
+                if (sessionStorage.getItem('ntg_global_auth') !== 'true') {
+                    window.location.href = 'index.html';
+                }
+            }, []);
 
-    // [Art. 4] Silent Logging: Καταγραφή στο Black Box
-    const logAction = (action) => {
-        const log = { timestamp: new Date().toISOString(), action };
-        const currentLogs = JSON.parse(localStorage.getItem('ntg_M4_logs') || '[]');
-        localStorage.setItem('ntg_M4_logs', JSON.stringify([...currentLogs, log]));
-    };
+            // [M4 Recovery] Safe-Parser Patch
+            useEffect(() => {
+                try {
+                    const saved = localStorage.getItem('ntg_M4_radar');
+                    const parsedData = saved ? JSON.parse(saved) : [];
+                    setVessels(Array.isArray(parsedData) ? parsedData : []);
+                } catch (error) {
+                    console.error("DATA CORRUPTION DETECTED. Resetting Radar View.");
+                    setVessels([]); // Reset για αποφυγή White Screen
+                }
+            }, []);
 
-    if (loading) return <div className="bg-slate-950 min-h-screen flex items-center justify-center text-orange-500 italic uppercase font-black">Scanning Frequency...</div>;
+            // [Art. 4] Silent Logging for M10 Auditor
+            const logAction = (action) => {
+                const logs = JSON.parse(localStorage.getItem('ntg_M4_logs') || '[]');
+                logs.push({ timestamp: new Date().toISOString(), action });
+                localStorage.setItem('ntg_M4_logs', JSON.stringify(logs));
+            };
 
-    return (
-        <div className="min-h-screen bg-slate-950 text-white p-6 italic">
-            <div className="flex justify-between items-center mb-8 glass p-6 rounded-[2rem] border-orange-500/20">
-                <h1 className="text-2xl font-black uppercase tracking-tighter">M4 Vessel Radar</h1>
-                <a href="index.html" className="p-4 bg-white/5 rounded-2xl hover:bg-orange-600 transition-all text-xs uppercase font-black">Back to Hub</a>
-            </div>
-            
-            {/* Vessel List / UI για Field Ops */}
-            <div className="grid gap-4">
-                {vessels.length === 0 ? (
-                    <div className="p-10 border-2 border-dashed border-white/10 rounded-[2.5rem] text-center opacity-30 uppercase font-black">No Targets Locked</div>
-                ) : (
-                    vessels.map((v, i) => (
-                        <div key={i} className="glass p-6 rounded-[2rem] flex justify-between items-center border-l-4 border-orange-500">
-                            <div>
-                                <h3 className="text-xl font-black uppercase">{v.name}</h3>
-                                <p className="text-[10px] text-orange-400 font-bold uppercase tracking-widest">{v.sector} | {v.status}</p>
-                            </div>
-                            <i className="fa-solid fa-chevron-right opacity-20"></i>
+            const lockTarget = () => {
+                if (!newVessel.name) return;
+                const updatedVessels = [...vessels, { ...newVessel, name: newVessel.name.toUpperCase() }];
+                setVessels(updatedVessels);
+                localStorage.setItem('ntg_M4_radar', JSON.stringify(updatedVessels));
+                logAction(`Vessel Added: ${newVessel.name.toUpperCase()}`);
+                setNewVessel({ name: '', sector: 'Piraeus', status: 'EXPECTED' });
+                setIsAdding(false);
+            };
+
+            return (
+                <div className={`min-h-screen p-6 transition-colors ${sunMode ? 'sun-mode' : ''}`}>
+                    <header className="flex justify-between items-center mb-8 glass p-6 rounded-[2.5rem]">
+                        <div className="flex items-center gap-4">
+                            <i className="fa-solid fa-tower-observation text-2xl text-orange-500 animate-pulse"></i>
+                            <h1 className="text-2xl font-black uppercase italic">M4 Vessel Radar</h1>
                         </div>
-                    ))
-                )}
-            </div>
-            
-            {/* Fat-Finger Add Button */}
-            <button className="fixed bottom-10 right-10 w-20 h-20 bg-orange-600 rounded-full shadow-2xl flex items-center justify-center text-3xl active:scale-90 transition-transform">
-                <i className="fa-solid fa-plus"></i>
-            </button>
-        </div>
-    );
-};
-ReactDOM.createRoot(document.getElementById('root')).render(<M4Radar />);
-</script>
+                        <div className="flex gap-3">
+                            <button onClick={() => setSunMode(!sunMode)} className="p-4 glass rounded-2xl"><i className="fa-solid fa-sun"></i></button>
+                            <a href="index.html" className="p-4 glass rounded-2xl text-orange-500"><i className="fa-solid fa-house"></i></a>
+                        </div>
+                    </header>
+
+                    {/* Vessel List - Combat Ready UI */}
+                    <div className="grid gap-4 max-w-4xl mx-auto mb-24">
+                        {vessels.map((v, i) => (
+                            <div key={i} className="target-lock glass p-6 rounded-[2rem] flex justify-between items-center group">
+                                <div>
+                                    <h3 className="text-xl font-black uppercase tracking-tighter">{v.name}</h3>
+                                    <p className="text-[10px] font-bold text-orange-500 uppercase tracking-widest">{v.sector} | {v.status}</p>
+                                </div>
+                                <div className="opacity-20 group-hover:opacity-100 transition-opacity">
+                                    <button className="p-3 bg-white/5 rounded-xl"><i className="fa-solid fa-ellipsis-vertical"></i></button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Fat-Finger Add Button & Form */}
+                    {isAdding ? (
+                        <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-50 p-6 flex items-center justify-center">
+                            <div className="glass p-8 rounded-[3rem] w-full max-w-md border-orange-500/30">
+                                <h2 className="text-2xl font-black uppercase italic mb-6">Lock New Target</h2>
+                                <input 
+                                    type="text" placeholder="VESSEL NAME"
+                                    value={newVessel.name} onChange={(e) => setNewVessel({...newVessel, name: e.target.value})}
+                                    className="w-full bg-black/40 border border-white/10 p-5 rounded-2xl text-xl font-black mb-4 uppercase focus:border-orange-500 outline-none"
+                                />
+                                <select 
+                                    value={newVessel.sector} onChange={(e) => setNewVessel({...newVessel, sector: e.target.value})}
+                                    className="w-full bg-black/40 border border-white/10 p-5 rounded-2xl text-xl font-black mb-4 uppercase"
+                                >
+                                    <option value="Piraeus">Piraeus</option>
+                                    <option value="Perama">Perama</option>
+                                    <option value="Drapetsona">Drapetsona</option>
+                                </select>
+                                <button onClick={lockTarget} className="w-full h-20 bg-orange-600 rounded-2xl font-black uppercase text-sm tracking-widest shadow-lg mb-4">Lock Target [M4]</button>
+                                <button onClick={() => setIsAdding(false)} className="w-full p-4 font-bold opacity-50 uppercase text-[10px]">Cancel</button>
+                            </div>
+                        </div>
+                    ) : (
+                        <button 
+                            onClick={() => setIsAdding(true)}
+                            className="fixed bottom-10 right-10 w-20 h-20 bg-orange-600 rounded-full shadow-2xl flex items-center justify-center text-3xl active:scale-90 transition-transform"
+                        >
+                            <i className="fa-solid fa-plus text-white"></i>
+                        </button>
+                    )}
+                </div>
+            );
+        };
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<M4Radar />);
+    </script>
+</body>
+</html>

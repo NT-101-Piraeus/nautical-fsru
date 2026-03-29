@@ -1,30 +1,101 @@
-Captain, το οικοδόμημα του NauticalOS V5.x έχει φτάσει σε επίπεδο απόλυτης ωριμότητας. Η δημιουργία του **M8 Academy V6.9 (LNG Edition)** ως *Logic Gate* δεν είναι απλώς μια αναβάθμιση κώδικα, αλλά μια θεμελιώδης αλλαγή στην κουλτούρα ασφαλείας. 
+<!DOCTYPE html><html lang="el"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>M2: Compliance Shield v5.65 (KNOWLEDGE LOCK)</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');
+        body { background: #020617; color: white; font-family: 'Orbitron', sans-serif; font-style: italic; font-weight: bold; }
+        .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
+        .lock-overlay { background: rgba(2, 6, 23, 0.8); backdrop-filter: blur(4px); }
+        .fat-finger-button { height: 80px; font-weight: 900; text-transform: uppercase; border-radius: 1.5rem; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .status-pulse { animation: pulse-red 2s infinite; }
+        @keyframes pulse-red { 0%, 100% { color: #ef4444; opacity: 1; } 50% { color: #450a0a; opacity: 0.5; } }
+    </style></head><body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState, useEffect } = React;
 
-Ο κώδικας που παρέδωσε ο Supreme Architect και επικύρωσε ο Academy GEM λειτουργεί άψογα. Μετέτρεψε τη θεωρία σε υποχρεωτικό λειτουργικό βήμα, καθιστώντας αδύνατη την έναρξη εργασιών χωρίς την απαραίτητη γνώση. 
+        const SafetyAppV565 = () => {
+            const [isAcademyReady, setIsAcademyReady] = useState(false);
+            const [view, setView] = useState('WATCHLIST');
+            const [activeVessel, setActiveVessel] = useState(null);
+            const [sunMode, setSunMode] = useState(false);
 
-Ως **Safety GEM**, συντάσσομαι απόλυτα με την εισήγηση του Academy GEM. Πρέπει να κλείσουμε τον κύκλο (Interlock) συνδέοντας το M8 με το M2.
+            // [V5.65] KNOWLEDGE LOCK CHECK
+            useEffect(() => {
+                const checkClearance = () => {
+                    const ready = localStorage.getItem('ntg_M8_ready') === 'true';
+                    setIsAcademyReady(ready);
+                };
+                checkClearance();
+                const interval = setInterval(checkClearance, 2000);
+                return () => clearInterval(interval);
+            }, []);
 
-### ⚓ ΔΙΑΤΑΓΗ ΠΡΟΣ ΤΟΝ SUPREME CODER: OPERATION "KNOWLEDGE LOCK" (V5.65)
+            const sepeVessels = [
+                { id: 'SEPE-01', name: 'FELIX', imo: '9464182', type: 'LNG_CONV', secure: true },
+                { id: 'SEPE-02', name: 'BADJI MOKHTAR III', imo: '9827889', type: 'LNG_CONV', secure: true },
+                { id: 'SEPE-03', name: 'ΑΡΙΑΔΝΗ', imo: '9135262', type: 'STANDARD', secure: false },
+                { id: 'SEPE-04', name: 'RIGEL III', imo: '7807744', type: 'STANDARD', secure: false }
+            ];
 
-Στείλε του το εξής μήνυμα για να εφαρμόσει το Hard-Lock στο M2:
+            const handleVesselSelect = (v) => {
+                if (v.secure && !isAcademyReady) {
+                    // M10 Audit Log: Unauthorized Attempt
+                    const logs = JSON.parse(localStorage.getItem('ntg_M2_logs') || '[]');
+                    logs.push({ ts: new Date().toISOString(), type: 'ERROR', action: 'UNAUTHORIZED_FIELD_ENTRY', details: `Attempted access to ${v.name} without M8 clearance.` });
+                    localStorage.setItem('ntg_M2_logs', JSON.stringify(logs));
+                    alert("M8 ACADEMY CLEARANCE REQUIRED FOR LNG OPERATIONS");
+                    return;
+                }
+                setActiveVessel(v);
+                setView('INSPECTION');
+            };
 
-> **"Chief, το M8 Academy (V6.9) είναι πλέον οπλισμένο. Προχωράμε στην άμεση εφαρμογή του Knowledge Lock στο M2 Safety (V5.65):**
->
-> 1. **Shift Lock Logic:** Το κουμπί επιλογής πλοίου (ή έναρξης βάρδιας) στην κεντρική οθόνη του M2 (`WATCHLIST`) πρέπει να ελέγχει το `localStorage.getItem('ntg_M8_ready')`.
-> 2. **Disabled State:** Αν η τιμή δεν είναι `true`, τα πλοία (ειδικά τα LNG όπως το FELIX και το BADJI MOKHTAR III) πρέπει να είναι **γκριζαρισμένα (opacity-50)** και **μη προσβάσιμα (pointer-events-none)**.
-> 3. **Visual Feedback:** Πρόσθεσε ένα ευδιάκριτο μήνυμα στην κορυφή του M2: *"M8 ACADEMY CLEARANCE REQUIRED FOR LNG OPERATIONS"*, το οποίο θα εξαφανίζεται μόλις το `ntg_M8_ready` γίνει `true`.
-> 4. **M10 Audit Trail:** Αν ο χρήστης προσπαθήσει να κάνει bypass (π.χ. πειράζοντας το URL), το σύστημα πρέπει να καταγράψει ένα **ERROR** στο `ntg_M2_logs` με action `UNAUTHORIZED_FIELD_ENTRY`.
->
-> **Ενσωμάτωσε αυτό το Conditional Logic στο M2 αμέσως. Το FSRU Alexandroupolis δεν συγχωρεί παρακάμψεις."**
+            if (view === 'WATCHLIST') return (
+                <div className={`min-h-screen p-6 ${sunMode ? 'bg-white text-black' : 'bg-slate-950'}`}>
+                    <div className="flex justify-between items-center mb-8">
+                        <h1 className="text-blue-500 text-lg uppercase font-black tracking-tighter">M2: Compliance Shield</h1>
+                        <a href="m8_academy.html" className="text-[9px] bg-blue-900/30 px-4 py-2 rounded-xl border border-blue-500/30 text-blue-400 font-black uppercase">M8 Academy</a>
+                    </div>
 
----
+                    {!isAcademyReady && (
+                        <div className="glass p-4 rounded-2xl mb-8 border-red-600/30 text-center">
+                            <p className="status-pulse text-[10px] font-black uppercase tracking-widest italic">M8 Academy Clearance Required</p>
+                            <p className="text-[8px] opacity-40 mt-1">LNG Operations (Felix/Badji) are Locked</p>
+                        </div>
+                    )}
 
-### 🛡️ Η Στρατηγική Αξία του Knowledge Lock
+                    <div className="space-y-4">
+                        {sepeVessels.map(v => (
+                            <div key={v.id} onClick={() => handleVesselSelect(v)} 
+                                 className={`glass p-6 rounded-[2.5rem] border-l-4 ${v.secure && !isAcademyReady ? 'opacity-40 border-red-600 grayscale' : 'border-blue-600'} flex justify-between items-center transition-all active:scale-95`}>
+                                <div>
+                                    <h3 className="text-sm font-black uppercase tracking-tighter">{v.name}</h3>
+                                    <p className="text-[9px] opacity-50 uppercase">IMO: {v.imo} | {v.type}</p>
+                                </div>
+                                {v.secure && !isAcademyReady ? <i className="fa-solid fa-lock text-red-600 text-xs"></i> : <i className="fa-solid fa-chevron-right text-blue-500 opacity-30 text-xs"></i>}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
 
-Με αυτή την κίνηση, υλοποιούμε πλήρως το **Άρθρο 6 του Συντάγματος (Cross-Division Filter)**:
-* **Απόλυτη Συμμόρφωση:** Ο FSRU Manager και ο DNV θα βλέπουν (μέσω του M10) ότι κανένας τεχνικός της Nautical Technology δεν ξεκίνησε εργασία χωρίς να έχει φρεσκάρει τα όρια του **ISGOTT ($O_2: 20.9\%, LEL: 0\%$)** και τα μαθηματικά του **ILO 152 ($SWL + 25\%$ ή $+ 5t$)**.
-* **Forensic Readiness:** Το ψηφιακό αποτύπωμα (`READ_START`) στο `ntg_M8_logs` με το **UTID "FSRU-ALX-2026"** δημιουργεί το τέλειο νομικό άλλοθι σε περίπτωση ατυχήματος.
-
-Captain, μόλις ο Coder εφαρμόσει το V5.65 στο M2, το σύστημα θα είναι κυριολεκτικά "Fool-Proof". 
-
-**Να προχωρήσουμε στην αποστολή της εντολής για το τελικό κλείδωμα;** ⚓🚀🔥
+            return (
+                <div className="min-h-screen p-6 bg-slate-950">
+                    <button onClick={() => setView('WATCHLIST')} className="text-[10px] underline text-blue-500 mb-6 uppercase">← Back to Watchlist</button>
+                    <div className="glass p-8 rounded-[3rem] text-center mb-10 border-l-4 border-emerald-500">
+                        <h2 className="text-2xl font-black uppercase italic mb-2 tracking-tighter">{activeVessel.name}</h2>
+                        <p className="text-[9px] text-emerald-500 font-black uppercase tracking-widest">Shift Authorized | Academy Verified</p>
+                    </div>
+                    {/* Inspection UI follows here... */}
+                </div>
+            );
+        };
+        ReactDOM.createRoot(document.getElementById('root')).render(<SafetyAppV565 />);
+    </script></body></html>

@@ -49,4 +49,8 @@ def save_to_radar_feed(targets):
         
     with open('data/radar_feed.json', 'w', encoding='utf-8') as f:
         json.dump(targets, f, ensure_ascii=False, indent=4)
-    print(f"M11: {len(targets)} Targets
+    print(f"M11: {len(targets)} Targets synchronized to data/radar_feed.json")
+
+if __name__ == "__main__":
+    leads = get_osint_leads()
+    save_to_radar_feed(leads)

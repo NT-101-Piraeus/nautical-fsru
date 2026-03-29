@@ -1,0 +1,31 @@
+name: M11 OSINT Radar Sync
+on:
+  schedule:
+    - cron: '0 */6 * * *' # Τρέχει κάθε 6 ώρες αυτόματα
+  workflow_dispatch:      # Επιτρέπει και χειροκίνητο τρέξιμο
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install Dependencies
+        run: pip install requests beautifulsoup4
+
+      - name: Run Fleet Commander OSINT
+        run: python scrapers/fleet_commander.py
+
+      - name: Commit & Push Results
+        run: |
+          git config --global user.name 'NauticalOS-Bot'
+          git config --global user.email 'bot@nauticalos.com'
+          git add data/radar_feed.json
+          git commit -m "M11: Radar Intelligence Updated [Auto]" || exit 0
+          git push

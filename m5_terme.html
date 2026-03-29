@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>M5: War Room V5.60 - SILENT SIEGE</title>
+    <title>M5: War Room V6.0 - LOCKDOWN PROTOCOL</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -17,135 +17,160 @@
         .sun-mode .glass { background: white !important; border: 1px solid #cbd5e1 !important; color: #0f172a !important; }
         .fat-finger { height: 80px; font-weight: 900; text-transform: uppercase; border-radius: 1.5rem; transition: all 0.2s; }
         .fat-finger:active { transform: scale(0.95); }
+        .glitch-red { color: #ef4444; text-shadow: 2px 0 #000, -2px 0 #fff; }
     </style>
 </head>
-<body><div id="root"></div><script type="text/babel">
-const { useState, useEffect } = React;
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState, useEffect } = React;
 
-const WarRoom = () => {
-    const [sunMode, setSunMode] = useState(false);
-    const [selectedTarget, setSelectedTarget] = useState(1);
-    const [pinEntry, setPinEntry] = useState("");
-    const [showPinModal, setShowPinModal] = useState(false);
+        const WarRoom = () => {
+            const [sunMode, setSunMode] = useState(false);
+            const [isAuthenticated, setIsAuthenticated] = useState(false);
+            const [entryPin, setEntryPin] = useState("");
+            
+            const [selectedTarget, setSelectedTarget] = useState(1);
+            const [exportPin, setExportPin] = useState("");
+            const [showExportModal, setShowExportModal] = useState(false);
 
-    // V5.60 DATA: UTID SYNC & TARGETS
-    const targets = [
-        { id: 1, utid: "UT-9482-926", name: 'Emir Öztürk', role: 'Warsaw Proxy', reg: 'NIP: 5262587598', anomaly: 'NACE 49.32 (TAXI SERVICES)' },
-        { id: 2, utid: "UT-1234-567", name: 'Erkan Zorlu', role: 'Mastermind', reg: 'TR-ID: 12345...', anomaly: 'ASSET CONCEALMENT' },
-        { id: 3, utid: "UT-9876-543", name: 'İpek Banu Karaca', role: 'Associated Party', reg: 'TR-ID: 98765...', anomaly: 'MONEY FUNNEL' }
-    ];
+            // [V6.0] THE SYNDICATE DATA INGESTION
+            const targets = [
+                { id: 1, utid: "UT-9482-926", name: 'Emir Öztürk', role: 'Warsaw Proxy', reg: 'NIP: 5262587598', anomaly: 'NACE 49.32 (TAXI SERVICES)' },
+                { id: 2, utid: "UT-1234-567", name: 'Erkan Zorlu', role: 'Mastermind', reg: 'TR-ID: CONFIDENTIAL', anomaly: 'ASSET CONCEALMENT' },
+                { id: 3, utid: "UT-9876-543", name: 'İpek Banu Karaca', role: 'Associated Party', reg: 'TR-ID: CONFIDENTIAL', anomaly: 'MONEY FUNNEL' },
+                { id: 4, utid: "UT-SYND-001", name: 'Terme Capital / Barker', role: 'Corporate Shells', reg: 'NL-IBAN / TR-REG', anomaly: 'ILLICIT FUND ROUTING' },
+                { id: 5, utid: "UT-SYND-002", name: 'Tugrul, Hasan, Aydin', role: 'Strawmen (Αχυράνθρωποι)', reg: 'MULTIPLE TR-IDs', anomaly: 'FRAUDULENT OWNERSHIP' }
+            ];
 
-    const currentTarget = targets.find(t => t.id === selectedTarget);
+            const currentTarget = targets.find(t => t.id === selectedTarget);
 
-    // SILENT LOGGING ENGINE
-    const logAction = (action, target) => {
-        const logEntry = { action, target, ts: new Date().toISOString() };
-        const logs = JSON.parse(localStorage.getItem('ntg_M5_logs') || '[]');
-        localStorage.setItem('ntg_M5_logs', JSON.stringify([...logs, logEntry]));
-        console.log(`[M10 AUDITOR] Action Logged: ${action}`);
-    };
+            // [Art. 2] HARD ENTRY GATE (Lockdown Protocol)
+            useEffect(() => {
+                if (sessionStorage.getItem('ntg_global_auth') === 'true') setIsAuthenticated(true);
+            }, []);
 
-    // SHA-256 SEAL & PDF EXPORT
-    const generateForensicPDF = async () => {
-        if (pinEntry !== "1234") { alert("INVALID MASTER PIN"); return; }
-        
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        const ts = new Date().toUTCString();
-        
-        // Hash Logic: SHA-256 Seal
-        const msgBuffer = new TextEncoder().encode(JSON.stringify(currentTarget) + ts);
-        const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-        const hashHex = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+            const handleEntryLogin = () => {
+                if (entryPin === "1234") {
+                    sessionStorage.setItem('ntg_global_auth', 'true');
+                    setIsAuthenticated(true);
+                } else {
+                    alert("SECURITY BREACH DETECTED. ACCESS DENIED.");
+                    setEntryPin("");
+                }
+            };
 
-        doc.setFontSize(14);
-        doc.text("FORENSIC DOSSIER - NAFTOTRADE LEGAL UNIT", 105, 20, { align: "center" });
-        doc.setFontSize(7);
-        doc.text(`UTID-SYNC: ${currentTarget.utid} | HASH: ${hashHex}`, 105, 30, { align: "center" });
-        
-        doc.setFontSize(10);
-        doc.text(`TARGET: ${currentTarget.name}`, 20, 50);
-        doc.text(`REGISTRY: ${currentTarget.reg}`, 20, 60);
-        doc.setTextColor(220, 38, 38);
-        doc.text(`CRITICAL ANOMALY: ${currentTarget.anomaly}`, 20, 70);
-        
-        doc.setTextColor(0,0,0);
-        doc.text(`CERTIFIED TIMESTAMP: ${ts}`, 20, 100);
-        doc.text(`M10 AUDITOR VERIFIED | SILENT SIEGE PROTOCOL V5.60`, 20, 110);
+            const logAction = (action, target) => {
+                const logEntry = { action, target, ts: new Date().toISOString() };
+                const logs = JSON.parse(localStorage.getItem('ntg_M5_logs') || '[]');
+                localStorage.setItem('ntg_M5_logs', JSON.stringify([...logs, logEntry]));
+            };
 
-        doc.save(`FORENSIC_${currentTarget.utid}.pdf`);
-        logAction("PDF_EXPORT", currentTarget.utid);
-        setShowPinModal(false);
-        setPinEntry("");
-    };
+            const generateForensicPDF = async () => {
+                if (exportPin !== "1234") { alert("INVALID MASTER PIN"); return; }
+                
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                const ts = new Date().toUTCString();
+                
+                const msgBuffer = new TextEncoder().encode(JSON.stringify(currentTarget) + ts);
+                const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+                const hashHex = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
 
-    return (
-        <div className={`min-h-screen p-4 transition-all ${sunMode ? 'sun-mode' : ''}`}>
-            {/* HEADER */}
-            <div className="flex justify-between items-center mb-6 pt-4 px-2">
-                <button onClick={() => setSunMode(!sunMode)} className="glass p-3 rounded-xl">
-                    <i className={`fa-solid ${sunMode ? 'fa-moon' : 'fa-sun text-orange-500'}`}></i>
-                </button>
-                <div className="text-right">
-                    <span className="text-[7px] text-red-600 uppercase tracking-widest animate-pulse">Silent Siege Active</span>
-                    <p className="text-[10px] font-black italic">M5: WAR ROOM V5.60</p>
-                </div>
-            </div>
+                doc.setFontSize(14);
+                doc.setTextColor(220, 38, 38);
+                doc.text("STRICTLY PRIVATE - FORENSIC DOSSIER", 105, 20, { align: "center" });
+                doc.setTextColor(0,0,0);
+                doc.setFontSize(7);
+                doc.text(`UTID-SYNC: ${currentTarget.utid} | HASH: ${hashHex}`, 105, 30, { align: "center" });
+                
+                doc.setFontSize(10);
+                doc.text(`TARGET IDENTITY: ${currentTarget.name}`, 20, 50);
+                doc.text(`OPERATIONAL ROLE: ${currentTarget.role}`, 20, 60);
+                doc.text(`KNOWN REGISTRY: ${currentTarget.reg}`, 20, 70);
+                doc.setTextColor(220, 38, 38);
+                doc.text(`CRITICAL ANOMALY: ${currentTarget.anomaly}`, 20, 80);
+                
+                doc.setTextColor(0,0,0);
+                doc.text(`CERTIFIED TIMESTAMP: ${ts}`, 20, 110);
+                doc.text(`M10 AUDITOR VERIFIED | PROTOCOL V6.0`, 20, 120);
 
-            {/* DYNAMIC DOSSIER GENERATOR */}
-            <div className="glass p-6 rounded-[2.5rem] mb-6 border-l-4 border-red-600 shadow-2xl">
-                <p className="text-[8px] opacity-50 uppercase mb-4 tracking-tighter">Target & UTID Selection</p>
-                <select 
-                    value={selectedTarget} 
-                    onChange={(e) => { setSelectedTarget(Number(e.target.value)); logAction("TARGET_CHANGE", targets.find(t=>t.id==e.target.value).utid); }}
-                    className="w-full bg-slate-900/50 p-4 rounded-2xl mb-4 border border-white/10 outline-none text-sm"
-                >
-                    {targets.map(t => <option key={t.id} value={t.id}>{t.name} ({t.utid})</option>)}
-                </select>
+                doc.save(`DOSSIER_${currentTarget.utid}.pdf`);
+                logAction("PDF_EXPORT_SEALED", currentTarget.utid);
+                setShowExportModal(false);
+                setExportPin("");
+            };
 
-                <div className="bg-black/20 p-4 rounded-2xl mb-6 border border-red-900/20">
-                    <p className="text-[10px] text-red-500 font-black uppercase tracking-widest">{currentTarget.anomaly}</p>
-                    <p className="text-[8px] opacity-40 italic mt-1">Status: Monitoring (0 kn detection ready)</p>
-                </div>
+            if (!isAuthenticated) {
+                return (
+                    <div className="min-h-screen bg-[#020617] flex items-center justify-center p-6">
+                        <div className="glass p-10 rounded-[3rem] w-full max-w-sm text-center border-red-900/50 shadow-2xl shadow-red-900/20">
+                            <i className="fa-solid fa-lock text-5xl text-red-600 mb-6 glitch-red"></i>
+                            <h2 className="text-sm font-black uppercase mb-2 text-red-500 tracking-widest">Lockdown Protocol</h2>
+                            <p className="text-[8px] opacity-50 uppercase tracking-[0.3em] mb-8">Division Isolation V6.0</p>
+                            <input type="password" value={entryPin} onChange={(e) => setEntryPin(e.target.value)} className="w-full bg-black/60 border border-red-900/30 p-6 rounded-2xl text-center text-4xl tracking-[1rem] outline-none text-red-500 mb-6" autoFocus />
+                            <button onClick={handleEntryLogin} className="fat-finger w-full bg-red-900/40 border border-red-600/50 text-red-500 hover:bg-red-600 hover:text-white">DECRYPT</button>
+                        </div>
+                    </div>
+                );
+            }
 
-                <button onClick={() => setShowPinModal(true)} className="fat-finger w-full bg-red-600 shadow-lg shadow-red-900/20 flex items-center justify-center gap-3">
-                    <i className="fa-solid fa-fingerprint text-xl"></i>
-                    <span>Export Forensic Dossier</span>
-                </button>
-            </div>
+            return (
+                <div className={`min-h-screen p-4 transition-all ${sunMode ? 'sun-mode' : ''}`}>
+                    <div className="flex justify-between items-center mb-6 pt-4 px-2">
+                        <div className="flex gap-2">
+                            <button onClick={() => setSunMode(!sunMode)} className="glass p-3 rounded-xl"><i className={`fa-solid ${sunMode ? 'fa-moon' : 'fa-sun text-orange-500'}`}></i></button>
+                            <a href="index.html" className="glass p-3 rounded-xl"><i className="fa-solid fa-house text-slate-400"></i></a>
+                        </div>
+                        <div className="text-right">
+                            <span className="text-[7px] text-red-600 uppercase tracking-widest animate-pulse border border-red-600/30 px-2 py-1 rounded">V6.0 LOCKED</span>
+                            <p className="text-[10px] font-black italic mt-1">M5: WAR ROOM</p>
+                        </div>
+                    </div>
 
-            {/* PIN MODAL */}
-            {showPinModal && (
-                <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-6">
-                    <div className="glass p-8 rounded-[2.5rem] w-full max-w-sm text-center">
-                        <p className="text-xs uppercase mb-6 font-black tracking-widest">Master PIN Required</p>
-                        <input 
-                            type="password" 
-                            value={pinEntry}
-                            onChange={(e) => setPinEntry(e.target.value)}
-                            className="w-full bg-transparent border-b-2 border-red-600 text-4xl text-center outline-none mb-8 tracking-[1em]"
-                            autoFocus
-                        />
-                        <div className="grid grid-cols-2 gap-4">
-                            <button onClick={() => setShowPinModal(false)} className="p-4 uppercase text-[10px] opacity-50">Cancel</button>
-                            <button onClick={generateForensicPDF} className="p-4 bg-red-600 rounded-2xl uppercase text-[10px] font-black">Verify & Seal</button>
+                    <div className="glass p-6 rounded-[2.5rem] mb-6 border-l-4 border-red-600 shadow-2xl">
+                        <p className="text-[8px] opacity-50 uppercase mb-4 tracking-tighter">Syndicate Database</p>
+                        <select value={selectedTarget} onChange={(e) => { setSelectedTarget(Number(e.target.value)); logAction("TARGET_VIEW", targets.find(t=>t.id==e.target.value).utid); }} className="w-full bg-slate-900/50 p-4 rounded-2xl mb-4 border border-white/10 outline-none text-sm text-red-400">
+                            {targets.map(t => <option key={t.id} value={t.id}>{t.name} ({t.utid})</option>)}
+                        </select>
+
+                        <div className="bg-black/20 p-4 rounded-2xl mb-6 border border-red-900/20">
+                            <p className="text-[10px] text-red-500 font-black uppercase tracking-widest">{currentTarget.anomaly}</p>
+                            <p className="text-[8px] opacity-40 italic mt-1">Role: {currentTarget.role}</p>
+                        </div>
+
+                        <button onClick={() => setShowExportModal(true)} className="fat-finger w-full bg-red-600/10 border border-red-600/30 text-red-500 hover:bg-red-600 hover:text-white flex items-center justify-center gap-3">
+                            <i className="fa-solid fa-fingerprint text-xl"></i>
+                            <span>Seal Dossier (.PDF)</span>
+                        </button>
+                    </div>
+
+                    {showExportModal && (
+                        <div className="fixed inset-0 bg-black/95 backdrop-blur-xl z-50 flex items-center justify-center p-6">
+                            <div className="glass p-8 rounded-[2.5rem] w-full max-w-sm text-center border border-red-600/30">
+                                <p className="text-xs text-red-500 uppercase mb-6 font-black tracking-widest">Master PIN Required</p>
+                                <input type="password" value={exportPin} onChange={(e) => setExportPin(e.target.value)} className="w-full bg-black/50 border-b-2 border-red-600 text-4xl text-red-500 text-center outline-none mb-8 tracking-[1em]" autoFocus />
+                                <div className="grid grid-cols-2 gap-4">
+                                    <button onClick={() => setShowExportModal(false)} className="p-4 uppercase text-[10px] opacity-50">Cancel</button>
+                                    <button onClick={generateForensicPDF} className="p-4 bg-red-600 rounded-2xl uppercase text-[10px] font-black">Generate</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="glass p-6 rounded-[2.5rem] opacity-80 border border-blue-900/30">
+                        <p className="text-[8px] text-blue-400 uppercase mb-4 tracking-widest">M4 Radar Feed: The Hostage Zone</p>
+                        <div className="space-y-3">
+                            <div className="flex justify-between items-center p-4 bg-red-900/10 border border-red-900/30 rounded-2xl animate-pulse">
+                                <span className="text-[10px] italic">S.V. NIKOLAY</span>
+                                <span className="text-[8px] font-black text-red-500">SDN ALERT | TRACKING</span>
+                            </div>
                         </div>
                     </div>
                 </div>
-            )}
-
-            {/* LIVE ROSTER */}
-            <div className="glass p-6 rounded-[2.5rem] opacity-80">
-                <p className="text-[8px] opacity-50 uppercase mb-4 tracking-widest">The Hostage Zone (SDN Alerts)</p>
-                <div className="space-y-3">
-                    <div className="flex justify-between items-center p-4 bg-red-900/10 border border-red-900/30 rounded-2xl animate-pulse">
-                        <span className="text-[10px] italic">S.V. NIKOLAY</span>
-                        <span className="text-[8px] font-black text-red-500">SDN ALERT | 0 KN</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-};
-ReactDOM.createRoot(document.getElementById('root')).render(<WarRoom />);
-</script></body></html>
+            );
+        };
+        ReactDOM.createRoot(document.getElementById('root')).render(<WarRoom />);
+    </script>
+</body>
+</html>

@@ -1,67 +1,124 @@
-<script type="text/babel">
-const { useState, useEffect } = React;
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>M14: Commercial Intel v5.60</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');
+        body { background: #020617; color: white; font-family: 'Orbitron', sans-serif; font-style: italic; }
+        .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .sun-mode { background: #ffffff !important; color: #000000 !important; }
+        .sun-mode .glass { background: #f8fafc !important; border: 1px solid #cbd5e1 !important; color: #000000 !important; }
+        .fat-finger-button { height: 80px; font-weight: 900; text-transform: uppercase; border-radius: 1.5rem; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .fat-finger-button:active { transform: scale(0.95); }
+        .pulse-emerald { animation: pulse-emerald 2s infinite; }
+        @keyframes pulse-emerald { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState, useEffect } = React;
 
-const M14Commercial = () => {
-    const [quotes, setQuotes] = useState([]);
+        const M14Intel = () => {
+            const [sunMode, setSunMode] = useState(false);
+            const [feed, setFeed] = useState([]);
+            const [stats, setStats] = useState({ won: 0, lost: 0, revenue: 0 });
 
-    // [Art. 2] Security Gate
-    useEffect(() => {
-        if (sessionStorage.getItem('ntg_global_auth') !== 'true') {
-            window.location.href = 'index.html';
-        }
-    }, []);
+            // [Art. 2] Security Gate & Data Fetch
+            useEffect(() => {
+                if (sessionStorage.getItem('ntg_global_auth') !== 'true') {
+                    window.location.href = 'index.html';
+                }
+                
+                // [Art. 7] Load "The Feed" from localStorage
+                const loadData = () => {
+                    const m14Data = JSON.parse(localStorage.getItem('ntg_M14_feed') || '[]');
+                    setFeed(m14Data);
+                    
+                    const wonJobs = m14Data.filter(j => j.status === 'WON');
+                    const lostJobs = m14Data.filter(j => j.status === 'LOST');
+                    const totalRev = wonJobs.reduce((sum, j) => sum + (parseFloat(j.value) || 0), 0);
+                    
+                    setStats({ won: wonJobs.length, lost: lostJobs.length, revenue: totalRev });
+                };
+                
+                loadData();
+                window.addEventListener('storage', loadData); // Real-time Sync
+                return () => window.removeEventListener('storage', loadData);
+            }, []);
 
-    // Safe-Parser για το Commercial Data [cite: 59]
-    useEffect(() => {
-        try {
-            const saved = localStorage.getItem('ntg_M14_quotes');
-            setQuotes(saved ? JSON.parse(saved) : []);
-        } catch (e) {
-            setQuotes([]);
-        }
-    }, []);
+            const conversionRate = (stats.won + stats.lost) > 0 
+                ? ((stats.won / (stats.won + stats.lost)) * 100).toFixed(1) 
+                : 0;
 
-    // Υπολογισμός Conversion Rate [cite: 60]
-    const won = quotes.filter(q => q.status === 'WON').length;
-    const total = quotes.length;
-    const rate = total > 0 ? ((won / total) * 100).toFixed(1) : 0;
-
-    return (
-        <div className="min-h-screen bg-slate-950 text-slate-200 p-6 italic">
-            <header className="flex justify-between items-center mb-8 glass p-6 rounded-[2rem]">
-                <h1 className="text-2xl font-black uppercase italic tracking-tighter text-emerald-500">M14 Commercial Intel</h1>
-                <a href="index.html" className="p-4 bg-white/5 rounded-2xl text-xs uppercase font-black">Bridge</a>
-            </header>
-
-            {/* Strategic Insights Cards [cite: 61] */}
-            <div className="grid grid-cols-2 gap-4 mb-8 text-center">
-                <div className="glass p-6 rounded-[2rem] border-emerald-500/20">
-                    <p className="text-[10px] uppercase font-bold opacity-50 mb-2">Conversion Rate</p>
-                    <h2 className="text-4xl font-black text-emerald-500">{rate}%</h2>
-                </div>
-                <div className="glass p-6 rounded-[2rem] border-blue-500/20">
-                    <p className="text-[10px] uppercase font-bold opacity-50 mb-2">Active Quotes</p>
-                    <h2 className="text-4xl font-black text-blue-500">{total}</h2>
-                </div>
-            </div>
-
-            {/* Quote List */}
-            <div className="grid gap-4">
-                {quotes.map((q, i) => (
-                    <div key={i} className="glass p-6 rounded-[2.5rem] flex justify-between items-center">
+            return (
+                <div className={`min-h-screen p-6 transition-all ${sunMode ? 'sun-mode' : ''}`}>
+                    <header className="flex justify-between items-center mb-10 glass p-6 rounded-[2rem]">
                         <div>
-                            <p className="text-[10px] font-bold opacity-40 uppercase tracking-widest">{q.vessel}</p>
-                            <h3 className="text-lg font-black uppercase">{q.projectType}</h3>
+                            <h1 className="text-sm uppercase font-black tracking-widest text-emerald-500 italic">M14: Commercial Intel</h1>
+                            <p className="text-[8px] font-bold opacity-50 uppercase tracking-widest">Revenue Forecast Active</p>
                         </div>
-                        <div className="text-right">
-                            <p className="font-black text-emerald-400">€{q.value}</p>
-                            <p className="text-[8px] uppercase font-bold opacity-30">{q.status}</p>
+                        <div className="flex gap-3">
+                            <button onClick={() => setSunMode(!sunMode)} className="p-4 glass rounded-2xl"><i className="fa-solid fa-sun text-orange-400"></i></button>
+                            <a href="index.html" className="p-4 glass rounded-2xl"><i className="fa-solid fa-house"></i></a>
+                        </div>
+                    </header>
+
+                    {/* Strategic Insights Grid [cite: 60, 61, 89] */}
+                    <div className="grid grid-cols-2 gap-4 mb-8">
+                        <div className="glass p-6 rounded-[2.5rem] border-emerald-500/20 text-center">
+                            <p className="text-[10px] uppercase font-black opacity-50 mb-2">Conversion Rate</p>
+                            <p className="text-4xl font-black text-emerald-500">{conversionRate}%</p>
+                        </div>
+                        <div className="glass p-6 rounded-[2.5rem] border-blue-500/20 text-center">
+                            <p className="text-[10px] uppercase font-black opacity-50 mb-2">Pipeline Revenue</p>
+                            <p className="text-4xl font-black text-blue-400">€{stats.revenue.toLocaleString()}</p>
                         </div>
                     </div>
-                ))}
-            </div>
-        </div>
-    );
-};
-ReactDOM.createRoot(document.getElementById('root')).render(<M14Commercial />);
-</script>
+
+                    {/* The Feed: Commercial Intelligence List [cite: 82, 83] */}
+                    <div className="space-y-4 mb-10">
+                        <h2 className="text-[10px] uppercase font-black ml-4 opacity-50 italic tracking-[0.3em]">Live Intelligence Feed (M3 Sync)</h2>
+                        {feed.length === 0 ? (
+                            <div className="p-10 border-2 border-dashed border-white/5 rounded-[3rem] text-center opacity-20 uppercase text-[10px]">No Commercial Data Received</div>
+                        ) : (
+                            feed.map((job, i) => (
+                                <div key={i} className={`glass p-6 rounded-[2.5rem] flex justify-between items-center border-l-4 ${job.status === 'WON' ? 'border-emerald-500' : 'border-red-500'}`}>
+                                    <div>
+                                        <h3 className="text-lg font-black uppercase tracking-tighter">{job.vessel}</h3>
+                                        <p className="text-[9px] font-bold uppercase opacity-60">Status: {job.status}</p>
+                                        {job.reasonCode && <p className="text-[8px] text-red-400 font-black mt-1 uppercase">Reason: {job.reasonCode}</p>}
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="font-black text-xl italic">€{job.value || '---'}</p>
+                                        <p className="text-[8px] opacity-40 uppercase">{new Date(job.ts).toLocaleDateString()}</p>
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                    </div>
+
+                    {/* Admin Actions [cite: 59, 137] */}
+                    <button className="fat-finger-button w-full bg-slate-800 border border-slate-700 text-[10px]">
+                        <i className="fa-solid fa-file-invoice-dollar text-emerald-500"></i> New Strategy Forecast (PIN Required)
+                    </button>
+                    
+                    <footer className="mt-10 text-center opacity-20">
+                        <p className="text-[8px] font-black uppercase tracking-[0.5em]">Nautical Technology Group | V5.60</p>
+                    </footer>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<M14Intel />);
+    </script>
+</body>
+</html>

@@ -1,96 +1,80 @@
-"""
-M11: FLEET COMMANDER (OSINT HYBRID SENSOR V6.0)
-Role: Autonomous Radar Feeder (MarineTraffic + News Scraper)
-Target Zones: Perama, Salamina, Elefsina, Drapetsona
-"""
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>M11: Sensors & Fleet Commander V6.1</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');
+        body { background: #020617; color: white; font-family: 'Orbitron', sans-serif; font-style: italic; overflow-x: hidden; }
+        .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.05); }
+        .sensor-pulse { animation: pulse-blue 2s infinite; }
+        @keyframes pulse-blue { 0%, 100% { box-shadow: 0 0 15px rgba(59, 130, 246, 0.3); } 50% { box-shadow: 0 0 5px rgba(59, 130, 246, 0.1); } }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState, useEffect } = React;
 
-import requests
-from bs4 import BeautifulSoup
-import json
-import datetime
-import uuid
+        const SensorHub = () => {
+            const [hardwareData, setHardwareData] = useState({ temp: 42, pressure: 1.2, flow: 85 });
+            const [osintLeads, setOsintLeads] = useState([
+                { id: 1, vessel: 'MT FELIX', status: 'INCOMING', eta: '07:00' },
+                { id: 2, vessel: 'BADJI MOKHTAR III', status: 'INCOMING', eta: '11:00' }
+            ]);
 
-# 1. ΣΤΡΑΤΗΓΙΚΕΣ ΠΑΡΑΜΕΤΡΟΙ (THE OSINT RULES)
-TARGET_ZONES = ["perama", "salamina", "elefsina", "drapetsona", "piraeus", "πέραμα", "ελευσίνα"]
-REPAIR_KEYWORDS = ["repair", "drydock", "επισκευή", "δεξαμενισμός", "shipyard"]
+            return (
+                <div className="min-h-screen p-6 bg-slate-950">
+                    <header className="glass p-6 rounded-[2.5rem] mb-8 border-blue-500/20 flex justify-between items-center">
+                        <div>
+                            <h1 className="text-blue-500 font-black uppercase text-lg tracking-tighter italic">M11: Sensor Hub</h1>
+                            <p className="text-[8px] font-bold uppercase tracking-[0.3em] opacity-50">Hybrid Intelligence V6.1</p>
+                        </div>
+                        <a href="index.html" className="p-4 glass rounded-2xl"><i className="fa-solid fa-house"></i></a>
+                    </header>
 
-def generate_utid(area):
-    """Παράγει το ψηφιακό DNA (UTID) για το M4 Radar"""
-    sector = area[:3].upper()
-    hex_id = uuid.uuid4().hex[:4].upper()
-    return f"NTG-2026-{sector}-{hex_id}"
+                    {/* SECTION 1: PHYSICAL SENSORS (FSRU DATA) */}
+                    <div className="grid grid-cols-2 gap-4 mb-8">
+                        <div className="glass p-6 rounded-[2.5rem] border-l-4 border-blue-500 sensor-pulse">
+                            <p className="text-[8px] opacity-40 uppercase font-black mb-2">Piping Pressure</p>
+                            <h3 className="text-2xl font-black">{hardwareData.pressure} <span className="text-[10px] opacity-50">BAR</span></h3>
+                        </div>
+                        <div className="glass p-6 rounded-[2.5rem] border-l-4 border-blue-500 sensor-pulse">
+                            <p className="text-[8px] opacity-40 uppercase font-black mb-2">System Temp</p>
+                            <h3 className="text-2xl font-black">{hardwareData.temp} <span className="text-[10px] opacity-50">°C</span></h3>
+                        </div>
+                    </div>
 
-# 2. AIS SENSOR (MARINE TRAFFIC / VESSEL FINDER API)
-def scan_ais_for_expected_vessels():
-    print("[M11 SENSOR] Scanning AIS Data for incoming vessels...")
-    # Εδώ μπαίνει το πραγματικό API Key από MarineTraffic / Spire
-    # Hypothetical API Call:
-    # response = requests.get("https://api.marinetraffic.com/api/expected/PORT_ID:PIRAEUS")
-    
-    # Mock Data (Αυτό που θα επέστρεφε το API)
-    incoming_vessels = [
-        {"name": "MT FELIX", "type": "TANKER", "destination": "PERAMA", "eta": "2026-03-31"}
-    ]
-    
-    locked_targets = []
-    for v in incoming_vessels:
-        if v["destination"].lower() in TARGET_ZONES:
-            target = {
-                "utid": generate_utid(v["destination"]),
-                "name": v["name"],
-                "type": v["type"],
-                "area": v["destination"],
-                "status": "EXPECTED",
-                "source": "AIS_SENSOR"
-            }
-            locked_targets.append(target)
-            
-    return locked_targets
+                    {/* SECTION 2: OSINT FLEET COMMANDER FEED */}
+                    <div className="glass p-6 rounded-[3rem] border-l-4 border-orange-500">
+                        <h4 className="text-[10px] font-black uppercase mb-6 tracking-widest text-orange-500 italic">
+                            <i className="fa-solid fa-satellite-dish mr-2"></i> Fleet Commander (OSINT Feed)
+                        </h4>
+                        <div className="space-y-4">
+                            {osintLeads.map(lead => (
+                                <div key={lead.id} className="bg-white/5 p-4 rounded-2xl flex justify-between items-center border border-white/5">
+                                    <div>
+                                        <p className="text-xs font-black uppercase">{lead.vessel}</p>
+                                        <p className="text-[8px] opacity-50 uppercase tracking-widest">ETA: {lead.eta} | Piraeus Sector</p>
+                                    </div>
+                                    <span className="text-[8px] bg-orange-600/20 text-orange-500 px-3 py-1 rounded-full font-black animate-pulse">LOCKED</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
 
-# 3. NEWS SCRAPER SENSOR (ΝΑΥΤΙΛΙΑΚΑ ΠΟΡΤΑΛΣ & ΣΕΠΕ)
-def scrape_shipping_news():
-    print("[M11 SENSOR] Scraping Web & Port Schedules...")
-    # Παράδειγμα: Σκανάρισμα σελίδων με BeautifulSoup
-    # url = "https://www.shipping-news-portal.gr/repairs"
-    # page = requests.get(url)
-    # soup = BeautifulSoup(page.content, 'html.parser')
-    
-    # Mock Scraped Data: Βρήκαμε άρθρο που λέει "Το BADJI MOKHTAR III πάει Ελευσίνα για επισκευή"
-    scraped_targets = []
-    
-    # Αν το script βρει τις λέξεις-κλειδιά στο κείμενο, φτιάχνει Lead:
-    scraped_targets.append({
-        "utid": generate_utid("ELEFSINA"),
-        "name": "BADJI MOKHTAR III",
-        "type": "RO-RO",
-        "area": "ELEFSINA",
-        "status": "EXPECTED",
-        "source": "WEB_OSINT"
-    })
-    
-    return scraped_targets
-
-# 4. DATA TRANSMISSION (PUSH TO M4 RADAR & M14 FEED)
-def transmit_to_nautical_os(targets):
-    """
-    Στέλνει τα δεδομένα στη Βάση μας (π.χ. Supabase) 
-    για να τα διαβάσουν το M4 (Radar) και το M14 (Commercial).
-    """
-    if not targets:
-        print("[M11 SENSOR] No new targets found. Radar remains quiet.")
-        return
-        
-    print(f"[M11 SENSOR] Transmitting {len(targets)} NEW TARGETS to NauticalOS Bridge...")
-    for t in targets:
-        print(f" -> 🚨 TARGET LOCKED: {t['name']} | AREA: {t['area']} | UTID: {t['utid']}")
-        # requests.post("https://our-supabase-url.com/rest/v1/m4_radar", json=t)
-
-# --- ΕΚΤΕΛΕΣΗ (Ο ΠΑΛΜΟΣ ΤΟΥ ΡΑΝΤΑΡ) ---
-if __name__ == "__main__":
-    print("=== M11 FLEET COMMANDER: INITIALIZED ===")
-    ais_leads = scan_ais_for_expected_vessels()
-    news_leads = scrape_shipping_news()
-    
-    all_leads = ais_leads + news_leads
-    transmit_to_nautical_os(all_leads)
-    print("=== M11 FLEET COMMANDER: SLEEP MODE (AWAITING NEXT CYCLE) ===")
+                    <div className="fixed bottom-6 left-6 right-6 text-center opacity-30">
+                        <p className="text-[8px] font-black uppercase tracking-[0.4em]">M10 Supreme Auditor Protocol Active</p>
+                    </div>
+                </div>
+            );
+        };
+        ReactDOM.createRoot(document.getElementById('root')).render(<SensorHub />);
+    </script>
+</body>
+</html>

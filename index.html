@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NauticalOS | Command Hub V5.65</title>
+    <title>NauticalOS | Full Command Hub V5.70</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -17,8 +17,6 @@
         .sun-mode { background: #f8fafc !important; color: #0f172a !important; }
         .sun-mode .glass-card { background: white !important; border: 1px solid #cbd5e1 !important; color: #0f172a !important; }
         .status-dot { width: 8px; height: 8px; border-radius: 50%; box-shadow: 0 0 10px currentColor; }
-        .matrix-alert { animation: pulse-red 1.5s infinite; }
-        @keyframes pulse-red { 0%, 100% { color: #ef4444; text-shadow: 0 0 5px #ef4444; } 50% { color: #450a0a; text-shadow: none; } }
     </style>
 </head>
 <body>
@@ -32,18 +30,9 @@
             const [pin, setPin] = useState("");
             const [targetFile, setTargetFile] = useState("");
             
-            // Strategic Insights State
-            const [stats, setStats] = useState({ revenue: 0, conversion: 0, compliance: 100 });
-
-            useEffect(() => {
-                const m14Data = JSON.parse(localStorage.getItem('ntg_M14_feed') || '[]');
-                const won = m14Data.filter(j => j.status === 'WON');
-                const rev = won.reduce((sum, j) => sum + (parseFloat(j.value) || 0), 0);
-                const rate = m14Data.length > 0 ? ((won.length / m14Data.length) * 100).toFixed(0) : 0;
-                setStats({ revenue: rev, conversion: rate, compliance: 98 });
-            }, []);
-
+            // [Art. 2] Security Gate Protocol
             const navigateTo = (file, secure) => {
+                if (!file) return; // For Standby Divisions
                 if (secure && sessionStorage.getItem('ntg_global_auth') !== 'true') {
                     setTargetFile(file);
                     setShowPinGate(true);
@@ -57,77 +46,68 @@
                     sessionStorage.setItem('ntg_global_auth', 'true');
                     window.location.href = targetFile;
                 } else {
-                    alert("ACCESS DENIED [Art. 2]");
+                    alert("ACCESS DENIED | MASTER PIN REQUIRED");
                     setPin("");
                 }
             };
 
+            // FULL DIVISION LIST (M1 to M15)
             const divisions = [
-                { id: 'M1', title: 'UTM ANALYSIS', file: 'm1_utm.html', icon: 'fa-arrows-left-right', status: 'ACTIVE', color: 'emerald', secure: true, insight: 'DNA Locked' },
-                { id: 'M2', title: 'SAFETY WATCH', file: 'm2_safety.html', icon: 'fa-shield-halved', status: 'SHIFT ON', color: 'emerald', secure: true, insight: 'P.D. 70/90 OK' },
-                { id: 'M3', title: 'LOAD TEST PRO', file: 'm3_loadtest.html', icon: 'fa-weight-hanging', status: 'ACTIVE', color: 'emerald', secure: true, insight: 'ILO 152 Sync' },
-                { id: 'M4', title: 'RADAR HUNTER', file: 'm4_radar.html', icon: 'fa-tower-observation', status: 'SCANNING', color: 'orange', secure: true, insight: 'Targets: 4' },
-                { id: 'M5', title: 'WAR ROOM', file: 'm5_terme.html', icon: 'fa-hammer', status: 'SILENT', color: 'red', secure: true, insight: 'SDN Alert' },
-                { id: 'M8', title: 'ACADEMY', file: 'm8_academy.html', icon: 'fa-book-open', status: 'VAULT', color: 'blue', secure: false, insight: 'MEG4 Loaded' },
-                { id: 'M10', title: 'SUPREME AUDITOR', file: 'm10_arch.html', icon: 'fa-eye', status: 'AUDITING', color: 'orange', secure: true, insight: 'Logs Clean' },
-                { id: 'M14', title: 'COMMERCIAL', file: 'm14_commercial.html', icon: 'fa-chart-line', status: 'LIVE', color: 'emerald', secure: true, insight: `€${stats.revenue.toLocaleString()}` }
+                { id: 'M1', title: 'UTM ANALYSIS', file: 'm1_utm.html', icon: 'fa-arrows-left-right', status: 'ACTIVE', color: 'emerald', secure: true },
+                { id: 'M2', title: 'SAFETY WATCH', file: 'm2_safety.html', icon: 'fa-shield-halved', status: 'ACTIVE', color: 'emerald', secure: true },
+                { id: 'M3', title: 'LOAD TEST PRO', file: 'm3_loadtest.html', icon: 'fa-weight-hanging', status: 'ACTIVE', color: 'emerald', secure: true },
+                { id: 'M4', title: 'RADAR HUNTER', file: 'm4_radar.html', icon: 'fa-tower-observation', status: 'ACTIVE', color: 'orange', secure: true },
+                { id: 'M5', title: 'WAR ROOM', file: 'm5_terme.html', icon: 'fa-hammer', status: 'ACTIVE', color: 'red', secure: true },
+                { id: 'M6', title: 'CEO OFFICE', file: 'm6_ceo.html', icon: 'fa-briefcase', status: 'STANDBY', color: 'blue', secure: true },
+                { id: 'M7', title: 'STARTUP', file: 'm7_startup.html', icon: 'fa-rocket', status: 'STANDBY', color: 'blue', secure: false },
+                { id: 'M8', title: 'ACADEMY', file: 'm8_academy.html', icon: 'fa-book-open', status: 'ACTIVE', color: 'blue', secure: false },
+                { id: 'M9', title: 'OPERATION GEM', file: 'm9_ops.html', icon: 'fa-file-pdf', status: 'CRITICAL', color: 'slate', secure: true },
+                { id: 'M10', title: 'SUPREME AUDITOR', file: 'm10_arch.html', icon: 'fa-eye', status: 'ACTIVE', color: 'orange', secure: true },
+                { id: 'M11', title: 'SENSORS', file: 'm11_sensors.html', icon: 'fa-microchip', status: 'STANDBY', color: 'slate', secure: true },
+                { id: 'M12', title: 'STAFF SCOUT', file: 'm12_staff.html', icon: 'fa-user-secret', status: 'WORKING', color: 'orange', secure: true },
+                { id: 'M13', title: 'MYKONOS', file: 'm13_mykonos.html', icon: 'fa-ship', status: 'STANDBY', color: 'slate', secure: true },
+                { id: 'M14', title: 'COMMERCIAL', file: 'm14_commercial.html', icon: 'fa-chart-line', status: 'ACTIVE', color: 'emerald', secure: true },
+                { id: 'M15', title: 'HUB CONFIG', file: 'm15_hub.html', icon: 'fa-gear', status: 'LOCKED', color: 'orange', secure: true }
             ];
 
             return (
                 <div className={`min-h-screen p-6 transition-all ${sunMode ? 'sun-mode' : ''}`}>
-                    {/* Header Bridge */}
-                    <div className="flex flex-col md:flex-row justify-between items-center gap-6 mb-12 glass-card p-8 rounded-[3rem]">
+                    <div className="flex justify-between items-center mb-12 glass-card p-8 rounded-[3rem]">
                         <div className="flex items-center gap-6">
-                            <div className="bg-orange-600/20 p-5 rounded-3xl">
-                                <i className="fa-solid fa-users-gear text-3xl text-orange-500"></i>
-                            </div>
+                            <i className="fa-solid fa-users-gear text-4xl text-orange-500"></i>
                             <div>
-                                <h1 className="text-2xl font-black italic tracking-tighter uppercase">Command Hub V5.65</h1>
-                                <p className="text-[9px] font-bold opacity-50 uppercase tracking-[0.4em] text-orange-500">Master PIN 1234 Required for Secure Divisions</p>
+                                <h1 className="text-2xl font-black italic tracking-tighter uppercase">Command Hub V5.70</h1>
+                                <p className="text-[9px] font-bold opacity-50 uppercase tracking-[0.4em] text-orange-500">Global Fleet Control</p>
                             </div>
                         </div>
-                        <div className="flex gap-4">
-                            <div className="text-center px-6 border-r border-white/10">
-                                <p className="text-[10px] opacity-40 font-black">REVENUE</p>
-                                <p className="text-xl font-black text-emerald-500 italic">€{stats.revenue.toLocaleString()}</p>
-                            </div>
-                            <button onClick={() => setSunMode(!sunMode)} className="p-5 glass-card rounded-2xl">
-                                <i className={`fa-solid ${sunMode ? 'fa-moon' : 'fa-sun text-orange-400'}`}></i>
-                            </button>
-                        </div>
+                        <button onClick={() => setSunMode(!sunMode)} className="p-5 glass-card rounded-2xl">
+                            <i className={`fa-solid ${sunMode ? 'fa-moon' : 'fa-sun text-orange-400'}`}></i>
+                        </button>
                     </div>
 
-                    {/* Matrix Grid */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
                         {divisions.map(div => (
-                            <div key={div.id} onClick={() => navigateTo(div.file, div.secure)} className="glass-card p-6 rounded-[2.5rem] relative cursor-pointer hover:border-orange-500/30">
+                            <div key={div.id} onClick={() => navigateTo(div.file, div.secure)} className={`glass-card p-6 rounded-[2.5rem] relative ${div.file ? 'cursor-pointer hover:border-orange-500/30' : 'opacity-50 cursor-not-allowed'}`}>
                                 <div className="flex justify-between items-start mb-6">
                                     <span className="text-[10px] font-black opacity-30 italic">{div.id}</span>
                                     <div className={`status-dot text-${div.color}-500 bg-current`}></div>
                                 </div>
                                 <i className={`fa-solid ${div.icon} text-2xl mb-4 opacity-80`}></i>
                                 <h3 className="text-[11px] font-black uppercase italic tracking-wider leading-none mb-1">{div.title}</h3>
-                                <p className="text-[8px] font-bold text-orange-500 uppercase">{div.insight}</p>
+                                <p className="text-[8px] font-bold opacity-50 uppercase">{div.status}</p>
                             </div>
                         ))}
                     </div>
 
-                    {/* PIN Gate Modal [Art. 2] */}
                     {showPinGate && (
                         <div className="fixed inset-0 bg-black/95 backdrop-blur-2xl z-50 flex items-center justify-center p-6">
                             <div className="glass-card w-full max-w-sm p-10 rounded-[3rem] text-center border-orange-500/20">
-                                <i className="fa-solid fa-user-shield text-4xl text-orange-500 mb-6"></i>
-                                <h2 className="text-sm font-black uppercase mb-8 italic tracking-widest">Authorize Access</h2>
-                                <input 
-                                    type="password" 
-                                    value={pin}
-                                    onChange={(e) => setPin(e.target.value)}
-                                    className="w-full bg-black/40 border border-white/10 p-6 rounded-3xl text-center text-4xl tracking-[1.2rem] outline-none focus:border-orange-500 transition-all font-black mb-8"
-                                    autoFocus
-                                />
+                                <i className="fa-solid fa-lock text-4xl text-orange-500 mb-6"></i>
+                                <h2 className="text-sm font-black uppercase mb-8 italic">Master PIN Required</h2>
+                                <input type="password" value={pin} onChange={(e) => setPin(e.target.value)} className="w-full bg-black/40 border border-white/10 p-6 rounded-3xl text-center text-4xl tracking-[1.2rem] outline-none font-black mb-8" autoFocus />
                                 <div className="grid grid-cols-2 gap-4">
                                     <button onClick={() => setShowPinGate(false)} className="text-[10px] font-black uppercase opacity-40">Cancel</button>
-                                    <button onClick={verifyPin} className="bg-orange-600 h-16 rounded-2xl font-black uppercase text-[10px] shadow-lg shadow-orange-900/40">Verify DNA</button>
+                                    <button onClick={verifyPin} className="bg-orange-600 h-16 rounded-2xl font-black uppercase text-xs">Verify</button>
                                 </div>
                             </div>
                         </div>
@@ -135,9 +115,7 @@
                 </div>
             );
         };
-
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<CommandHub />);
+        ReactDOM.createRoot(document.getElementById('root')).render(<CommandHub />);
     </script>
 </body>
 </html>

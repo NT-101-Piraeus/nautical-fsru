@@ -1,58 +1,163 @@
-<script type="text/babel">
-const { useState, useEffect } = React;
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NauticalOS V5.0 | Command Hub</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #020617; color: white; font-family: ui-sans-serif, system-ui; overflow-x: hidden; }
+        .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .sun-mode { background: white !important; color: black !important; }
+        .sun-mode .glass { background: #f8fafc !important; border: 1px solid #e2e8f0 !important; color: black !important; }
+        @keyframes pulse-orange { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .animate-pulse-custom { animation: pulse-orange 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
 
-const MainHub = () => {
-    const [isLocked, setIsLocked] = useState(true);
-    const [pin, setPin] = useState('');
-    const MASTER_PIN = "1234";
+    <script type="text/babel">
+        const { useState, useEffect } = React;
 
-    // Ελέγχουμε αν υπάρχει ήδη ενεργή συνεδρία στην προσωρινή μνήμη
-    useEffect(() => {
-        const auth = sessionStorage.getItem('ntg_global_auth');
-        if (auth === 'true') setIsLocked(false);
-    }, []);
+        const MainHub = () => {
+            const [isLocked, setIsLocked] = useState(true);
+            const [pin, setPin] = useState('');
+            const [sunMode, setSunMode] = useState(false);
+            const MASTER_PIN = "1234"; // Σύμφωνα με το Άρθρο 2 
 
-    const unlock = () => {
-        if (pin === MASTER_PIN) {
-            setIsLocked(false);
-            sessionStorage.setItem('ntg_global_auth', 'true');
-        } else {
-            alert("ACCESS DENIED: WRONG PIN");
-            setPin('');
-        }
-    };
+            // Offline First & Auth Check [cite: 66, 68]
+            useEffect(() => {
+                const auth = sessionStorage.getItem('ntg_global_auth');
+                if (auth === 'true') setIsLocked(false);
+            }, []);
 
-    if (isLocked) {
-        return (
-            <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 italic">
-                <div className="glass p-10 rounded-[3rem] border-orange-500/20 text-center shadow-2xl">
-                    <i className="fa-solid fa-lock text-4xl text-orange-500 mb-6 animate-pulse"></i>
-                    <h1 className="text-xl font-black uppercase tracking-tighter mb-8">NauticalOS Locked</h1>
-                    <input 
-                        type="password" 
-                        value={pin} 
-                        onChange={(e) => setPin(e.target.value)}
-                        placeholder="ENTER MASTER PIN"
-                        className="bg-black/50 border border-white/10 p-5 rounded-2xl text-center text-2xl font-black mb-6 w-full outline-none focus:border-orange-500 transition-all"
-                    />
-                    <button 
-                        onClick={unlock}
-                        className="w-full bg-orange-600 p-5 rounded-2xl font-black uppercase text-[10px] tracking-widest active:scale-95 transition-all"
-                    >
-                        Authorize Access
-                    </button>
+            const unlock = () => {
+                if (pin === MASTER_PIN) {
+                    setIsLocked(false);
+                    sessionStorage.setItem('ntg_global_auth', 'true');
+                } else {
+                    alert("ACCESS DENIED: SECURITY ALERT LOGGED");
+                    setPin('');
+                    // Εδώ θα μπορούσε να μπει το Silent Logging για τον M10 [cite: 70]
+                }
+            };
+
+            const toggleSunMode = () => setSunMode(!sunMode);
+
+            if (isLocked) {
+                return (
+                    <div className={`min-h-screen flex flex-col items-center justify-center p-6 italic transition-all ${sunMode ? 'sun-mode' : ''}`}>
+                        <button onClick={toggleSunMode} className="absolute top-6 right-6 text-2xl p-4 glass rounded-full shadow-lg active:scale-90 transition-transform">
+                            {sunMode ? <i className="fa-solid fa-moon"></i> : <i className="fa-solid fa-sun text-orange-500"></i>}
+                        </button>
+                        
+                        <div className="glass p-10 rounded-[3rem] border-orange-500/20 text-center shadow-2xl max-w-sm w-full">
+                            <i className="fa-solid fa-shield-halved text-5xl text-orange-600 mb-6 animate-pulse-custom"></i>
+                            <h1 className="text-2xl font-black uppercase tracking-tighter mb-8">NauticalOS V5.0</h1>
+                            
+                            <input 
+                                type="password" 
+                                value={pin} 
+                                onChange={(e) => setPin(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && unlock()}
+                                placeholder="ENTER MASTER PIN"
+                                className={`bg-black/50 border border-white/10 p-5 rounded-2xl text-center text-3xl font-black mb-6 w-full outline-none focus:border-orange-500 transition-all ${sunMode ? 'bg-slate-100 border-slate-300' : ''}`}
+                            />
+                            
+                            <button 
+                                onClick={unlock}
+                                className="w-full bg-orange-600 hover:bg-orange-500 p-5 rounded-2xl font-black uppercase text-sm tracking-widest active:scale-95 transition-all shadow-lg shadow-orange-900/20"
+                            >
+                                Authorize Bridge Access
+                            </button>
+                            <p className="mt-6 text-[10px] uppercase opacity-40 font-bold tracking-widest">Admin Override Required [Art.2]</p>
+                        </div>
+                    </div>
+                );
+            }
+
+            return (
+                <div className={`min-h-screen p-6 transition-all ${sunMode ? 'sun-mode' : 'bg-slate-950 text-slate-200'}`}>
+                    {/* Header Section */}
+                    <div className="flex justify-between items-center mb-10 glass p-6 rounded-[2rem]">
+                        <div>
+                            <h1 className="text-3xl font-black uppercase italic tracking-tighter">Command Hub</h1>
+                            <p className="text-[10px] font-bold text-orange-500 tracking-[0.3em] uppercase">Piraeus Sector Active</p>
+                        </div>
+                        <div className="flex gap-4">
+                            <button onClick={toggleSunMode} className="p-4 glass rounded-2xl hover:bg-white/5 transition-all">
+                                <i className={`fa-solid ${sunMode ? 'fa-moon' : 'fa-sun text-orange-400'}`}></i>
+                            </button>
+                            <button onClick={() => { sessionStorage.removeItem('ntg_global_auth'); window.location.reload(); }} className="p-4 glass rounded-2xl text-red-500 hover:bg-red-500/10 transition-all">
+                                <i className="fa-solid fa-power-off"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Division Grid - Fat-Finger Design [cite: 15, 63, 76] */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
+                        
+                        {/* M4 RADAR - Vessel Hunter [cite: 2] */}
+                        <a href="m4_radar.html" className="glass p-8 rounded-[2.5rem] hover:border-orange-500/50 transition-all group relative overflow-hidden">
+                            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-100 transition-opacity">
+                                <i className="fa-solid fa-tower-observation text-4xl"></i>
+                            </div>
+                            <h2 className="text-xl font-black uppercase mb-2">M4 Radar</h2>
+                            <p className="text-xs font-bold opacity-60 uppercase mb-4 tracking-wider text-orange-400">Vessel Hunter / Lead Gen</p>
+                            <div className="flex items-center gap-2 text-[10px] font-black uppercase bg-orange-600/10 text-orange-500 px-3 py-1 rounded-full w-fit">
+                                <span className="relative flex h-2 w-2">
+                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
+                                  <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-500"></span>
+                                </span>
+                                Scanning Piraeus
+                            </div>
+                        </a>
+
+                        {/* M3 LOAD TEST - Pro Logic [cite: 126] */}
+                        <a href="m3_loadtest.html" className="glass p-8 rounded-[2.5rem] hover:border-blue-500/50 transition-all group">
+                            <h2 className="text-xl font-black uppercase mb-2">M3 Load Test</h2>
+                            <p className="text-xs font-bold opacity-60 uppercase mb-4 tracking-wider text-blue-400">ILO 152 & MEG4 Certified</p>
+                            <div className="text-[10px] font-black uppercase bg-blue-600/10 text-blue-500 px-3 py-1 rounded-full w-fit">Math Engines Ready</div>
+                        </a>
+
+                        {/* M5 TERME - War Room [cite: 21] */}
+                        <a href="m5_terme.html" className="glass p-8 rounded-[2.5rem] border-red-500/20 hover:border-red-500/50 transition-all group">
+                            <h2 className="text-xl font-black uppercase mb-2">M5 War Room</h2>
+                            <p className="text-xs font-bold opacity-60 uppercase mb-4 tracking-wider text-red-500">Silent Siege Protocol</p>
+                            <div className="text-[10px] font-black uppercase bg-red-600/10 text-red-500 px-3 py-1 rounded-full w-fit">Forensic Dossier Active</div>
+                        </a>
+
+                        {/* M14 COMMERCIAL [cite: 58] */}
+                        <a href="m14_commercial.html" className="glass p-8 rounded-[2.5rem] hover:border-emerald-500/50 transition-all group">
+                            <h2 className="text-xl font-black uppercase mb-2">M14 Intel</h2>
+                            <p className="text-xs font-bold opacity-60 uppercase mb-4 tracking-wider text-emerald-400">Commercial Manager</p>
+                            <div className="text-[10px] font-black uppercase bg-emerald-600/10 text-emerald-500 px-3 py-1 rounded-full w-fit">Revenue Forecast</div>
+                        </a>
+
+                        {/* M8 ACADEMY [cite: 44] */}
+                        <a href="m8_academy.html" className="glass p-8 rounded-[2.5rem] hover:border-purple-500/50 transition-all group">
+                            <h2 className="text-xl font-black uppercase mb-2">M8 Academy</h2>
+                            <p className="text-xs font-bold opacity-60 uppercase mb-4 tracking-wider text-purple-400">Knowledge Fortress</p>
+                            <div className="text-[10px] font-black uppercase bg-purple-600/10 text-purple-500 px-3 py-1 rounded-full w-fit">DNV / ISGOTT Vault</div>
+                        </a>
+
+                    </div>
+                    
+                    <footer className="mt-20 text-center opacity-30">
+                        <p className="text-[10px] font-black uppercase tracking-[0.5em]">Nautical Technology Group © 2026</p>
+                        <p className="text-[8px] font-bold mt-2">V4 Constitution Compliant • Independent Fortress Architecture</p>
+                    </footer>
                 </div>
-            </div>
-        );
-    }
+            );
+        };
 
-    return (
-        /* ΕΔΩ ΜΠΑΙΝΕΙ ΟΛΟ ΤΟ GRID ΜΕ ΤΑ 15 DIVISIONS ΠΟΥ ΦΤΙΑΞΑΜΕ */
-        <div className="p-6">
-            <h1 className="text-2xl font-black uppercase italic">Command Hub Active</h1>
-            {/* ... Το Grid των Divisions ... */}
-        </div>
-    );
-};
-ReactDOM.createRoot(document.getElementById('root')).render(<MainHub />);
-</script>
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<MainHub />);
+    </script>
+</body>
+</html>

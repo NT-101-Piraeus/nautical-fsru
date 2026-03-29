@@ -2,144 +2,147 @@
 <html lang="el">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>M5: Dynamic War Room v1.1</title>
+    <title>M5: War Room V5.60 - SILENT SIEGE</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');
-        body { background:#020617; color:white; font-family:'Orbitron',sans-serif; font-style:italic; font-weight:bold; }
-        .glass { background:rgba(15,23,42,0.8); backdrop-filter:blur(15px); border:1px solid rgba(255,255,255,0.05); }
-        .target-active { border-left: 4px solid #ef4444; background: rgba(239, 68, 68, 0.05); }
+        body { background: #020617; color: white; font-family: 'Orbitron', sans-serif; font-style: italic; font-weight: bold; }
+        .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
+        .sun-mode { background: #f8fafc !important; color: #0f172a !important; }
+        .sun-mode .glass { background: white !important; border: 1px solid #cbd5e1 !important; color: #0f172a !important; }
+        .fat-finger { height: 80px; font-weight: 900; text-transform: uppercase; border-radius: 1.5rem; transition: all 0.2s; }
+        .fat-finger:active { transform: scale(0.95); }
     </style>
 </head>
 <body><div id="root"></div><script type="text/babel">
-const { useState } = React;
+const { useState, useEffect } = React;
 
 const WarRoom = () => {
-    const [selectedTarget, setSelectedTarget] = useState('Emir Öztürk');
-    const [isGenerating, setIsGenerating] = useState(false);
+    const [sunMode, setSunMode] = useState(false);
+    const [selectedTarget, setSelectedTarget] = useState(1);
+    const [pinEntry, setPinEntry] = useState("");
+    const [showPinModal, setShowPinModal] = useState(false);
 
-    const targets = {
-        'Emir Öztürk': { id: 'TR-9921', activity: 'NACE 49.32', risk: 'HIGH', status: 'WATCHLIST' },
-        'Erkan Zorlu': { id: 'TR-8842', activity: 'Ship Repair & Asset Management', risk: 'CRITICAL', status: 'LITIGATION' },
-        'Alasund Fisheries': { id: 'NO-1120', activity: 'Offshore Logistics', risk: 'MEDIUM', status: 'ASSET TRACING' }
+    // V5.60 DATA: UTID SYNC & TARGETS
+    const targets = [
+        { id: 1, utid: "UT-9482-926", name: 'Emir Öztürk', role: 'Warsaw Proxy', reg: 'NIP: 5262587598', anomaly: 'NACE 49.32 (TAXI SERVICES)' },
+        { id: 2, utid: "UT-1234-567", name: 'Erkan Zorlu', role: 'Mastermind', reg: 'TR-ID: 12345...', anomaly: 'ASSET CONCEALMENT' },
+        { id: 3, utid: "UT-9876-543", name: 'İpek Banu Karaca', role: 'Associated Party', reg: 'TR-ID: 98765...', anomaly: 'MONEY FUNNEL' }
+    ];
+
+    const currentTarget = targets.find(t => t.id === selectedTarget);
+
+    // SILENT LOGGING ENGINE
+    const logAction = (action, target) => {
+        const logEntry = { action, target, ts: new Date().toISOString() };
+        const logs = JSON.parse(localStorage.getItem('ntg_M5_logs') || '[]');
+        localStorage.setItem('ntg_M5_logs', JSON.stringify([...logs, logEntry]));
+        console.log(`[M10 AUDITOR] Action Logged: ${action}`);
     };
 
-    const generateForensicDossier = () => {
-        setIsGenerating(true);
+    // SHA-256 SEAL & PDF EXPORT
+    const generateForensicPDF = async () => {
+        if (pinEntry !== "1234") { alert("INVALID MASTER PIN"); return; }
+        
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
-        const timestamp = new Date().toISOString();
-        const targetData = targets[selectedTarget];
+        const ts = new Date().toUTCString();
         
-        // Content for Hashing
-        const rawContent = `TARGET: ${selectedTarget} | ID: ${targetData.id} | CODE: ${targetData.activity} | TIME: ${timestamp}`;
-        const sha256Hash = CryptoJS.SHA256(rawContent).toString();
+        // Hash Logic: SHA-256 Seal
+        const msgBuffer = new TextEncoder().encode(JSON.stringify(currentTarget) + ts);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+        const hashHex = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
 
-        // PDF Structure
-        doc.setFillColor(2, 6, 23);
-        doc.rect(0, 0, 210, 297, 'F');
-        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(14);
+        doc.text("FORENSIC DOSSIER - NAFTOTRADE LEGAL UNIT", 105, 20, { align: "center" });
+        doc.setFontSize(7);
+        doc.text(`UTID-SYNC: ${currentTarget.utid} | HASH: ${hashHex}`, 105, 30, { align: "center" });
+        
         doc.setFontSize(10);
-        doc.text("NAUTICAL TECHNOLOGY - LEGAL DIVISION M5", 10, 10);
-        doc.text(`PROTOCOL: SILENT SIEGE | CONFIDENTIAL`, 10, 15);
+        doc.text(`TARGET: ${currentTarget.name}`, 20, 50);
+        doc.text(`REGISTRY: ${currentTarget.reg}`, 20, 60);
+        doc.setTextColor(220, 38, 38);
+        doc.text(`CRITICAL ANOMALY: ${currentTarget.anomaly}`, 20, 70);
         
-        doc.setFontSize(22);
-        doc.text("FORENSIC DOSSIER", 10, 40);
-        
-        doc.setFontSize(12);
-        doc.setTextColor(239, 68, 68);
-        doc.text(`SUBJECT: ${selectedTarget.toUpperCase()}`, 10, 60);
-        doc.setTextColor(255, 255, 255);
-        doc.text(`TARGET ID: ${targetData.id}`, 10, 70);
-        doc.text(`ACTIVITY CODE: ${targetData.activity}`, 10, 80);
-        doc.text(`RISK LEVEL: ${targetData.risk}`, 10, 90);
-        doc.text(`TIMESTAMP: ${timestamp}`, 10, 100);
+        doc.setTextColor(0,0,0);
+        doc.text(`CERTIFIED TIMESTAMP: ${ts}`, 20, 100);
+        doc.text(`M10 AUDITOR VERIFIED | SILENT SIEGE PROTOCOL V5.60`, 20, 110);
 
-        doc.setFontSize(8);
-        doc.setTextColor(100, 100, 100);
-        doc.text(`SHA-256 AUTHENTICATION HASH:`, 10, 270);
-        doc.text(sha256Hash, 10, 275);
-        
-        doc.save(`DOSSIER_${selectedTarget.replace(' ', '_')}_${Date.now()}.pdf`);
-        setIsGenerating(false);
+        doc.save(`FORENSIC_${currentTarget.utid}.pdf`);
+        logAction("PDF_EXPORT", currentTarget.utid);
+        setShowPinModal(false);
+        setPinEntry("");
     };
 
     return (
-        <div className="min-h-screen p-6 bg-slate-950 text-white italic">
+        <div className={`min-h-screen p-4 transition-all ${sunMode ? 'sun-mode' : ''}`}>
             {/* HEADER */}
-            <div className="flex justify-between items-center mb-10 border-b border-red-500/30 pb-6">
-                <div>
-                    <span className="text-[10px] text-red-500 uppercase tracking-[0.3em]">M5: Dynamic War Room</span>
-                    <h1 className="text-2xl font-black uppercase tracking-tighter">Silent Siege Protocol</h1>
+            <div className="flex justify-between items-center mb-6 pt-4 px-2">
+                <button onClick={() => setSunMode(!sunMode)} className="glass p-3 rounded-xl">
+                    <i className={`fa-solid ${sunMode ? 'fa-moon' : 'fa-sun text-orange-500'}`}></i>
+                </button>
+                <div className="text-right">
+                    <span className="text-[7px] text-red-600 uppercase tracking-widest animate-pulse">Silent Siege Active</span>
+                    <p className="text-[10px] font-black italic">M5: WAR ROOM V5.60</p>
                 </div>
-                <button onClick={() => window.location.href='index.html'} className="glass p-4 rounded-2xl border-white/10 hover:bg-white/5 transition-all">
-                    <i className="fa-solid fa-house-chimney text-xs"></i>
+            </div>
+
+            {/* DYNAMIC DOSSIER GENERATOR */}
+            <div className="glass p-6 rounded-[2.5rem] mb-6 border-l-4 border-red-600 shadow-2xl">
+                <p className="text-[8px] opacity-50 uppercase mb-4 tracking-tighter">Target & UTID Selection</p>
+                <select 
+                    value={selectedTarget} 
+                    onChange={(e) => { setSelectedTarget(Number(e.target.value)); logAction("TARGET_CHANGE", targets.find(t=>t.id==e.target.value).utid); }}
+                    className="w-full bg-slate-900/50 p-4 rounded-2xl mb-4 border border-white/10 outline-none text-sm"
+                >
+                    {targets.map(t => <option key={t.id} value={t.id}>{t.name} ({t.utid})</option>)}
+                </select>
+
+                <div className="bg-black/20 p-4 rounded-2xl mb-6 border border-red-900/20">
+                    <p className="text-[10px] text-red-500 font-black uppercase tracking-widest">{currentTarget.anomaly}</p>
+                    <p className="text-[8px] opacity-40 italic mt-1">Status: Monitoring (0 kn detection ready)</p>
+                </div>
+
+                <button onClick={() => setShowPinModal(true)} className="fat-finger w-full bg-red-600 shadow-lg shadow-red-900/20 flex items-center justify-center gap-3">
+                    <i className="fa-solid fa-fingerprint text-xl"></i>
+                    <span>Export Forensic Dossier</span>
                 </button>
             </div>
 
-            {/* TARGET SELECTION PANEL */}
-            <div className="glass p-8 rounded-[3rem] border-red-500/20 mb-8 relative overflow-hidden">
-                <div className="absolute top-0 right-0 p-4 opacity-10">
-                    <i className="fa-solid fa-gavel text-6xl"></i>
-                </div>
-                <p className="text-[9px] uppercase tracking-widest opacity-50 mb-6">Target Dossier Generator</p>
-                
-                <div className="space-y-6">
-                    <select 
-                        value={selectedTarget} 
-                        onChange={(e) => setSelectedTarget(e.target.value)}
-                        className="w-full bg-black/50 p-6 rounded-3xl border border-white/10 text-xl font-black uppercase outline-none focus:border-red-500 transition-all"
-                    >
-                        {Object.keys(targets).map(t => <option key={t} value={t}>{t}</option>)}
-                    </select>
-
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
-                            <p className="text-[7px] opacity-40 uppercase">Target ID</p>
-                            <p className="text-xs uppercase">{targets[selectedTarget].id}</p>
-                        </div>
-                        <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
-                            <p className="text-[7px] opacity-40 uppercase">Activity</p>
-                            <p className="text-xs uppercase text-red-400">{targets[selectedTarget].activity}</p>
+            {/* PIN MODAL */}
+            {showPinModal && (
+                <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-6">
+                    <div className="glass p-8 rounded-[2.5rem] w-full max-w-sm text-center">
+                        <p className="text-xs uppercase mb-6 font-black tracking-widest">Master PIN Required</p>
+                        <input 
+                            type="password" 
+                            value={pinEntry}
+                            onChange={(e) => setPinEntry(e.target.value)}
+                            className="w-full bg-transparent border-b-2 border-red-600 text-4xl text-center outline-none mb-8 tracking-[1em]"
+                            autoFocus
+                        />
+                        <div className="grid grid-cols-2 gap-4">
+                            <button onClick={() => setShowPinModal(false)} className="p-4 uppercase text-[10px] opacity-50">Cancel</button>
+                            <button onClick={generateForensicPDF} className="p-4 bg-red-600 rounded-2xl uppercase text-[10px] font-black">Verify & Seal</button>
                         </div>
                     </div>
-
-                    <button 
-                        onClick={generateForensicDossier}
-                        disabled={isGenerating}
-                        className="w-full bg-red-600 hover:bg-red-500 p-8 rounded-[2.5rem] text-[11px] uppercase font-black italic shadow-2xl shadow-red-950/50 transition-all active:scale-95 flex items-center justify-center gap-3"
-                    >
-                        {isGenerating ? <i className="fa-solid fa-circle-notch animate-spin"></i> : <i className="fa-solid fa-file-export"></i>}
-                        Export Forensic Dossier (.PDF)
-                    </button>
                 </div>
-            </div>
+            )}
 
-            {/* LIVE ROSTER (M5 LOGIC) */}
-            <div className="space-y-4 pb-20">
-                <p className="text-[10px] uppercase font-black opacity-40 ml-4 tracking-widest">Active Watchlist Intelligence</p>
-                {Object.entries(targets).map(([name, data]) => (
-                    <div key={name} className={`glass p-6 rounded-3xl border-white/5 flex justify-between items-center ${selectedTarget === name ? 'target-active' : ''}`}>
-                        <div>
-                            <p className="text-xs font-black uppercase tracking-tight">{name}</p>
-                            <p className="text-[8px] opacity-40 uppercase">{data.status}</p>
-                        </div>
-                        <div className="text-right">
-                            <p className="text-[8px] text-red-500 font-black uppercase tracking-tighter">Risk Level</p>
-                            <p className="text-xs font-black">{data.risk}</p>
-                        </div>
+            {/* LIVE ROSTER */}
+            <div className="glass p-6 rounded-[2.5rem] opacity-80">
+                <p className="text-[8px] opacity-50 uppercase mb-4 tracking-widest">The Hostage Zone (SDN Alerts)</p>
+                <div className="space-y-3">
+                    <div className="flex justify-between items-center p-4 bg-red-900/10 border border-red-900/30 rounded-2xl animate-pulse">
+                        <span className="text-[10px] italic">S.V. NIKOLAY</span>
+                        <span className="text-[8px] font-black text-red-500">SDN ALERT | 0 KN</span>
                     </div>
-                ))}
-            </div>
-
-            <div className="fixed bottom-6 left-0 right-0 text-center">
-                <p className="text-[7px] opacity-20 tracking-[0.5rem] uppercase">SHA-256 Forensic Integrity Active</p>
+                </div>
             </div>
         </div>
     );

@@ -2,67 +2,56 @@
 <html lang="el">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NauticalOS: Command Hub v4.55</title>
+    <title>NauticalOS: Full Command Hub v4.60</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <style>@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');body{background:#020617;color:white;font-family:'Orbitron',sans-serif;font-style:italic;font-weight:bold;}.glass{background:rgba(15,23,42,0.7);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.1);}</style>
+    <style>@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');body{background:#020617;color:white;font-family:'Orbitron',sans-serif;font-style:italic;font-weight:bold;}.glass{background:rgba(15,23,42,0.7);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.1);}.active-box{border:1px solid rgba(249,115,22,0.4);box-shadow:0 0 15px rgba(249,115,22,0.1);}</style>
 </head>
 <body><div id="root"></div><script type="text/babel">
 const { useState, useEffect } = React;
 
-const HubCommand = () => {
-    const [stats, setStats] = useState({ won: 0, revenue: 0, alerts: 0 });
-
-    useEffect(() => {
-        try {
-            const m3Jobs = JSON.parse(localStorage.getItem('ntg_M3_jobs') || '[]');
-            const m14Offers = JSON.parse(localStorage.getItem('ntg_M14_offers') || '[]');
-            setStats({
-                won: m3Jobs.filter(j => j.status === 'WON').length,
-                revenue: m14Offers.filter(o => o.status === 'WON').reduce((acc, curr) => acc + curr.value, 0),
-                alerts: m3Jobs.length > 0 ? 1 : 0
-            });
-        } catch (e) { console.error("Safe Boot Active: Data Reset"); }
-    }, []);
+const Hub = () => {
+    const divisions = [
+        { id: 'M1', name: 'Command Hub', icon: 'fa-gauge-high', color: 'text-white', active: true, link: 'index.html' },
+        { id: 'M2', name: 'Safety Watch', icon: 'fa-shield-halved', color: 'text-blue-500', active: true, link: 'm2_safety.html' },
+        { id: 'M3', name: 'Load Test Pro', icon: 'fa-anchor', color: 'text-orange-500', active: true, link: 'm3_loadtest.html' },
+        { id: 'M4', name: 'Radar Hunter', icon: 'fa-crosshairs', color: 'text-red-500', active: true, link: 'm4_radar.html' },
+        { id: 'M5', name: 'UTM Analysis', icon: 'fa-layer-group', color: 'text-slate-500', active: false },
+        { id: 'M6', name: 'NDT Report', icon: 'fa-magnifying-glass', color: 'text-slate-500', active: false },
+        { id: 'M7', name: 'Legal Shield', icon: 'fa-scale-balanced', color: 'text-slate-500', active: false },
+        { id: 'M8', name: 'Academy', icon: 'fa-graduation-cap', color: 'text-blue-400', active: true, link: 'm8_academy.html' },
+        { id: 'M9', name: 'Operation GEM', icon: 'fa-robot', color: 'text-slate-500', active: false },
+        { id: 'M10', name: 'Supreme Auditor', icon: 'fa-eye', color: 'text-purple-500', active: true, link: '#' },
+        { id: 'M11', name: 'Client Vault', icon: 'fa-address-book', color: 'text-slate-500', active: false },
+        { id: 'M12', name: 'The Scout', icon: 'fa-user-secret', color: 'text-slate-500', active: false },
+        { id: 'M13', name: 'Mykonos Sync', icon: 'fa-rotate', color: 'text-slate-500', active: false },
+        { id: 'M14', name: 'Commercial Intel', icon: 'fa-vault', color: 'text-emerald-500', active: true, link: 'm14_commercial.html' }
+    ];
 
     return (
-        <div className="min-h-screen p-6 bg-slate-950 text-white italic">
-            <div className="mb-10 flex justify-between items-end border-b border-white/10 pb-6">
-                <div><h1 className="text-2xl font-black uppercase tracking-tighter">NauticalOS Hub</h1><p className="text-[9px] text-blue-400 font-black uppercase">Fleet Command</p></div>
-                <div className="text-right"><p className="text-[10px] font-black text-orange-500 italic">ADMIN: 1234</p></div>
+        <div className="min-h-screen p-6 animate-fade">
+            <div className="mb-8 border-b border-white/10 pb-6">
+                <h1 className="text-xl font-black uppercase tracking-tighter">NauticalOS Hub</h1>
+                <p className="text-[8px] text-blue-400 uppercase font-black italic">14 Divisions Active | v4.60</p>
             </div>
 
-            {/* COMMERCIAL PULSE CARD */}
-            <div className="mb-8 glass p-8 rounded-[3rem] border-emerald-500/30 active:scale-95 transition-all" onClick={() => window.location.href='m14_commercial.html'}>
-                <div className="flex justify-between items-center mb-4 text-emerald-500"><span className="text-[10px] font-black uppercase">Commercial Pulse</span><i className="fa-solid fa-chart-line"></i></div>
-                <p className="text-[8px] opacity-50 uppercase">Secured Revenue</p>
-                <p className="text-3xl font-black">€{stats.revenue.toLocaleString()}</p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {divisions.map((div) => (
+                    <div key={div.id} 
+                         onClick={() => div.active && (window.location.href = div.link)}
+                         className={`glass p-6 rounded-[2.5rem] text-center transition-all ${div.active ? 'active:scale-95 active-box opacity-100' : 'opacity-30 grayscale'}`}>
+                        <i className={`fa-solid ${div.icon} text-2xl mb-3 ${div.color}`}></i>
+                        <p className="text-[9px] font-black uppercase tracking-widest">{div.id}</p>
+                        <p className="text-[7px] opacity-60 uppercase font-black">{div.name}</p>
+                    </div>
+                ))}
             </div>
-
-            {/* PERFECT GRID - 2x2 NO GAPS */}
-            <div className="grid grid-cols-2 gap-4">
-                <button onClick={() => window.location.href='m2_safety.html'} className="glass p-10 rounded-[3rem] border-blue-500/30 active:scale-95 transition-all">
-                    <i className="fa-solid fa-shield-halved text-3xl mb-4 text-blue-500"></i>
-                    <p className="text-[10px] font-black uppercase">M2 Safety</p>
-                </button>
-                <button onClick={() => window.location.href='m3_loadtest.html'} className="glass p-10 rounded-[3rem] border-orange-500/30 active:scale-95 transition-all">
-                    <i className="fa-solid fa-anchor text-3xl mb-4 text-orange-500"></i>
-                    <p className="text-[10px] font-black uppercase">M3 Load Test</p>
-                </button>
-                <button onClick={() => window.location.href='m14_commercial.html'} className="glass p-10 rounded-[3rem] border-emerald-500/30 active:scale-95 transition-all">
-                    <i className="fa-solid fa-vault text-3xl mb-4 text-emerald-500"></i>
-                    <p className="text-[10px] font-black uppercase">M14 Intel</p>
-                </button>
-                <button className="glass p-10 rounded-[3rem] border-white/10 opacity-30 grayscale">
-                    <i className="fa-solid fa-satellite-dish text-3xl mb-4"></i>
-                    <p className="text-[10px] font-black uppercase">M4 Radar</p>
-                </button>
-            </div>
+            <p className="fixed bottom-6 left-0 right-0 text-center text-[7px] opacity-20 uppercase tracking-[0.4rem]">Command Bridge System © 2026</p>
         </div>
     );
 };
-ReactDOM.createRoot(document.getElementById('root')).render(<HubCommand />);
+ReactDOM.createRoot(document.getElementById('root')).render(<Hub />);
 </script></body></html>

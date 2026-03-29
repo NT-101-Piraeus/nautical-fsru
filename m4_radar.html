@@ -1,46 +1,10 @@
-<script type="text/babel">
-const { useState, useEffect } = React;
-
-const RadarApp = () => {
-    const [isAuthorized, setIsAuthorized] = useState(false);
-    const [pin, setPin] = useState('');
-    const [vessels, setVessels] = useState([]);
-
-    // --- SECURITY GATE: PIN CHECK ON LOAD ---
-    const handleLogin = () => {
-        if (pin === '1234') { 
-            setIsAuthorized(true);
-            sessionStorage.setItem('ntg_M4_auth', 'true'); // Keeps you logged in until tab closes
-        } else { alert("WRONG PIN"); }
-    };
-
-    useEffect(() => {
-        // Safe Data Loading
-        try {
-            const saved = localStorage.getItem('ntg_M4_radar');
-            setVessels(saved ? JSON.parse(saved) : []);
-            if (sessionStorage.getItem('ntg_M4_auth') === 'true') setIsAuthorized(true);
-        } catch (e) { console.error("Radar Crash Prevented"); setVessels([]); }
-    }, []);
-
-    if (!isAuthorized) {
-        return (
-            <div className="min-h-screen flex flex-col items-center justify-center bg-slate-950 p-6 italic">
-                <i className="fa-solid fa-crosshairs text-4xl text-red-500 mb-6 animate-pulse"></i>
-                <h2 className="text-sm font-black mb-4 uppercase tracking-widest">M4 Radar Access Lock</h2>
-                <input type="password" value={pin} onChange={(e)=>setPin(e.target.value)} placeholder="ENTER PIN" className="bg-black border border-white/10 p-4 rounded-2xl text-center outline-none mb-4" />
-                <button onClick={handleLogin} className="bg-red-600 px-10 py-4 rounded-full font-black text-[10px] uppercase">Authorize</button>
-            </div>
-        );
+useEffect(() => {
+    try {
+        const saved = localStorage.getItem('ntg_M4_radar');
+        // Αν το saved είναι "undefined" ή "null", επιστρέφει άδειο πίνακα [] αντί να κρασάρει
+        setVessels(saved ? JSON.parse(saved) : []); 
+    } catch (error) {
+        console.error("Data Corruption Detected. Resetting Radar View.");
+        setVessels([]);
     }
-
-    return (
-        /* ... Το υπόλοιπο UI του Radar όπως το ξέρουμε ... */
-        <div className="p-6">
-            <h1 className="text-xl font-black uppercase italic">Piraeus Fleet Watch</h1>
-            {/* Radar Content Here */}
-        </div>
-    );
-};
-ReactDOM.createRoot(document.getElementById('root')).render(<RadarApp />);
-</script>
+}, []);

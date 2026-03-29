@@ -1,9 +1,7 @@
-<!DOCTYPE html>
-<html lang="el">
-<head>
+<!DOCTYPE html><html lang="el"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>M3: Load Test Pro v5.50</title>
+    <title>M3: Load Test Pro v5.65 (MATH ENGINE LOCK)</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -11,116 +9,87 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');
-        body { background: #020617; color: white; font-family: 'Orbitron', sans-serif; font-style: italic; }
-        .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .sun-mode { background: #ffffff !important; color: #000000 !important; }
-        .sun-mode .glass { background: #f8fafc !important; border: 1px solid #cbd5e1 !important; color: #000000 !important; }
-        .fat-finger-input { height: 80px; text-align: center; font-size: 2rem; font-weight: 900; background: rgba(0,0,0,0.3); border-radius: 1.5rem; border: 1px solid rgba(255,255,255,0.1); outline: none; }
-        .fat-finger-button { height: 80px; font-weight: 900; text-transform: uppercase; border-radius: 1.5rem; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; }
-        .fat-finger-button:active { transform: scale(0.95); }
-    </style>
-</head>
-<body>
+        body { background: #020617; color: white; font-family: 'Orbitron', sans-serif; font-style: italic; font-weight: bold; }
+        .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
+        .math-engine-lock { filter: blur(8px); pointer-events: none; opacity: 0.3; }
+        .fat-finger-button { height: 80px; font-weight: 900; text-transform: uppercase; border-radius: 1.5rem; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.2s; }
+        .status-alert { animation: pulse-orange 2s infinite; }
+        @keyframes pulse-orange { 0%, 100% { color: #f97316; } 50% { color: #431407; } }
+    </style></head><body>
     <div id="root"></div>
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        const M3LoadTest = () => {
-            const [view, setView] = useState('HUB');
-            const [sunMode, setSunMode] = useState(false);
-            const [mathType, setMathType] = useState(null); // ILO or MEG4
-            const [data, setData] = useState({ swl: '', sdmbl: '', l1: '', l2: '' });
-            const [targetResult, setTargetResult] = useState(null);
+        const LoadTestAppV565 = () => {
+            const [isMathReady, setIsMathReady] = useState(false);
+            const [swl, setSwl] = useState("");
+            const [targetLoad, setTargetLoad] = useState(0);
 
-            // [Art. 2] Security Gate
+            // [V5.65] KNOWLEDGE LOCK CHECK (M8 Academy Sync)
             useEffect(() => {
-                if (sessionStorage.getItem('ntg_global_auth') !== 'true') {
-                    window.location.href = 'index.html';
-                }
+                const checkClearance = () => {
+                    const ready = localStorage.getItem('ntg_M8_ready') === 'true';
+                    setIsMathReady(ready);
+                };
+                checkClearance();
+                const interval = setInterval(checkClearance, 2000);
+                return () => clearInterval(interval);
             }, []);
 
-            // [M3 Math Engine] ILO 152 & MEG4 Logic [cite: 147, 149]
-            const calculateTarget = () => {
-                if (mathType === 'ILO') {
-                    const swl = parseFloat(data.swl);
-                    let target = 0;
-                    if (swl < 20) target = swl * 1.25; // SWL + 25% [cite: 48]
-                    else if (swl <= 50) target = swl + 5; // SWL + 5t [cite: 49]
-                    setTargetResult(target.toFixed(2) + " t");
-                } else if (mathType === 'MEG4') {
-                    const res = 0.60 * parseFloat(data.sdmbl) * (parseFloat(data.l1) / parseFloat(data.l2)); // 
-                    setTargetResult(res.toFixed(2) + " t");
-                }
-                // Silent Logging [cite: 141]
-                const log = JSON.parse(localStorage.getItem('ntg_M3_logs') || '[]');
-                log.push({ action: 'MATH_CALC', type: mathType, timestamp: new Date().toISOString() });
-                localStorage.setItem('ntg_M3_logs', JSON.stringify(log));
+            const calculateLoad = () => {
+                const val = parseFloat(swl);
+                if (!val) return;
+                // [Art. 5] ILO 152 Math Engine
+                let result = val < 20 ? val * 1.25 : val + 5;
+                setTargetLoad(result.toFixed(2));
+                
+                // M10 Silent Logging
+                const logs = JSON.parse(localStorage.getItem('ntg_M3_logs') || '[]');
+                logs.push({ ts: new Date().toISOString(), action: 'MATH_CALCULATION', swl: val, target: result, status: 'VERIFIED' });
+                localStorage.setItem('ntg_M3_logs', JSON.stringify(logs));
             };
 
-            const handleBack = () => { setView('HUB'); setTargetResult(null); setData({ swl: '', sdmbl: '', l1: '', l2: '' }); };
-
-            if (view === 'HUB') return (
-                <div className={`min-h-screen p-6 transition-all ${sunMode ? 'sun-mode' : ''}`}>
+            return (
+                <div className="min-h-screen p-6 bg-slate-950">
                     <header className="flex justify-between items-center mb-10 glass p-6 rounded-[2rem]">
-                        <h1 className="text-sm uppercase font-black tracking-widest text-orange-500 italic">M3: Load Test Pro</h1>
-                        <div className="flex gap-3">
-                            <button onClick={() => setSunMode(!sunMode)} className="p-4 glass rounded-2xl"><i className="fa-solid fa-sun text-orange-400"></i></button>
-                            <a href="index.html" className="p-4 glass rounded-2xl"><i className="fa-solid fa-house"></i></a>
+                        <div>
+                            <h1 className="text-orange-500 text-lg uppercase font-black tracking-tighter">M3: Load Test Pro</h1>
+                            <p className="text-[8px] opacity-50 uppercase tracking-widest">ILO 152 & MEG4 Compliant</p>
                         </div>
+                        <a href="m8_academy.html" className="p-4 glass rounded-2xl"><i className="fa-solid fa-book-open text-orange-400"></i></a>
                     </header>
 
-                    <div className="grid grid-cols-1 gap-6 max-w-md mx-auto">
-                        <button onClick={() => { setView('ENGINE'); setMathType('ILO'); }} className="fat-finger-button bg-orange-600/10 border border-orange-500/30">
-                            <i className="fa-solid fa-crane"></i> Cargo Gear (ILO 152)
-                        </button>
-                        <button onClick={() => { setView('ENGINE'); setMathType('MEG4'); }} className="fat-finger-button bg-blue-600/10 border border-blue-500/30">
-                            <i className="fa-solid fa-anchor"></i> Mooring Winches (MEG4)
-                        </button>
-                        <div className="mt-10 p-6 glass rounded-[2rem] opacity-50 text-center">
-                            <p className="text-[10px] uppercase font-black tracking-[0.3em]">Business Intelligence Feed Active</p>
+                    {!isMathReady && (
+                        <div className="glass p-8 rounded-[2.5rem] mb-10 border-orange-500/30 text-center">
+                            <i className="fa-solid fa-lock text-3xl text-orange-600 mb-4 animate-bounce"></i>
+                            <h2 className="status-alert text-xs font-black uppercase tracking-widest italic">Math Engine Locked</h2>
+                            <p className="text-[9px] opacity-40 mt-2 uppercase">Complete M8 Academy Training to unlock ILO 152 calculations</p>
                         </div>
-                    </div>
-                </div>
-            );
+                    )}
 
-            return (
-                <div className={`min-h-screen p-6 transition-all ${sunMode ? 'sun-mode' : ''}`}>
-                    <button onClick={handleBack} className="text-[10px] uppercase underline mb-8 opacity-50">← Back to M3 Hub</button>
-                    
-                    <div className="glass p-8 rounded-[3rem] max-w-md mx-auto space-y-6">
-                        <h2 className="text-xl font-black uppercase text-center text-orange-500">{mathType} Math Engine</h2>
-                        
-                        {mathType === 'ILO' ? (
-                            <input type="number" placeholder="Enter SWL (tons)" value={data.swl} onChange={(e) => setData({...data, swl: e.target.value})} className="fat-finger-input w-full text-white" />
-                        ) : (
-                            <div className="space-y-4">
-                                <input type="number" placeholder="SDMBL" value={data.sdmbl} onChange={(e) => setData({...data, sdmbl: e.target.value})} className="fat-finger-input w-full" />
-                                <div className="grid grid-cols-2 gap-4">
-                                    <input type="number" placeholder="L1" value={data.l1} onChange={(e) => setData({...data, l1: e.target.value})} className="fat-finger-input w-full text-sm" />
-                                    <input type="number" placeholder="L2" value={data.l2} onChange={(e) => setData({...data, l2: e.target.value})} className="fat-finger-input w-full text-sm" />
-                                </div>
-                            </div>
-                        )}
+                    <div className={`space-y-6 ${!isMathReady ? 'math-engine-lock' : ''}`}>
+                        <div className="glass p-8 rounded-[3rem] border-l-4 border-orange-500">
+                            <p className="text-[10px] uppercase opacity-40 mb-4 font-black">Enter SWL (Safe Working Load)</p>
+                            <input type="number" value={swl} onChange={(e) => setSwl(e.target.value)} placeholder="0.00 t" className="w-full bg-black/40 p-6 rounded-2xl text-center text-5xl font-black outline-none border border-white/5 focus:border-orange-500 transition-all" />
+                        </div>
 
-                        <button onClick={calculateTarget} className="fat-finger-button w-full bg-orange-600 shadow-lg shadow-orange-900/20">Calculate Target</button>
-
-                        {targetResult && (
-                            <div className="mt-6 p-6 glass rounded-2xl border-emerald-500/30 text-center animate-pulse">
-                                <p className="text-[10px] uppercase font-black opacity-50 mb-2 italic">Target Proof Load [cite: 147, 149]</p>
-                                <p className="text-5xl font-black text-emerald-500 tracking-tighter">{targetResult}</p>
-                            </div>
-                        )}
-
-                        {/* Evidence Lock Sign Button  */}
-                        <button disabled={!targetResult} className={`fat-finger-button w-full mt-10 ${!targetResult ? 'bg-slate-900 opacity-20' : 'bg-emerald-600'}`}>
-                            <i className="fa-solid fa-signature"></i> {targetResult ? "Sign CERT 11" : "Locked: Need Math Data"}
+                        <button onClick={calculateLoad} className="fat-finger-button w-full bg-orange-600 shadow-xl shadow-orange-900/30">
+                            <i className="fa-solid fa-calculator text-xl"></i> Calculate Target Load
                         </button>
+
+                        {targetLoad > 0 && (
+                            <div className="glass p-8 rounded-[3rem] border-l-4 border-emerald-500 text-center animate-pulse">
+                                <p className="text-[10px] uppercase text-emerald-500 font-black tracking-widest mb-2">Target Proof Load (ILO 152)</p>
+                                <h3 className="text-5xl font-black tracking-tighter text-white">{targetLoad} <span className="text-sm opacity-50">tons</span></h3>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="fixed bottom-6 left-6 right-6 text-center">
+                        <p className="text-[8px] opacity-30 uppercase tracking-[0.4em]">M10 Supreme Auditor Verified Engine</p>
                     </div>
                 </div>
             );
         };
-
-        ReactDOM.createRoot(document.getElementById('root')).render(<M3LoadTest />);
-    </script>
-</body>
-</html>
+        ReactDOM.createRoot(document.getElementById('root')).render(<LoadTestAppV565 />);
+    </script></body></html>

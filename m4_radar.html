@@ -1,38 +1,28 @@
-<script type="text/babel">
-    // ... υπάρχων κώδικας Radar ...
-    const lockTarget = () => {
-        const name = prompt("Enter Vessel Name");
-        if (!name) return;
-        
-        // [V5.85] SMART TRIAGE: Επιλογή τύπου για το M14 Commercial
-        const type = prompt("Enter Vessel Type (TUG, TANKER, LNG, BULKER)", "BULKER").toUpperCase();
-        
-        const utid = generateUTID("PIRAEUS");
-        const newVessel = { 
-            id: utid, 
-            name: name.toUpperCase(), 
-            type: type, // New Intelligence Data [cite: 8]
-            area: 'PIRAEUS', 
-            status: 'LOCKED',
-            ts: new Date().toISOString()
-        };
-        
-        // Save & Sync to Commercial Feed
-        const updated = [...vessels, newVessel];
-        setVessels(updated);
-        localStorage.setItem('ntg_M4_radar', JSON.stringify(updated));
-        
-        // [V5.85 Handshake] Push directly to M14 Intelligence Feed
-        const currentFeed = JSON.parse(localStorage.getItem('ntg_M14_feed') || '[]');
-        const autoQuote = {
-            utid: utid,
-            vessel: name.toUpperCase(),
-            type: type,
-            status: "PENDING",
-            value: type === 'LNG' ? 7500 : (type === 'TANKER' ? 5000 : (type === 'TUG' ? 3500 : 2500)),
-            service: type === 'LNG' ? 'LNG Compliance' : (type === 'TANKER' ? 'MEG4 Test' : 'UTM Survey'),
-            ts: new Date().toISOString()
-        };
-        localStorage.setItem('ntg_M14_feed', JSON.stringify([autoQuote, ...currentFeed]));
-    };
-</script>
+<div className="space-y-6 pb-40">
+    <div className="glass p-6 rounded-[2.5rem] border-l-4 border-emerald-500">
+        <p className="text-[10px] uppercase opacity-40 mb-2 font-black">Shift Status</p>
+        <p className="text-sm font-black text-emerald-500 uppercase">Authorized | Academy Verified</p>
+    </div>
+
+    {/* [V5.65] Fat-Finger Controls */}
+    <div className="grid grid-cols-1 gap-4">
+        <button className="fat-finger-button w-full bg-blue-600 text-white">
+            <i className="fa-solid fa-camera"></i> Capture Smart Evidence
+        </button>
+        <button className="fat-finger-button w-full bg-slate-800 text-white opacity-50">
+            <i className="fa-solid fa-file-signature"></i> Sign Daily Log (Evidence Locked)
+        </button>
+    </div>
+
+    <div className="glass p-6 rounded-[2.5rem] border-l-4 border-orange-500">
+        <h4 className="text-[10px] font-black uppercase mb-4 tracking-widest text-orange-500">P.D. 70/1990 Compliance Tasks</h4>
+        <label className="flex items-center gap-4 mb-4 opacity-70">
+            <input type="checkbox" className="w-5 h-5 rounded" />
+            <span className="text-[10px] uppercase font-black">Fire Watch Established</span>
+        </label>
+        <label className="flex items-center gap-4 opacity-70">
+            <input type="checkbox" className="w-5 h-5 rounded" />
+            <span className="text-[10px] uppercase font-black">Gas-Free Certificate Verified</span>
+        </label>
+    </div>
+</div>

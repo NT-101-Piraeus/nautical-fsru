@@ -1,120 +1,87 @@
 <!DOCTYPE html>
 <html lang="el">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>M4: AIS Radar Live</title>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>M4: Radar Hunter v1.0</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');
-        body { background-color: #020617; color: white; margin: 0; font-family: 'Orbitron', sans-serif; font-style: italic; font-weight: bold; }
-        .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
-        .radar-line { 
-            position: absolute; width: 50%; height: 2px; background: linear-gradient(90deg, transparent, #22d3ee);
-            top: 50%; left: 50%; transform-origin: left center; animation: radar-sweep 4s linear infinite;
-        }
-        @keyframes radar-sweep { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        .blip { animation: ping 2s ease-out infinite; }
-        @keyframes ping { 0% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(3); } }
-    </style>
+    <style>@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');body{background:#020617;color:white;font-family:'Orbitron',sans-serif;font-style:italic;font-weight:bold;}.glass{background:rgba(15,23,42,0.7);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.1);}</style>
 </head>
-<body>
-    <div id="root"></div>
+<body><div id="root"></div><script type="text/babel">
+const { useState, useEffect } = React;
 
-    <script type="text/babel">
-        const { useState, useEffect } = React;
+const RadarApp = () => {
+    const [vessels, setVessels] = useState(() => {
+        const saved = localStorage.getItem('ntg_M4_radar');
+        return saved ? JSON.parse(saved) : [
+            { id: 1, name: 'MT FELIX', status: 'IN PORT', area: 'Piraeus', eta: '2026-03-29' },
+            { id: 2, name: 'MV ARGO', status: 'EXPECTED', area: 'Perama', eta: '2026-04-05' }
+        ];
+    });
 
-        // --- SUPABASE CONFIG ---
-        const SUPABASE_URL = 'https://omdarjncczohpzfrqqhr.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_V-nfUDy5MxEG4SlXkisFBg_GBlD_4Y9';
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const [newVessel, setNewVessel] = useState({ name: '', status: 'EXPECTED', area: 'Piraeus' });
 
-        const RadarApp = () => {
-            const [vessels, setVessels] = useState([]);
-            const [loading, setLoading] = useState(true);
+    const addVessel = () => {
+        if (!newVessel.name) return;
+        const updated = [...vessels, { ...newVessel, id: Date.now() }];
+        setVessels(updated);
+        localStorage.setItem('ntg_M4_radar', JSON.stringify(updated));
+        setNewVessel({ name: '', status: 'EXPECTED', area: 'Piraeus' });
+    };
 
-            useEffect(() => {
-                fetchVessels();
-                // Real-time updates for vessel positions
-                const subscription = supabaseClient
-                    .channel('vessel-updates')
-                    .on('postgres_changes', { event: '*', schema: 'public', table: 'vessel_tracker' }, fetchVessels)
-                    .subscribe();
-                return () => supabaseClient.removeChannel(subscription);
-            }, []);
+    return (
+        <div className="min-h-screen p-6 bg-slate-950 text-white italic">
+            {/* HEADER */}
+            <div className="flex justify-between items-center mb-8 border-b border-red-500/20 pb-4">
+                <div>
+                    <span className="text-[10px] text-red-500 font-black uppercase tracking-tighter">M4: Radar Hunter</span>
+                    <h1 className="text-xl font-black uppercase tracking-tighter italic">Piraeus Sector Active</h1>
+                </div>
+                <button onClick={() => window.location.href='index.html'} className="glass p-3 rounded-xl border-white/10"><i className="fa-solid fa-house text-xs"></i></button>
+            </div>
 
-            const fetchVessels = async () => {
-                const { data, error } = await supabaseClient.from('vessel_tracker').select('*');
-                if (!error) setVessels(data || []);
-                setLoading(false);
-            };
+            {/* ADD VESSEL FORM */}
+            <div className="glass p-6 rounded-[2.5rem] border-white/5 mb-8">
+                <p className="text-[8px] uppercase opacity-50 mb-4 tracking-widest">Add New Target</p>
+                <div className="space-y-4">
+                    <input type="text" placeholder="VESSEL NAME" value={newVessel.name} onChange={(e)=>setNewVessel({...newVessel, name: e.target.value.toUpperCase()})} className="w-full bg-black/50 p-4 rounded-2xl outline-none border border-white/10 text-center" />
+                    <div className="grid grid-cols-2 gap-2">
+                        <select value={newVessel.status} onChange={(e)=>setNewVessel({...newVessel, status: e.target.value})} className="bg-black/50 p-4 rounded-xl border border-white/10 text-[9px] uppercase">
+                            <option value="EXPECTED">Expected</option>
+                            <option value="IN PORT">In Port</option>
+                            <option value="OPPORTUNITY">Opportunity</option>
+                        </select>
+                        <select value={newVessel.area} onChange={(e)=>setNewVessel({...newVessel, area: e.target.value})} className="bg-black/50 p-4 rounded-xl border border-white/10 text-[9px] uppercase">
+                            <option value="Piraeus">Piraeus</option>
+                            <option value="Perama">Perama</option>
+                            <option value="Drapetsona">Drapetsona</option>
+                        </select>
+                    </div>
+                    <button onClick={addVessel} className="w-full bg-red-600 p-5 rounded-[2rem] text-[10px] uppercase font-black italic shadow-lg active:scale-95 transition-all">Lock Target</button>
+                </div>
+            </div>
 
-            return (
-                <div className="min-h-screen p-6 animate-fade bg-slate-950">
-                    <div className="flex justify-between items-center mb-6">
-                        <a href="index.html" className="text-[10px] uppercase underline opacity-60 font-black text-cyan-400">← HUB</a>
-                        <div className="flex items-center gap-2">
-                            <span className="text-[9px] text-cyan-400 font-black uppercase tracking-widest italic animate-pulse">Scanning Horizon...</span>
+            {/* TARGET LIST */}
+            <div className="space-y-4 pb-20">
+                <p className="text-[10px] uppercase font-black opacity-50 italic">Live Radar Feed</p>
+                {vessels.map(v => (
+                    <div key={v.id} className="glass p-6 rounded-3xl border-red-500/20 flex justify-between items-center relative overflow-hidden">
+                        <div className="absolute top-0 left-0 w-1 h-full bg-red-500 opacity-50"></div>
+                        <div>
+                            <p className="text-xs font-black tracking-tight uppercase">{v.name}</p>
+                            <p className="text-[8px] opacity-40 uppercase tracking-widest">{v.area}</p>
+                        </div>
+                        <div className="text-right">
+                            <span className={`text-[8px] px-2 py-1 rounded-full font-black ${v.status==='IN PORT'?'bg-emerald-500/20 text-emerald-500':'bg-blue-500/20 text-blue-500'}`}>{v.status}</span>
                         </div>
                     </div>
-                    
-                    {/* RADAR VISUAL */}
-                    <div className="relative w-48 h-48 mx-auto mb-10 border-2 border-cyan-900/30 rounded-full flex items-center justify-center overflow-hidden bg-cyan-950/10">
-                        <div className="absolute inset-0 opacity-20" style={{backgroundImage: 'radial-gradient(circle, #22d3ee 1px, transparent 1px)', backgroundSize: '20px 20px'}}></div>
-                        <div className="radar-line"></div>
-                        <div className="absolute w-2 h-2 bg-cyan-400 rounded-full blip shadow-[0_0_10px_#22d3ee]"></div>
-                        <i className="fa-solid fa-crosshairs text-cyan-900 text-3xl"></i>
-                    </div>
-
-                    <h1 className="brand text-cyan-400 text-lg uppercase mb-8 italic tracking-tighter text-center">M4: ARRIVALS RADAR</h1>
-                    
-                    <div className="space-y-4">
-                        {loading ? (
-                            <div className="text-center p-10 opacity-50 uppercase text-[10px] animate-pulse italic">Interrogating AIS Satellites...</div>
-                        ) : vessels.map(v => (
-                            <div key={v.id} className="glass p-5 rounded-[2.5rem] border-cyan-500/20 shadow-lg relative overflow-hidden">
-                                {v.vessel_name === 'NAFTOCEMENT IV' && <div className="absolute top-0 left-0 w-1 h-full bg-cyan-500"></div>}
-                                <div className="flex justify-between items-start mb-4">
-                                    <div>
-                                        <h3 className="text-[11px] font-black uppercase text-white tracking-widest italic">{v.vessel_name}</h3>
-                                        <p className="text-[8px] text-cyan-400 mt-1 uppercase font-black italic tracking-widest">{v.last_port || 'En Route'}</p>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className="text-[7px] text-slate-500 uppercase">ETA</p>
-                                        <p className="text-[9px] font-black text-white">{v.eta || 'N/A'}</p>
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-2 gap-2 text-[8px] uppercase font-black italic">
-                                    <div className="bg-black/40 p-2 rounded-xl border border-white/5">
-                                        <span className="text-slate-500 mr-2">Status:</span>
-                                        <span className={v.status === 'MOORED' ? 'text-emerald-500' : 'text-orange-500'}>{v.status}</span>
-                                    </div>
-                                    <div className="bg-black/40 p-2 rounded-xl border border-white/5">
-                                        <span className="text-slate-500 mr-2">Speed:</span>
-                                        <span className="text-white">{v.speed || '0.0'} kn</span>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-
-                    <div className="mt-12 p-5 glass rounded-3xl border border-cyan-500/10 text-center opacity-40">
-                        <p className="text-[7px] text-slate-500 uppercase font-black italic tracking-widest leading-loose">
-                            AIS Source: Satellite & Terrestrial Mesh <br/>
-                            Geofence: Active (Samsun / Piraeus / Mykonos)
-                        </p>
-                    </div>
-                </div>
-            );
-        };
-
-            const root = ReactDOM.createRoot(document.getElementById('root'));
-            root.render(<RadarApp />);
-    </script>
-</body>
-</html>
+                ))}
+            </div>
+        </div>
+    );
+};
+ReactDOM.createRoot(document.getElementById('root')).render(<RadarApp />);
+</script></body></html>

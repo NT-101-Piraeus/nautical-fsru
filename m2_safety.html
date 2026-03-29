@@ -1,9 +1,7 @@
-<!DOCTYPE html>
-<html lang="el">
-<head>
+<!DOCTYPE html><html lang="el"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>M2: Compliance Shield v5.50 (UTID Sync)</title>
+    <title>M2: Compliance Shield v5.60 (Operational Baseline)</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -12,69 +10,75 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');
         body { background: #020617; color: white; font-family: 'Orbitron', sans-serif; font-style: italic; font-weight: bold; }
-        .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .sun-mode { background: #ffffff !important; color: #000000 !important; }
-        .sun-mode .glass { background: #f1f5f9 !important; border: 1px solid #cbd5e1 !important; color: #000000 !important; }
-        .fat-finger-button { height: 80px; font-weight: 900; text-transform: uppercase; border-radius: 1.5rem; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.2s; }
+        .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
+        .sun-mode { background: white !important; color: black !important; }
+        .sun-mode .glass { background: #f8fafc !important; border: 1px solid #cbd5e1 !important; color: black !important; }
+        .fat-finger-button { height: 80px; font-weight: 900; text-transform: uppercase; border-radius: 1.5rem; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; }
         .fat-finger-button:active { transform: scale(0.95); }
-    </style>
-</head>
-<body>
+        .matrix-blink { animation: matrix-alert 1.5s infinite; }
+        @keyframes matrix-alert { 0%, 100% { border-color: #ef4444; } 50% { border-color: #450a0a; } }
+    </style></head><body>
     <div id="root"></div>
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        const SafetyShield = () => {
+        const Telemetry = {
+            log: (type, action, details) => {
+                const logs = JSON.parse(localStorage.getItem('ntg_M2_logs') || '[]');
+                logs.push({ ts: new Date().toISOString(), type, action, details });
+                localStorage.setItem('ntg_M2_logs', JSON.stringify(logs.slice(-50)));
+            }
+        };
+
+        const SafetyApp = () => {
             const [view, setView] = useState('WATCHLIST');
-            const [sunMode, setSunMode] = useState(false);
-            const [vessels, setVessels] = useState([]);
             const [activeVessel, setActiveVessel] = useState(null);
+            const [sunMode, setSunMode] = useState(false);
             
-            // Inspection States [cite: 103, 111]
-            const [tasks, setTasks] = useState([]);
+            // INSPECTION STATE
+            const [dailyTasks, setDailyTasks] = useState([]);
             const [photos, setPhotos] = useState([]);
-            const [measurements, setMeasurements] = useState({ o2: '', lel: '' });
+            const [gasMeasurements, setGasMeasurements] = useState({ o2: '', lel: '' });
 
-            // [Art. 1] Safe-Parser & UTID Fetch [cite: 7, 94]
-            useEffect(() => {
-                try {
-                    const radarData = localStorage.getItem('ntg_M4_radar');
-                    const parsed = radarData ? JSON.parse(radarData) : [];
-                    setVessels(parsed);
-                } catch (e) {
-                    console.error("Radar Sync Failure");
-                }
-            }, []);
+            // [V5.60] OPERATIONAL DATA INJECTION (ΣΕΠΕ MAR/APR 2026)
+            const [vessels, setVessels] = useState(() => {
+                const radarData = JSON.parse(localStorage.getItem('ntg_M4_radar') || '[]');
+                const sepeBaseline = [
+                    { id: 'SEPE-01', name: 'FELIX', imo: '9464182', shift: '07:00-11:00', type: 'LNG_CONV' },
+                    { id: 'SEPE-02', name: 'BADJI MOKHTAR III', imo: '9827889', shift: '11:00-13:00', type: 'LNG_CONV' },
+                    { id: 'SEPE-03', name: 'ΑΡΙΑΔΝΗ', imo: '9135262', shift: '13:00-15:00', type: 'STANDARD' },
+                    { id: 'SEPE-04', name: 'RIGEL III', imo: '7807744', shift: '15:00-17:00', type: 'STANDARD' }
+                ];
+                return radarData.length > 0 ? [...radarData, ...sepeBaseline] : sepeBaseline;
+            });
 
-            // [Art. 4] Hard Evidence Lock (No M5 dependency) 
-            const isEvidenceReady = () => {
-                return tasks.length > 0 && photos.length > 0;
+            // HARD EVIDENCE LOCK (Min 2 Photos per V5.60)
+            const canSignLog = () => {
+                const hasPhotos = photos.length >= 2;
+                const hasTasks = dailyTasks.length > 0;
+                return hasPhotos && hasTasks;
             };
 
-            const addPhoto = () => {
-                setPhotos([...photos, { id: Date.now(), ts: new Date().toISOString() }]);
-                // Silent Logging [cite: 70, 118]
-                const log = JSON.parse(localStorage.getItem('ntg_M2_logs') || '[]');
-                log.push({ action: 'PHOTO_CAPTURE', utid: activeVessel?.id, ts: new Date().toISOString() });
-                localStorage.setItem('ntg_M2_logs', JSON.stringify(log));
-            };
+            const isLNGMode = activeVessel?.type === 'LNG_CONV' || activeVessel?.name === 'FELIX' || activeVessel?.name === 'BADJI MOKHTAR III';
 
             if (view === 'WATCHLIST') return (
-                <div className={`min-h-screen p-6 ${sunMode ? 'sun-mode' : ''}`}>
-                    <header className="flex justify-between items-center mb-8 glass p-6 rounded-[2rem]">
-                        <h1 className="text-sm uppercase font-black tracking-widest text-blue-500 italic">M2: Compliance Shield</h1>
+                <div className={`min-h-screen p-6 ${sunMode ? 'sun-mode' : 'bg-slate-950'}`}>
+                    <div className="flex justify-between items-center mb-10">
+                        <h1 className="text-blue-600 text-lg uppercase font-black">M2: Compliance Shield</h1>
                         <button onClick={() => setSunMode(!sunMode)} className="p-4 glass rounded-2xl">
-                            <i className={`fa-solid ${sunMode ? 'fa-moon' : 'fa-sun text-orange-500'}`}></i>
+                            <i className={`fa-solid ${sunMode ? 'fa-moon text-blue-900' : 'fa-sun text-orange-500'}`}></i>
                         </button>
-                    </header>
+                    </div>
 
-                    <div className="space-y-4">
-                        <p className="text-[10px] uppercase opacity-50 ml-4">Active Radar Targets [M4 Sync]</p>
+                    <div className="space-y-4 mb-10">
+                        <p className="text-[10px] uppercase opacity-40 ml-4 italic">Daily Fleet Schedule (SEPE Verified)</p>
                         {vessels.map(v => (
-                            <div key={v.id} onClick={() => { setActiveVessel(v); setView('INSPECTION'); }} className="glass p-6 rounded-[2.5rem] border-l-4 border-blue-600 active:scale-95 transition-all">
-                                <h3 className="text-lg font-black uppercase tracking-tighter">{v.name}</h3>
-                                <p className="text-[9px] opacity-70">ID: {v.id || 'NO_UTID'}</p>
-                                <p className="text-[8px] text-blue-400 uppercase mt-1">{v.sector} | {v.status}</p>
+                            <div key={v.id} onClick={() => { setActiveVessel(v); setView('INSPECTION'); }} className="glass p-6 rounded-[2.5rem] border-l-4 border-blue-600 flex justify-between items-center active:scale-95 transition-all">
+                                <div>
+                                    <p className="text-sm uppercase font-black tracking-tighter">{v.name}</p>
+                                    <p className="text-[9px] opacity-50 uppercase">Shift: {v.shift} | IMO: {v.imo}</p>
+                                </div>
+                                <i className="fa-solid fa-chevron-right opacity-30 text-xs"></i>
                             </div>
                         ))}
                     </div>
@@ -82,54 +86,54 @@
             );
 
             return (
-                <div className={`min-h-screen p-6 ${sunMode ? 'sun-mode' : ''}`}>
-                    <div className="flex justify-between items-center mb-6">
-                        <button onClick={() => setView('WATCHLIST')} className="text-[10px] uppercase underline opacity-50 italic">← Back to Radar</button>
-                        <span className="text-[8px] glass px-3 py-1 rounded-full">{activeVessel.id}</span>
-                    </div>
+                <div className={`min-h-screen p-6 ${sunMode ? 'sun-mode' : 'bg-slate-950'}`}>
+                    <button onClick={() => setView('WATCHLIST')} className="text-[10px] underline text-blue-500 mb-6 uppercase">← Back</button>
+                    <h2 className="text-2xl font-black uppercase text-center mb-8 italic">{activeVessel.name}</h2>
 
-                    <h2 className="text-2xl font-black uppercase italic text-center mb-8">{activeVessel.name}</h2>
-
-                    {/* [cite: 106, 124] FSRU / LNG Controls */}
-                    <div className="glass p-6 rounded-[2.5rem] mb-6 space-y-4 border-blue-500/20">
-                        <p className="text-[10px] uppercase text-blue-500 mb-2">Gas Measurements [LNG Edition]</p>
-                        <div className="grid grid-cols-2 gap-4">
-                            <input type="number" placeholder="O2 %" value={measurements.o2} onChange={(e) => setMeasurements({...measurements, o2: e.target.value})} className="bg-black/20 p-5 rounded-2xl text-center text-xl outline-none border border-white/5" />
-                            <input type="number" placeholder="LEL %" value={measurements.lel} onChange={(e) => setMeasurements({...measurements, lel: e.target.value})} className="bg-black/20 p-5 rounded-2xl text-center text-xl outline-none border border-white/5" />
+                    {/* LNG EDITION CONTROLS  */}
+                    {isLNGMode && (
+                        <div className="glass p-6 rounded-[2.5rem] mb-6 space-y-4 border-orange-500/30">
+                            <p className="text-[10px] uppercase text-orange-500 font-black">LNG Edition: Required Gas Levels</p>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="text-center">
+                                    <p className="text-[9px] opacity-50 mb-1">O2 %</p>
+                                    <input type="number" placeholder="20.9" value={gasMeasurements.o2} onChange={(e)=>setGasMeasurements({...gasMeasurements, o2: e.target.value})} className="w-full bg-black/20 p-4 rounded-xl text-center outline-none border border-white/5" />
+                                </div>
+                                <div className="text-center">
+                                    <p className="text-[9px] opacity-50 mb-1">LEL %</p>
+                                    <input type="number" placeholder="0" value={gasMeasurements.lel} onChange={(e)=>setGasMeasurements({...gasMeasurements, lel: e.target.value})} className="w-full bg-black/20 p-4 rounded-xl text-center outline-none border border-white/5" />
+                                </div>
+                            </div>
                         </div>
-                        <button onClick={() => setTasks([...tasks, {id: Date.now(), type: 'Hot Works'}])} className="fat-finger-button w-full bg-blue-600/10 border border-blue-600/30 text-xs">Add Hot Works Task +</button>
+                    )}
+
+                    <div className="glass p-6 rounded-[2.5rem] mb-6 space-y-4">
+                        <button onClick={()=>{setDailyTasks([...dailyTasks, {id:Date.now(), type:'Hot Works'}]);}} className="fat-finger-button w-full bg-blue-600/10 border border-blue-600/30 text-[10px]">Add Compliance Task +</button>
                     </div>
 
-                    {/* Tasks List [cite: 106] */}
                     <div className="space-y-4 mb-40">
-                        {tasks.map(t => (
-                            <div key={t.id} className="glass p-5 rounded-3xl border-l-4 border-emerald-500">
-                                <p className="text-[10px] uppercase font-black">{t.type}</p>
-                                <div className="mt-2 text-[9px] opacity-60 uppercase">Π.Δ. 70/1990 Compliant Checkbox Active</div>
+                        {dailyTasks.map(task => (
+                            <div key={task.id} className="glass p-5 rounded-3xl border-l-4 border-emerald-500">
+                                <h4 className="text-[11px] uppercase font-black">P.D. 70/1990 Task Active</h4>
+                                <label className="flex items-center gap-3 mt-3 opacity-70"><input type="checkbox" className="w-4 h-4" /><span className="text-[9px] uppercase">Safety Equipment Verified</span></label>
                             </div>
                         ))}
                     </div>
 
-                    {/* Fixed Evidence Bar  */}
+                    {/* FIXED EVIDENCE BAR [cite: 89, 125] */}
                     <div className="fixed bottom-0 left-0 right-0 p-6 glass backdrop-blur-xl border-t border-white/5 space-y-4">
-                        <button onClick={addPhoto} className="fat-finger-button w-full bg-slate-800 border border-slate-700">
+                        <button onClick={()=>{setPhotos([...photos, Date.now()]);}} className="fat-finger-button w-full bg-slate-800 border border-slate-700">
                             <i className="fa-solid fa-camera text-xl"></i>
-                            Capture Evidence ({photos.length})
+                            Capture Evidence ({photos.length}/2)
                         </button>
-                        <button 
-                            disabled={!isEvidenceReady()} 
-                            className={`fat-finger-button w-full ${!isEvidenceReady() ? 'bg-slate-900 opacity-20' : 'bg-emerald-600 shadow-lg shadow-emerald-900/30'}`}
-                        >
+                        <button disabled={!canSignLog()} onClick={()=>{alert("Log Signed."); setView('WATCHLIST');}} 
+                                className={`fat-finger-button w-full ${!canSignLog() ? 'bg-slate-900 opacity-20' : 'bg-emerald-600 matrix-blink shadow-lg shadow-emerald-900/40'}`}>
                             <i className="fa-solid fa-signature"></i>
-                            {isEvidenceReady() ? "Confirm Sign Log" : "Locked: Need Photo & Tasks"}
+                            {canSignLog() ? "Confirm Sign Log" : "Locked: Need 2 Photos"}
                         </button>
                     </div>
                 </div>
             );
         };
-
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<SafetyShield />);
-    </script>
-</body>
-</html>
+        ReactDOM.createRoot(document.getElementById('root')).render(<SafetyApp />);
+    </script></body></html>

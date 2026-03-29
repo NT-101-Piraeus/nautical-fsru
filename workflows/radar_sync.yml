@@ -1,8 +1,8 @@
 name: M11 OSINT Radar Sync
 on:
   schedule:
-    - cron: '0 */6 * * *' # Τρέχει κάθε 6 ώρες αυτόματα
-  workflow_dispatch:      # Επιτρέπει και χειροκίνητο τρέξιμο
+    - cron: '0 */6 * * *' # Αυτόματο σκανάρισμα κάθε 6 ώρες
+  workflow_dispatch:      # Η "Χειροκίνητη Σκανδάλη" για άμεσο τρέξιμο
 
 jobs:
   build:
@@ -26,6 +26,8 @@ jobs:
         run: |
           git config --global user.name 'NauticalOS-Bot'
           git config --global user.email 'bot@nauticalos.com'
+          # Δημιουργία φακέλου data αν δεν υπάρχει
+          mkdir -p data
           git add data/radar_feed.json
-          git commit -m "M11: Radar Intelligence Updated [Auto]" || exit 0
+          git commit -m "M11: Radar Intelligence Sync [Auto]" || exit 0
           git push

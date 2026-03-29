@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>M11: Sensor Hub & Fleet Commander</title>
+    <title>M11: Sensor Hub & Fleet Commander V6.2</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -11,9 +11,11 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');
         body { background: #020617; color: white; font-family: 'Orbitron', sans-serif; font-style: italic; }
-        .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
+        .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.05); }
         .sensor-pulse { animation: pulse-blue 2s infinite; }
         @keyframes pulse-blue { 0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.4); border-color: rgba(59, 130, 246, 0.5); } 50% { box-shadow: 0 0 5px rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.1); } }
+        .priority-blink { border-left: 4px solid #ef4444; animation: blink-red 1.5s infinite; }
+        @keyframes blink-red { 0%, 100% { border-left-color: #ef4444; } 50% { border-left-color: transparent; } }
     </style>
 </head>
 <body>
@@ -22,61 +24,84 @@
         const { useState, useEffect } = React;
 
         const SensorHub = () => {
-            // Mock Data για την επίδειξη (θα αντικατασταθούν από το Python Feed)
-            const [vessels, setVessels] = useState([
-                { id: 'NTG-ALX-001', name: 'MT FELIX', status: 'LOCKED', area: 'PERAMA', type: 'LNG' },
-                { id: 'NTG-ALX-002', name: 'BADJI MOKHTAR III', status: 'LOCKED', area: 'ELEFSINA', type: 'LNG' }
-            ]);
+            const [vessels, setVessels] = useState([]);
+            const [loading, setLoading] = useState(true);
+
+            useEffect(() => {
+                // Διαβάζει το JSON που παράγει ο Ghost Server
+                const fetchData = () => {
+                    fetch('data/radar_feed.json?t=' + Date.now()) // cache busting
+                        .then(res => res.json())
+                        .then(data => {
+                            setVessels(data);
+                            setLoading(false);
+                        })
+                        .catch(err => {
+                            console.log("Waiting for M11 Ghost Server...");
+                            setLoading(false);
+                        });
+                };
+                fetchData();
+                const interval = setInterval(fetchData, 30000); // Ανανέωση κάθε 30 δευτ.
+                return () => clearInterval(interval);
+            }, []);
 
             return (
                 <div className="min-h-screen p-6 bg-slate-950 flex flex-col">
                     <header className="glass p-6 rounded-[2.5rem] mb-8 border-blue-500/20 flex justify-between items-center">
                         <div>
                             <h1 className="text-blue-500 font-black uppercase text-lg tracking-tighter italic">M11: Sensor Hub</h1>
-                            <p className="text-[8px] font-bold uppercase tracking-[0.3em] opacity-50">Hybrid Intelligence V6.1</p>
+                            <p className="text-[8px] font-bold uppercase tracking-[0.3em] opacity-50">Ghost Server Active</p>
                         </div>
                         <a href="index.html" className="p-4 glass rounded-2xl text-blue-400"><i className="fa-solid fa-house"></i></a>
                     </header>
 
-                    {/* Hardware Sensors (FSRU Simulation) */}
+                    {/* Hardware Pulse */}
                     <div className="grid grid-cols-2 gap-4 mb-8">
-                        <div className="glass p-6 rounded-[2rem] border-l-4 border-blue-500 sensor-pulse">
-                            <p className="text-[8px] opacity-40 uppercase font-black mb-1">Pressure</p>
-                            <h3 className="text-2xl font-black italic">1.2 <span className="text-[10px] opacity-50 uppercase">Bar</span></h3>
+                        <div className="glass p-5 rounded-[2rem] sensor-pulse text-center">
+                            <p className="text-[7px] opacity-40 uppercase font-black">Pressure</p>
+                            <h3 className="text-xl font-black italic">1.2 Bar</h3>
                         </div>
-                        <div className="glass p-6 rounded-[2rem] border-l-4 border-blue-500 sensor-pulse">
-                            <p className="text-[8px] opacity-40 uppercase font-black mb-1">Temperature</p>
-                            <h3 className="text-2xl font-black italic">42 <span className="text-[10px] opacity-50 uppercase">°C</span></h3>
+                        <div className="glass p-5 rounded-[2rem] sensor-pulse text-center">
+                            <p className="text-[7px] opacity-40 uppercase font-black">Temp</p>
+                            <h3 className="text-xl font-black italic">42°C</h3>
                         </div>
                     </div>
 
-                    {/* Fleet Commander OSINT Section */}
+                    {/* Autonomous OSINT Feed */}
                     <div className="flex-grow glass p-6 rounded-[3rem] border-l-4 border-orange-500 overflow-hidden">
                         <div className="flex justify-between items-center mb-6">
-                            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-500 italic">
-                                <i className="fa-solid fa-satellite-dish mr-2"></i> OSINT Fleet Commander
+                            <h4 className="text-[10px] font-black uppercase tracking-widest text-orange-500 italic">
+                                <i className="fa-solid fa-satellite-dish mr-2 animate-pulse"></i> OSINT Fleet Commander
                             </h4>
-                            <span className="text-[8px] bg-orange-500/10 text-orange-500 px-2 py-1 rounded-lg font-black animate-pulse">LIVE AIS FEED</span>
+                            <span className="text-[7px] bg-orange-500/10 text-orange-500 px-2 py-1 rounded font-black tracking-widest">AUTO-SYNC ON</span>
                         </div>
 
                         <div className="space-y-4">
-                            {vessels.map(v => (
-                                <div key={v.id} className="bg-white/5 p-4 rounded-2xl border border-white/5 flex justify-between items-center">
+                            {loading ? (
+                                <p className="text-[10px] text-center opacity-30 animate-pulse">INITIALIZING SENSORS...</p>
+                            ) : vessels.length > 0 ? vessels.map(v => (
+                                <div key={v.utid} className={`bg-white/5 p-4 rounded-2xl border border-white/5 flex justify-between items-center ${v.status === 'PRIORITY TARGET' ? 'priority-blink' : ''}`}>
                                     <div>
-                                        <p className="text-xs font-black uppercase tracking-tight">{v.name}</p>
-                                        <p className="text-[8px] opacity-40 uppercase">{v.area} | {v.type}</p>
+                                        <div className="flex items-center gap-2">
+                                            <p className="text-xs font-black uppercase tracking-tight">{v.name}</p>
+                                            {v.status === 'PRIORITY TARGET' && <i className="fa-solid fa-star text-[8px] text-red-500"></i>}
+                                        </div>
+                                        <p className="text-[8px] opacity-40 uppercase font-bold">{v.company} | {v.area}</p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-[7px] text-orange-500 font-black uppercase mb-1">Target Locked</p>
-                                        <p className="text-[9px] font-black opacity-80">{v.id}</p>
+                                        <p className="text-[7px] text-orange-500 font-black uppercase mb-1">{v.status}</p>
+                                        <p className="text-[9px] font-black opacity-80">{v.utid}</p>
                                     </div>
                                 </div>
-                            ))}
+                            )) : (
+                                <p className="text-[10px] text-center opacity-30 italic">No targets locked. Radar scanning...</p>
+                            )}
                         </div>
                     </div>
 
                     <footer className="mt-8 text-center opacity-20">
-                        <p className="text-[8px] font-black uppercase tracking-[0.5em]">M10 Supreme Auditor Verified</p>
+                        <p className="text-[8px] font-black uppercase tracking-[0.5em]">M10 Supreme Auditor Verified | Piraeus 2026</p>
                     </footer>
                 </div>
             );

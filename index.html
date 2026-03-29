@@ -1,63 +1,58 @@
-<!DOCTYPE html>
-<html lang="el">
-<head>
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NauticalOS Hub v4.97</title>
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <style>@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');body{background:#020617;color:white;font-family:'Orbitron',sans-serif;font-style:italic;font-weight:bold;}.glass{background:rgba(15,23,42,0.7);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.05);}.active-card{border:1px solid rgba(255,255,255,0.1); box-shadow: 0 0 20px rgba(59, 130, 246, 0.1);}</style>
-</head>
-<body><div id="root"></div><script type="text/babel">
-const { useState } = React;
+<script type="text/babel">
+const { useState, useEffect } = React;
 
-const Hub = () => {
-    const divisions = [
-        { id: 'M1', name: 'UTM Analysis', icon: 'fa-layer-group', color: 'text-blue-400', active: true, link: 'm1_utm.html' },
-        { id: 'M2', name: 'Safety Watch', icon: 'fa-shield-halved', color: 'text-blue-500', active: true, link: 'm2_safety.html' },
-        { id: 'M3', name: 'Load Test Pro', icon: 'fa-anchor', color: 'text-orange-500', active: true, link: 'm3_loadtest.html' },
-        { id: 'M4', name: 'Radar Hunter', icon: 'fa-crosshairs', color: 'text-red-500', active: true, link: 'm4_radar.html' },
-        { id: 'M5', name: 'War Room', icon: 'fa-gavel', color: 'text-red-600', active: true, link: 'm5_terme.html' },
-        { id: 'M6', name: 'CEO Office', icon: 'fa-user-tie', color: 'text-slate-500', active: false },
-        { id: 'M7', name: 'Startup Div', icon: 'fa-rocket', color: 'text-slate-500', active: false },
-        { id: 'M8', name: 'Academy', icon: 'fa-graduation-cap', color: 'text-cyan-400', active: true, link: 'm8_academy.html' },
-        { id: 'M9', name: 'Operation GEM', icon: 'fa-robot', color: 'text-purple-400', active: false },
-        { id: 'M10', name: 'Supreme Auditor', icon: 'fa-eye', color: 'text-indigo-500', active: true },
-        { id: 'M11', name: 'Sensors Vault', icon: 'fa-microchip', color: 'text-slate-500', active: false },
-        { id: 'M12', name: 'Staff Intel', icon: 'fa-users-gears', color: 'text-slate-500', active: false },
-        { id: 'M13', name: 'Mykonos Sync', icon: 'fa-rotate', color: 'text-slate-500', active: false },
-        { id: 'M14', name: 'Commercial', icon: 'fa-vault', color: 'text-emerald-500', active: true, link: 'm14_commercial.html' },
-        { id: 'M15', name: 'Command Hub', icon: 'fa-gauge-high', color: 'text-white', active: true, link: 'index.html' }
-    ];
+const MainHub = () => {
+    const [isLocked, setIsLocked] = useState(true);
+    const [pin, setPin] = useState('');
+    const MASTER_PIN = "1234";
+
+    // Ελέγχουμε αν υπάρχει ήδη ενεργή συνεδρία στην προσωρινή μνήμη
+    useEffect(() => {
+        const auth = sessionStorage.getItem('ntg_global_auth');
+        if (auth === 'true') setIsLocked(false);
+    }, []);
+
+    const unlock = () => {
+        if (pin === MASTER_PIN) {
+            setIsLocked(false);
+            sessionStorage.setItem('ntg_global_auth', 'true');
+        } else {
+            alert("ACCESS DENIED: WRONG PIN");
+            setPin('');
+        }
+    };
+
+    if (isLocked) {
+        return (
+            <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 italic">
+                <div className="glass p-10 rounded-[3rem] border-orange-500/20 text-center shadow-2xl">
+                    <i className="fa-solid fa-lock text-4xl text-orange-500 mb-6 animate-pulse"></i>
+                    <h1 className="text-xl font-black uppercase tracking-tighter mb-8">NauticalOS Locked</h1>
+                    <input 
+                        type="password" 
+                        value={pin} 
+                        onChange={(e) => setPin(e.target.value)}
+                        placeholder="ENTER MASTER PIN"
+                        className="bg-black/50 border border-white/10 p-5 rounded-2xl text-center text-2xl font-black mb-6 w-full outline-none focus:border-orange-500 transition-all"
+                    />
+                    <button 
+                        onClick={unlock}
+                        className="w-full bg-orange-600 p-5 rounded-2xl font-black uppercase text-[10px] tracking-widest active:scale-95 transition-all"
+                    >
+                        Authorize Access
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
-        <div className="min-h-screen p-6 bg-slate-950 flex flex-col items-center">
-            <div className="w-full max-w-4xl mb-10 flex justify-between items-end border-b border-white/10 pb-6">
-                <div>
-                    <h1 className="text-2xl font-black uppercase tracking-tighter">NauticalOS Hub</h1>
-                    <p className="text-[9px] text-blue-400 font-black uppercase tracking-widest italic">Vessel Control System | V4.97</p>
-                </div>
-                <div className="text-right text-[10px] text-orange-500 font-black">MASTER ADMIN ACCESS</div>
-            </div>
-
-            <div className="grid grid-cols-3 md:grid-cols-5 gap-4 w-full max-w-4xl pb-20">
-                {divisions.map((div) => (
-                    <div key={div.id} onClick={() => div.active && (window.location.href = div.link)}
-                         className={`glass p-5 rounded-[2rem] text-center transition-all cursor-pointer ${div.active ? 'active:scale-90 active-card' : 'opacity-20 grayscale'}`}>
-                        <i className={`fa-solid ${div.icon} text-xl mb-3 ${div.color}`}></i>
-                        <p className="text-[10px] font-black uppercase tracking-tighter">{div.id}</p>
-                        <p className="text-[7px] opacity-50 uppercase truncate">{div.name}</p>
-                    </div>
-                ))}
-            </div>
-            
-            <div className="fixed bottom-6 glass px-8 py-3 rounded-full border-white/10">
-                <p className="text-[8px] uppercase tracking-[0.4em] opacity-40">System Integrity: 100% SECURE</p>
-            </div>
+        /* ΕΔΩ ΜΠΑΙΝΕΙ ΟΛΟ ΤΟ GRID ΜΕ ΤΑ 15 DIVISIONS ΠΟΥ ΦΤΙΑΞΑΜΕ */
+        <div className="p-6">
+            <h1 className="text-2xl font-black uppercase italic">Command Hub Active</h1>
+            {/* ... Το Grid των Divisions ... */}
         </div>
     );
 };
-ReactDOM.createRoot(document.getElementById('root')).render(<Hub />);
-</script></body></html>
+ReactDOM.createRoot(document.getElementById('root')).render(<MainHub />);
+</script>

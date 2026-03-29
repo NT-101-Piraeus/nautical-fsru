@@ -1,10 +1,71 @@
-useEffect(() => {
-    try {
-        const saved = localStorage.getItem('ntg_M4_radar');
-        // Αν το saved είναι "undefined" ή "null", επιστρέφει άδειο πίνακα [] αντί να κρασάρει
-        setVessels(saved ? JSON.parse(saved) : []); 
-    } catch (error) {
-        console.error("Data Corruption Detected. Resetting Radar View.");
-        setVessels([]);
-    }
-}, []);
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+const M4Radar = () => {
+    const [vessels, setVessels] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    // [Art. 2] Security Gate: Έλεγχος αν ο χρήστης πέρασε από το Hub
+    useEffect(() => {
+        if (sessionStorage.getItem('ntg_global_auth') !== 'true') {
+            window.location.href = 'index.html';
+        }
+    }, []);
+
+    // [Art. 1] Safe-Parser Patch: Αποφυγή Λευκής Οθόνης
+    useEffect(() => {
+        try {
+            const saved = localStorage.getItem('ntg_M4_radar');
+            // Αν το data είναι null/undefined/corrupted, επιστρέφει άδειο πίνακα []
+            const parsedData = saved ? JSON.parse(saved) : [];
+            setVessels(Array.isArray(parsedData) ? parsedData : []);
+        } catch (error) {
+            console.error("CRITICAL: Data Corruption in M4. Resetting to safe state.");
+            setVessels([]); 
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    // [Art. 4] Silent Logging: Καταγραφή στο Black Box
+    const logAction = (action) => {
+        const log = { timestamp: new Date().toISOString(), action };
+        const currentLogs = JSON.parse(localStorage.getItem('ntg_M4_logs') || '[]');
+        localStorage.setItem('ntg_M4_logs', JSON.stringify([...currentLogs, log]));
+    };
+
+    if (loading) return <div className="bg-slate-950 min-h-screen flex items-center justify-center text-orange-500 italic uppercase font-black">Scanning Frequency...</div>;
+
+    return (
+        <div className="min-h-screen bg-slate-950 text-white p-6 italic">
+            <div className="flex justify-between items-center mb-8 glass p-6 rounded-[2rem] border-orange-500/20">
+                <h1 className="text-2xl font-black uppercase tracking-tighter">M4 Vessel Radar</h1>
+                <a href="index.html" className="p-4 bg-white/5 rounded-2xl hover:bg-orange-600 transition-all text-xs uppercase font-black">Back to Hub</a>
+            </div>
+            
+            {/* Vessel List / UI για Field Ops */}
+            <div className="grid gap-4">
+                {vessels.length === 0 ? (
+                    <div className="p-10 border-2 border-dashed border-white/10 rounded-[2.5rem] text-center opacity-30 uppercase font-black">No Targets Locked</div>
+                ) : (
+                    vessels.map((v, i) => (
+                        <div key={i} className="glass p-6 rounded-[2rem] flex justify-between items-center border-l-4 border-orange-500">
+                            <div>
+                                <h3 className="text-xl font-black uppercase">{v.name}</h3>
+                                <p className="text-[10px] text-orange-400 font-bold uppercase tracking-widest">{v.sector} | {v.status}</p>
+                            </div>
+                            <i className="fa-solid fa-chevron-right opacity-20"></i>
+                        </div>
+                    ))
+                )}
+            </div>
+            
+            {/* Fat-Finger Add Button */}
+            <button className="fixed bottom-10 right-10 w-20 h-20 bg-orange-600 rounded-full shadow-2xl flex items-center justify-center text-3xl active:scale-90 transition-transform">
+                <i className="fa-solid fa-plus"></i>
+            </button>
+        </div>
+    );
+};
+ReactDOM.createRoot(document.getElementById('root')).render(<M4Radar />);
+</script>

@@ -3,131 +3,132 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>M4 RADAR | Vessel Hunter</title>
+    <title>M4 RADAR | Vessel Hunter V5.60</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        body { background-color: #020617; color: white; font-family: 'Inter', sans-serif; }
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');
+        body { background: #020617; color: white; font-family: 'Orbitron', sans-serif; font-style: italic; }
         .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
         .sun-mode { background: #ffffff !important; color: #000000 !important; }
         .sun-mode .glass { background: #f8fafc !important; border: 1px solid #cbd5e1 !important; color: #000000 !important; }
-        .target-lock { border-left: 5px solid #f97316; animation: scan 2s infinite; }
-        @keyframes scan { 0% { border-left-color: #f97316; } 50% { border-left-color: #fb923c; } 100% { border-left-color: #f97316; } }
+        .fat-finger-button { height: 80px; font-weight: 900; text-transform: uppercase; border-radius: 1.5rem; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .fat-finger-button:active { transform: scale(0.95); }
+        .target-lock-anim { border-left: 5px solid #f97316; animation: pulse-border 2s infinite; }
+        @keyframes pulse-border { 0%, 100% { border-left-color: #f97316; } 50% { border-left-color: #431407; } }
     </style>
 </head>
 <body>
     <div id="root"></div>
-
     <script type="text/babel">
         const { useState, useEffect } = React;
 
         const M4Radar = () => {
-            const [vessels, setVessels] = useState([]);
+            const [view, setView] = useState('RADAR');
             const [sunMode, setSunMode] = useState(false);
-            const [isAdding, setIsAdding] = useState(false);
-            const [newVessel, setNewVessel] = useState({ name: '', sector: 'Piraeus', status: 'EXPECTED' });
+            const [vessels, setVessels] = useState([]);
+            const [showPinGate, setShowPinGate] = useState(false);
+            const [pin, setPin] = useState('');
+            const [pendingAction, setPendingAction] = useState(null);
 
-            // [Art. 2] Security Gate & Global Iron Gate
+            // [Art. 1 & 2] Security & Safe-Parser Patch [cite: 6, 68]
             useEffect(() => {
-                if (sessionStorage.getItem('ntg_global_auth') !== 'true') {
-                    window.location.href = 'index.html';
-                }
-            }, []);
-
-            // [M4 Recovery] Safe-Parser Patch
-            useEffect(() => {
+                if (sessionStorage.getItem('ntg_global_auth') !== 'true') window.location.href = 'index.html';
                 try {
                     const saved = localStorage.getItem('ntg_M4_radar');
-                    const parsedData = saved ? JSON.parse(saved) : [];
-                    setVessels(Array.isArray(parsedData) ? parsedData : []);
-                } catch (error) {
-                    console.error("DATA CORRUPTION DETECTED. Resetting Radar View.");
-                    setVessels([]); // Reset για αποφυγή White Screen
+                    setVessels(saved ? JSON.parse(saved) : []);
+                } catch (e) {
+                    console.error("M4 Data Corruption Intercepted"); // [cite: 130]
+                    setVessels([]);
                 }
             }, []);
 
-            // [Art. 4] Silent Logging for M10 Auditor
-            const logAction = (action) => {
+            // [UTID Generator] The DNA Strand 
+            const generateUTID = (area) => {
+                const year = 2026;
+                const sector = area.substring(0, 3).toUpperCase();
+                const hex = Math.floor(Math.random() * 65535).toString(16).toUpperCase().padStart(4, '0');
+                return `NTG-${year}-${sector}-${hex}`;
+            };
+
+            const lockTarget = (name, area) => {
+                const utid = generateUTID(area);
+                const newVessel = { 
+                    id: utid, 
+                    name: name.toUpperCase(), 
+                    area, 
+                    status: 'EXPECTED', 
+                    ts: new Date().toISOString(),
+                    evolution: { legacy: [], current: name.toUpperCase() } // 
+                };
+                const updated = [...vessels, newVessel];
+                setVessels(updated);
+                localStorage.setItem('ntg_M4_radar', JSON.stringify(updated));
+                // Silent Logging for M10 [cite: 12, 70]
                 const logs = JSON.parse(localStorage.getItem('ntg_M4_logs') || '[]');
-                logs.push({ timestamp: new Date().toISOString(), action });
+                logs.push({ action: 'TARGET_LOCK', utid, vessel: name.toUpperCase(), ts: new Date().toISOString() });
                 localStorage.setItem('ntg_M4_logs', JSON.stringify(logs));
             };
 
-            const lockTarget = () => {
-                if (!newVessel.name) return;
-                const updatedVessels = [...vessels, { ...newVessel, name: newVessel.name.toUpperCase() }];
-                setVessels(updatedVessels);
-                localStorage.setItem('ntg_M4_radar', JSON.stringify(updatedVessels));
-                logAction(`Vessel Added: ${newVessel.name.toUpperCase()}`);
-                setNewVessel({ name: '', sector: 'Piraeus', status: 'EXPECTED' });
-                setIsAdding(false);
+            const handleAdminAction = (action) => {
+                if (pin === '1234') {
+                    action();
+                    setShowPinGate(false);
+                    setPin('');
+                } else {
+                    alert("ACCESS DENIED [Art. 2]");
+                }
             };
 
             return (
-                <div className={`min-h-screen p-6 transition-colors ${sunMode ? 'sun-mode' : ''}`}>
-                    <header className="flex justify-between items-center mb-8 glass p-6 rounded-[2.5rem]">
+                <div className={`min-h-screen p-6 transition-all ${sunMode ? 'sun-mode' : ''}`}>
+                    <header className="flex justify-between items-center mb-10 glass p-6 rounded-[2rem]">
                         <div className="flex items-center gap-4">
                             <i className="fa-solid fa-tower-observation text-2xl text-orange-500 animate-pulse"></i>
-                            <h1 className="text-2xl font-black uppercase italic">M4 Vessel Radar</h1>
+                            <h1 className="text-sm uppercase font-black tracking-widest italic">M4: Radar Hunter</h1>
                         </div>
-                        <div className="flex gap-3">
-                            <button onClick={() => setSunMode(!sunMode)} className="p-4 glass rounded-2xl"><i className="fa-solid fa-sun"></i></button>
-                            <a href="index.html" className="p-4 glass rounded-2xl text-orange-500"><i className="fa-solid fa-house"></i></a>
-                        </div>
+                        <button onClick={() => setSunMode(!sunMode)} className="p-4 glass rounded-2xl"><i className="fa-solid fa-sun text-orange-400"></i></button>
                     </header>
 
-                    {/* Vessel List - Combat Ready UI */}
-                    <div className="grid gap-4 max-w-4xl mx-auto mb-24">
-                        {vessels.map((v, i) => (
-                            <div key={i} className="target-lock glass p-6 rounded-[2rem] flex justify-between items-center group">
+                    {/* Vessel Grid [cite: 15, 76] */}
+                    <div className="space-y-4 mb-24 max-w-2xl mx-auto">
+                        {vessels.map(v => (
+                            <div key={v.id} className="target-lock-anim glass p-6 rounded-[2.5rem] flex justify-between items-center relative overflow-hidden">
                                 <div>
                                     <h3 className="text-xl font-black uppercase tracking-tighter">{v.name}</h3>
-                                    <p className="text-[10px] font-bold text-orange-500 uppercase tracking-widest">{v.sector} | {v.status}</p>
+                                    <p className="text-[9px] font-bold opacity-60">UTID: {v.id}</p>
+                                    <p className="text-[10px] text-orange-500 font-black mt-1 uppercase">{v.area} | {v.status}</p>
                                 </div>
-                                <div className="opacity-20 group-hover:opacity-100 transition-opacity">
-                                    <button className="p-3 bg-white/5 rounded-xl"><i className="fa-solid fa-ellipsis-vertical"></i></button>
-                                </div>
+                                <button onClick={() => { setPendingAction(() => () => alert("Evolution Logic Active")); setShowPinGate(true); }} className="p-4 opacity-30"><i className="fa-solid fa-ellipsis-vertical"></i></button>
                             </div>
                         ))}
                     </div>
 
-                    {/* Fat-Finger Add Button & Form */}
-                    {isAdding ? (
-                        <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-50 p-6 flex items-center justify-center">
-                            <div className="glass p-8 rounded-[3rem] w-full max-w-md border-orange-500/30">
-                                <h2 className="text-2xl font-black uppercase italic mb-6">Lock New Target</h2>
-                                <input 
-                                    type="text" placeholder="VESSEL NAME"
-                                    value={newVessel.name} onChange={(e) => setNewVessel({...newVessel, name: e.target.value})}
-                                    className="w-full bg-black/40 border border-white/10 p-5 rounded-2xl text-xl font-black mb-4 uppercase focus:border-orange-500 outline-none"
-                                />
-                                <select 
-                                    value={newVessel.sector} onChange={(e) => setNewVessel({...newVessel, sector: e.target.value})}
-                                    className="w-full bg-black/40 border border-white/10 p-5 rounded-2xl text-xl font-black mb-4 uppercase"
-                                >
-                                    <option value="Piraeus">Piraeus</option>
-                                    <option value="Perama">Perama</option>
-                                    <option value="Drapetsona">Drapetsona</option>
-                                </select>
-                                <button onClick={lockTarget} className="w-full h-20 bg-orange-600 rounded-2xl font-black uppercase text-sm tracking-widest shadow-lg mb-4">Lock Target [M4]</button>
-                                <button onClick={() => setIsAdding(false)} className="w-full p-4 font-bold opacity-50 uppercase text-[10px]">Cancel</button>
+                    {/* Fat-Finger Add Button [cite: 15, 76] */}
+                    <div className="fixed bottom-10 left-6 right-6">
+                        <button onClick={() => lockTarget(prompt("Vessel Name"), "Piraeus")} className="fat-finger-button w-full bg-orange-600 shadow-xl shadow-orange-900/20">
+                            <i className="fa-solid fa-crosshairs text-xl"></i> Lock New Target
+                        </button>
+                    </div>
+
+                    {/* Master PIN Gate [cite: 10, 68] */}
+                    {showPinGate && (
+                        <div className="fixed inset-0 bg-black/95 backdrop-blur-xl z-50 flex items-center justify-center p-6 italic">
+                            <div className="glass p-10 rounded-[3rem] w-full max-w-sm text-center">
+                                <i className="fa-solid fa-user-shield text-4xl text-orange-500 mb-6"></i>
+                                <h2 className="text-lg font-black uppercase mb-8">Admin Override</h2>
+                                <input type="password" value={pin} onChange={(e) => setPin(e.target.value)} placeholder="ENTER MASTER PIN" className="w-full bg-black/40 p-6 rounded-2xl text-center text-2xl font-black mb-6 border border-white/10" />
+                                <button onClick={() => handleAdminAction(pendingAction)} className="fat-finger-button w-full bg-orange-600">Authorize Access</button>
+                                <button onClick={() => setShowPinGate(false)} className="mt-6 text-[10px] opacity-40 uppercase font-black">Cancel</button>
                             </div>
                         </div>
-                    ) : (
-                        <button 
-                            onClick={() => setIsAdding(true)}
-                            className="fixed bottom-10 right-10 w-20 h-20 bg-orange-600 rounded-full shadow-2xl flex items-center justify-center text-3xl active:scale-90 transition-transform"
-                        >
-                            <i className="fa-solid fa-plus text-white"></i>
-                        </button>
                     )}
                 </div>
             );
         };
-
         ReactDOM.createRoot(document.getElementById('root')).render(<M4Radar />);
     </script>
 </body>

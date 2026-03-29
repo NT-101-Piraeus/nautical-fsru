@@ -1,132 +1,148 @@
 <!DOCTYPE html>
 <html lang="el">
 <head>
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>M5: Dynamic War Room Intel</title>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>M5: Dynamic War Room v1.1</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');
-        body { background: #020617; color: white; font-family: 'Orbitron', sans-serif; font-style: italic; font-weight: bold; }
-        .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
+        body { background:#020617; color:white; font-family:'Orbitron',sans-serif; font-style:italic; font-weight:bold; }
+        .glass { background:rgba(15,23,42,0.8); backdrop-filter:blur(15px); border:1px solid rgba(255,255,255,0.05); }
+        .target-active { border-left: 4px solid #ef4444; background: rgba(239, 68, 68, 0.05); }
     </style>
 </head>
-<body>
-<div id="root"></div>
-
-<script type="text/babel">
+<body><div id="root"></div><script type="text/babel">
 const { useState } = React;
 
 const WarRoom = () => {
     const [selectedTarget, setSelectedTarget] = useState('Emir Öztürk');
+    const [isGenerating, setIsGenerating] = useState(false);
 
-    // 1. DYNAMIC TARGET DATABASE
-    const targets = [
-        { id: 1, name: 'Emir Öztürk', role: 'Warsaw Proxy', ids: 'NIP: 5262587598', anomaly: 'NACE 49.32 (TAXI SERVICES)' },
-        { id: 2, name: 'Erkan Zorlu', role: 'Mastermind', ids: 'TR-ID: 123456789', anomaly: 'ASSET CONCEALMENT' },
-        { id: 3, name: 'İpek Banu Karaca', role: 'Associated Party', ids: 'TR-ID: 987654321', anomaly: 'MONEY FUNNEL' },
-        { id: 4, name: 'Alasund Shipbrokers', role: 'Financial Conduit', ids: 'ICE-REG: 456123', anomaly: 'WHITE-LABEL FUNDING' }
-    ];
+    const targets = {
+        'Emir Öztürk': { id: 'TR-9921', activity: 'NACE 49.32', risk: 'HIGH', status: 'WATCHLIST' },
+        'Erkan Zorlu': { id: 'TR-8842', activity: 'Ship Repair & Asset Management', risk: 'CRITICAL', status: 'LITIGATION' },
+        'Alasund Fisheries': { id: 'NO-1120', activity: 'Offshore Logistics', risk: 'MEDIUM', status: 'ASSET TRACING' }
+    };
 
-    // 2. LIVE ROSTER (GEOFENCE)
-    const roster = [
-        { vessel: 'S.V. NIKOLAY', status: 'DOCKING (0 kn) - SDN ALERT', since: '24h', alert: true },
-        { vessel: 'NB05 Hull', status: 'STATIC - ASSET FROZEN', since: '15d', alert: false }
-    ];
-
-    // 3. PDF EXPORT LOGIC (The Digital Affidavit)
-    const exportForensicPDF = () => {
-        const targetData = targets.find(t => t.name === selectedTarget);
+    const generateForensicDossier = () => {
+        setIsGenerating(true);
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
-        const ts = new Date().toUTCString();
+        const timestamp = new Date().toISOString();
+        const targetData = targets[selectedTarget];
         
-        // Mock Forensic Hash for the PDF
-        const fakeHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"; 
+        // Content for Hashing
+        const rawContent = `TARGET: ${selectedTarget} | ID: ${targetData.id} | CODE: ${targetData.activity} | TIME: ${timestamp}`;
+        const sha256Hash = CryptoJS.SHA256(rawContent).toString();
 
-        doc.setFontSize(16);
-        doc.text("CONFIDENTIAL OSINT REPORT - NAFTOTRADE ASSET RECOVERY", 105, 20, { align: "center" });
-        doc.setFontSize(8);
-        doc.text(`FORENSIC IDENTIFIER: ${fakeHash}`, 105, 30, { align: "center" });
-        
-        doc.setLineWidth(0.5);
-        doc.line(20, 35, 190, 35);
-
-        doc.setFontSize(12);
-        doc.text(`TARGET IDENTITY: ${targetData.name}`, 20, 50);
-        doc.text(`ROLE: ${targetData.role}`, 20, 60);
-        doc.text(`REGISTRY ID: ${targetData.ids}`, 20, 70);
-        
-        doc.setTextColor(220, 38, 38); // Red
-        doc.text(`CRITICAL ANOMALY: ${targetData.anomaly}`, 20, 80);
-        doc.setTextColor(0, 0, 0);
-
+        // PDF Structure
+        doc.setFillColor(2, 6, 23);
+        doc.rect(0, 0, 210, 297, 'F');
+        doc.setTextColor(255, 255, 255);
         doc.setFontSize(10);
-        doc.text("CHAIN OF CUSTODY LEDGER:", 20, 110);
-        doc.setFontSize(8);
-        doc.text(`[TIMESTAMP]: ${ts} UTC`, 25, 120);
-        doc.text(`[PAYLOAD HASH]: ${fakeHash}`, 25, 130);
+        doc.text("NAUTICAL TECHNOLOGY - LEGAL DIVISION M5", 10, 10);
+        doc.text(`PROTOCOL: SILENT SIEGE | CONFIDENTIAL`, 10, 15);
         
-        doc.save(`LEGAL_DOSSIER_${targetData.name.replace(' ', '_')}.pdf`);
+        doc.setFontSize(22);
+        doc.text("FORENSIC DOSSIER", 10, 40);
+        
+        doc.setFontSize(12);
+        doc.setTextColor(239, 68, 68);
+        doc.text(`SUBJECT: ${selectedTarget.toUpperCase()}`, 10, 60);
+        doc.setTextColor(255, 255, 255);
+        doc.text(`TARGET ID: ${targetData.id}`, 10, 70);
+        doc.text(`ACTIVITY CODE: ${targetData.activity}`, 10, 80);
+        doc.text(`RISK LEVEL: ${targetData.risk}`, 10, 90);
+        doc.text(`TIMESTAMP: ${timestamp}`, 10, 100);
+
+        doc.setFontSize(8);
+        doc.setTextColor(100, 100, 100);
+        doc.text(`SHA-256 AUTHENTICATION HASH:`, 10, 270);
+        doc.text(sha256Hash, 10, 275);
+        
+        doc.save(`DOSSIER_${selectedTarget.replace(' ', '_')}_${Date.now()}.pdf`);
+        setIsGenerating(false);
     };
 
     return (
-        <div className="min-h-screen p-6 animate-fade max-w-xl mx-auto pb-20">
-            <div className="flex justify-between items-center mb-6">
-                <a href="index.html" className="text-[10px] underline opacity-50 text-red-500 font-black">← EXIT PANIC ROOM</a>
-                <span className="text-[9px] text-red-600 animate-pulse uppercase italic">Dynamic Surveillance Active</span>
-            </div>
-
-            <h1 className="text-red-600 text-lg uppercase mb-8 text-center italic tracking-tighter shadow-[0_0_15px_rgba(220,38,38,0.2)]">M5: TERME INTELLIGENCE</h1>
-
-            {/* PANEL 1: TARGET SELECTION & EXPORT */}
-            <div className="glass p-6 rounded-[2.5rem] border-red-500/30 mb-6 shadow-[0_0_20px_rgba(220,38,38,0.1)]">
-                <p className="text-[8px] text-slate-400 uppercase tracking-widest mb-2"><i className="fa-solid fa-crosshairs text-red-500 mr-2"></i>Target Selection (Dossier Generator)</p>
-                <select 
-                    value={selectedTarget} 
-                    onChange={(e) => setSelectedTarget(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 p-4 rounded-2xl text-white text-sm outline-none mb-4 cursor-pointer"
-                >
-                    {targets.map(t => <option key={t.id} value={t.name}>{t.name} ({t.ids})</option>)}
-                </select>
-                
-                <button onClick={exportForensicPDF} className="w-full bg-red-600 hover:bg-red-700 p-4 rounded-2xl text-[10px] uppercase font-black italic shadow-[0_0_15px_rgba(220,38,38,0.4)] transition-all active:scale-95">
-                    <i className="fa-solid fa-file-pdf mr-2"></i> Export Forensic Dossier (.PDF)
+        <div className="min-h-screen p-6 bg-slate-950 text-white italic">
+            {/* HEADER */}
+            <div className="flex justify-between items-center mb-10 border-b border-red-500/30 pb-6">
+                <div>
+                    <span className="text-[10px] text-red-500 uppercase tracking-[0.3em]">M5: Dynamic War Room</span>
+                    <h1 className="text-2xl font-black uppercase tracking-tighter">Silent Siege Protocol</h1>
+                </div>
+                <button onClick={() => window.location.href='index.html'} className="glass p-4 rounded-2xl border-white/10 hover:bg-white/5 transition-all">
+                    <i className="fa-solid fa-house-chimney text-xs"></i>
                 </button>
             </div>
 
-            {/* PANEL 2: LIVE ROSTER */}
-            <div className="glass p-6 rounded-[2.5rem] border-cyan-500/20 mb-6">
-                <p className="text-[9px] text-cyan-500 uppercase tracking-widest mb-4 italic"><i className="fa-solid fa-anchor mr-2"></i>Live Roster: Terme Tersanesi</p>
-                <div className="space-y-3">
-                    {roster.map(v => (
-                        <div key={v.vessel} className={`flex justify-between items-center p-4 bg-black/40 rounded-xl border ${v.alert ? 'border-red-500/50' : 'border-white/5'}`}>
-                            <span className="text-[10px] text-white uppercase italic">{v.vessel}</span>
-                            <span className={`text-[8px] font-black uppercase tracking-widest ${v.alert ? 'text-red-500 animate-pulse' : 'text-cyan-400'}`}>{v.status}</span>
+            {/* TARGET SELECTION PANEL */}
+            <div className="glass p-8 rounded-[3rem] border-red-500/20 mb-8 relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-4 opacity-10">
+                    <i className="fa-solid fa-gavel text-6xl"></i>
+                </div>
+                <p className="text-[9px] uppercase tracking-widest opacity-50 mb-6">Target Dossier Generator</p>
+                
+                <div className="space-y-6">
+                    <select 
+                        value={selectedTarget} 
+                        onChange={(e) => setSelectedTarget(e.target.value)}
+                        className="w-full bg-black/50 p-6 rounded-3xl border border-white/10 text-xl font-black uppercase outline-none focus:border-red-500 transition-all"
+                    >
+                        {Object.keys(targets).map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
+                            <p className="text-[7px] opacity-40 uppercase">Target ID</p>
+                            <p className="text-xs uppercase">{targets[selectedTarget].id}</p>
                         </div>
-                    ))}
+                        <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
+                            <p className="text-[7px] opacity-40 uppercase">Activity</p>
+                            <p className="text-xs uppercase text-red-400">{targets[selectedTarget].activity}</p>
+                        </div>
+                    </div>
+
+                    <button 
+                        onClick={generateForensicDossier}
+                        disabled={isGenerating}
+                        className="w-full bg-red-600 hover:bg-red-500 p-8 rounded-[2.5rem] text-[11px] uppercase font-black italic shadow-2xl shadow-red-950/50 transition-all active:scale-95 flex items-center justify-center gap-3"
+                    >
+                        {isGenerating ? <i className="fa-solid fa-circle-notch animate-spin"></i> : <i className="fa-solid fa-file-export"></i>}
+                        Export Forensic Dossier (.PDF)
+                    </button>
                 </div>
             </div>
 
-            {/* PANEL 3: HISTORY LOG */}
-            <div className="glass p-6 rounded-[2.5rem] border-slate-700 opacity-90">
-                <p className="text-[9px] text-slate-400 uppercase tracking-widest mb-4 italic"><i className="fa-solid fa-clock-rotate-left mr-2"></i>Visitor History Log</p>
-                <div className="space-y-2 text-[8px] font-mono text-slate-400 italic">
-                    <p className="border-l-2 border-slate-600 pl-2">> 25/03: OCEAN PEACE (Departure Terme)</p>
-                    <p className="border-l-2 border-slate-600 pl-2">> 22/03: ALASUND TRAWLER 01 (Arrival Terme)</p>
-                    <p className="border-l-2 border-red-900 pl-2 text-red-500">> 18/03: S.V. NIKOLAY (Entry Geofence)</p>
-                </div>
+            {/* LIVE ROSTER (M5 LOGIC) */}
+            <div className="space-y-4 pb-20">
+                <p className="text-[10px] uppercase font-black opacity-40 ml-4 tracking-widest">Active Watchlist Intelligence</p>
+                {Object.entries(targets).map(([name, data]) => (
+                    <div key={name} className={`glass p-6 rounded-3xl border-white/5 flex justify-between items-center ${selectedTarget === name ? 'target-active' : ''}`}>
+                        <div>
+                            <p className="text-xs font-black uppercase tracking-tight">{name}</p>
+                            <p className="text-[8px] opacity-40 uppercase">{data.status}</p>
+                        </div>
+                        <div className="text-right">
+                            <p className="text-[8px] text-red-500 font-black uppercase tracking-tighter">Risk Level</p>
+                            <p className="text-xs font-black">{data.risk}</p>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            <div className="fixed bottom-6 left-0 right-0 text-center">
+                <p className="text-[7px] opacity-20 tracking-[0.5rem] uppercase">SHA-256 Forensic Integrity Active</p>
             </div>
         </div>
     );
 };
-
 ReactDOM.createRoot(document.getElementById('root')).render(<WarRoom />);
-</script>
-</body>
-</html>
+</script></body></html>

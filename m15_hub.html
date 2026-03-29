@@ -1,0 +1,53 @@
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+const NeuralHub = () => {
+    // Reading Shared War Map
+    const [activeOps, setActiveOps] = useState({ radar: 0, utm: 0, legal: 0 });
+
+    useEffect(() => {
+        const radar = JSON.parse(localStorage.getItem('ntg_M4_radar') || '[]');
+        const utm = JSON.parse(localStorage.getItem('ntg_M1_utm_logs') || '[]');
+        setActiveOps({
+            radar: radar.length,
+            utm: utm.length,
+            legal: 3 // Fixed targets in War Room
+        });
+    }, []);
+
+    return (
+        <div className="min-h-screen p-6 bg-slate-950 text-white italic font-bold">
+            {/* NEURAL SYNC MONITOR */}
+            <div className="glass p-6 rounded-[2.5rem] border-blue-500/30 mb-8 overflow-hidden relative">
+                <div className="flex justify-between items-center mb-4">
+                    <p className="text-[10px] text-blue-400 uppercase tracking-widest">Neural Sync Status</p>
+                    <div className="flex gap-1">
+                        <div className="w-1 h-1 bg-emerald-500 rounded-full animate-ping"></div>
+                        <div className="w-1 h-1 bg-emerald-500 rounded-full"></div>
+                    </div>
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-center">
+                    <div className="bg-white/5 p-2 rounded-xl border border-white/5">
+                        <p className="text-[7px] opacity-50 uppercase">M4 Hunt</p>
+                        <p className="text-xs">{activeOps.radar} Targets</p>
+                    </div>
+                    <div className="bg-white/5 p-2 rounded-xl border border-white/5">
+                        <p className="text-[7px] opacity-50 uppercase">M14 Intel</p>
+                        <p className="text-xs">€{activeOps.radar * 2500} Est.</p>
+                    </div>
+                    <div className="bg-white/5 p-2 rounded-xl border border-white/5 text-red-400">
+                        <p className="text-[7px] opacity-50 uppercase">M5 Siege</p>
+                        <p className="text-xs">Active</p>
+                    </div>
+                </div>
+                {/* Visual Connector Line */}
+                <div className="mt-4 h-[1px] bg-gradient-to-r from-transparent via-blue-500 to-transparent opacity-30"></div>
+                <p className="mt-2 text-[8px] text-center opacity-40 uppercase">Cross-Fortress Communication: OPTIMAL</p>
+            </div>
+
+            {/* REST OF THE 15 DIVISIONS GRID... (As previously sent) */}
+        </div>
+    );
+};
+ReactDOM.createRoot(document.getElementById('root')).render(<NeuralHub />);
+</script>

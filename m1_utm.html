@@ -1,27 +1,60 @@
 <!DOCTYPE html>
 <html lang="el">
 <head>
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>M1: UTM Gauging</title>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>M1: UTM Analysis</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <style>@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');body{background:#020617;color:white;font-family:'Orbitron',sans-serif;font-style:italic;font-weight:bold;}.glass{background:rgba(15,23,42,0.7);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.1);}</style>
+    <style>@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');body{background:#020617;color:white;font-family:'Orbitron',sans-serif;font-style:italic;font-weight:bold;}.glass{background:rgba(15,23,42,0.8);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.05);}</style>
 </head>
 <body><div id="root"></div><script type="text/babel">
-const UtmApp=()=>{
-    return(
-        <div className="min-h-screen p-6 animate-fade bg-slate-950">
-            <div className="flex justify-between items-center mb-8"><a href="index.html" className="text-[10px] underline opacity-50 text-slate-400">← HUB</a></div>
-            <h1 className="text-slate-400 text-lg uppercase mb-10 text-center italic tracking-tighter">M1: UTM GAUGING</h1>
-            <div className="glass p-10 rounded-[3rem] border-slate-800 text-center opacity-20">
-                <i className="fa-solid fa-microchip text-4xl mb-4"></i>
-                <p className="text-[8px] uppercase tracking-widest italic">Awaiting UTM GEM Protocols</p>
+const { useState } = React;
+
+const UTMApp = () => {
+    const [original, setOriginal] = useState('');
+    const [current, setCurrent] = useState('');
+    const [diminution, setDiminution] = useState(null);
+
+    const calc = () => {
+        const o = parseFloat(original);
+        const c = parseFloat(current);
+        if (o && c) {
+            const res = ((o - c) / o) * 100;
+            setDiminution(res.toFixed(1));
+        }
+    };
+
+    return (
+        <div className="min-h-screen p-6 bg-slate-950 flex flex-col items-center italic">
+            <div className="w-full max-w-md flex justify-between items-center mb-8 border-b border-blue-500/30 pb-4">
+                <h1 className="text-xl font-black uppercase tracking-tighter text-blue-400">M1: UTM Analysis</h1>
+                <button onClick={() => window.location.href='index.html'} className="glass p-3 rounded-xl"><i className="fa-solid fa-house text-xs"></i></button>
+            </div>
+
+            <div className="w-full max-w-md glass p-8 rounded-[3rem] border-blue-500/20 space-y-6">
+                <div>
+                    <p className="text-[9px] uppercase opacity-50 mb-2">Original Plate Thickness (mm)</p>
+                    <input type="number" value={original} onChange={(e)=>setOriginal(e.target.value)} className="w-full bg-black/50 p-5 rounded-2xl text-2xl font-black text-center border border-white/5" placeholder="0.00" />
+                </div>
+                <div>
+                    <p className="text-[9px] uppercase opacity-50 mb-2">Actual Reading (mm)</p>
+                    <input type="number" value={current} onChange={(e)=>setCurrent(e.target.value)} className="w-full bg-black/50 p-5 rounded-2xl text-2xl font-black text-center border border-blue-500/40 text-blue-400" placeholder="0.00" />
+                </div>
+                <button onClick={calc} className="w-full bg-blue-600 p-6 rounded-[2rem] text-xs uppercase font-black shadow-xl">Calculate Diminution</button>
+                
+                {diminution && (
+                    <div className={`p-6 rounded-3xl text-center border-2 ${diminution > 20 ? 'border-red-500 bg-red-500/10' : 'border-emerald-500 bg-emerald-500/10'}`}>
+                        <p className="text-[10px] uppercase mb-1">Diminution Result</p>
+                        <p className="text-4xl font-black tracking-tighter">{diminution}%</p>
+                        <p className="text-[8px] mt-2 uppercase">{diminution > 20 ? 'CRITICAL: RENEWAL REQUIRED' : 'PLATE WITHIN LIMITS'}</p>
+                    </div>
+                )}
             </div>
         </div>
     );
 };
-ReactDOM.createRoot(document.getElementById('root')).render(<UtmApp/>);
+ReactDOM.createRoot(document.getElementById('root')).render(<UTMApp />);
 </script></body></html>

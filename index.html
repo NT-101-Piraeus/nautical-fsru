@@ -2,99 +2,125 @@
 <html lang="el">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NauticalOS: Command Hub v4.30</title>
+    <title>NauticalOS: Command Hub v4.41</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <style>@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');body{background:#020617;color:white;font-family:'Orbitron',sans-serif;font-style:italic;font-weight:bold;}.glass{background:rgba(15,23,42,0.7);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.1);}</style>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');
+        body { background:#020617; color:white; font-family:'Orbitron',sans-serif; font-style:italic; font-weight:bold; overflow-x:hidden; }
+        .glass { background:rgba(15,23,42,0.7); backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,0.1); }
+        .animate-fade { animation: fadeIn 0.5s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
 </head>
 <body><div id="root"></div><script type="text/babel">
 const { useState, useEffect } = React;
 
+// --- SAFE STORAGE WRAPPER (Prevents Refresh Crashes) ---
+const getSafeData = (key, defaultVal) => {
+    try {
+        const data = localStorage.getItem(key);
+        return data ? JSON.parse(data) : defaultVal;
+    } catch (e) {
+        console.error("Data Load Error:", e);
+        return defaultVal;
+    }
+};
+
 const HubCommand = () => {
-    const [m3Stats, setM3Stats] = useState({ won: 0, lost: 0, pendingEvidence: 0 });
+    const [stats, setStats] = useState({ won: 0, lost: 0, alerts: 0, revenue: 0 });
 
     useEffect(() => {
-        // Sync Logic: Reading from M3 Fortress
-        const jobs = JSON.parse(localStorage.getItem('ntg_M3_jobs') || '[]');
-        const won = jobs.filter(j => j.status === 'WON').length;
-        const lost = jobs.filter(j => j.status === 'LOST').length;
+        // Syncing with Fortresses
+        const m3Jobs = getSafeData('ntg_M3_jobs', []);
+        const m14Offers = getSafeData('ntg_M14_offers', []);
         
-        // Simulation of log checking for evidence
-        setM3Stats({ won, lost, pendingEvidence: won > 0 ? 1 : 0 });
+        setStats({
+            won: m3Jobs.filter(j => j.status === 'WON').length,
+            lost: m3Jobs.filter(j => j.status === 'LOST').length,
+            alerts: m3Jobs.filter(j => j.status === 'WON').length > 0 ? 1 : 0, // Evidence Alert
+            revenue: m14Offers.filter(o => o.status === 'WON').reduce((acc, curr) => acc + curr.value, 0)
+        });
     }, []);
 
     return (
-        <div className="min-h-screen p-6 bg-slate-950 text-white italic">
+        <div className="min-h-screen p-6 animate-fade">
             {/* HEADER */}
-            <div className="mb-10 flex justify-between items-end border-b border-white/10 pb-6">
+            <div className="mb-8 flex justify-between items-end border-b border-white/10 pb-6">
                 <div>
-                    <h1 className="text-2xl font-black tracking-tighter uppercase">NauticalOS Hub</h1>
-                    <p className="text-[9px] text-blue-400 uppercase tracking-widest font-black">Fleet Operations Command</p>
+                    <h1 className="text-xl font-black tracking-tighter uppercase">NauticalOS Hub</h1>
+                    <p className="text-[8px] text-blue-400 uppercase tracking-widest font-black italic">Fleet Operations Command</p>
                 </div>
                 <div className="text-right">
-                    <p className="text-[8px] opacity-50 uppercase">Vessel: MT FELIX</p>
-                    <p className="text-[10px] font-black text-orange-500">ADMIN: 1234 ACTIVE</p>
+                    <p className="text-[10px] font-black text-orange-500 uppercase italic">Admin: 1234</p>
+                    <p className="text-[8px] opacity-40 uppercase">Vessel: MT FELIX</p>
                 </div>
             </div>
 
-            {/* OPERATIONS DASHBOARD CARD (M3 SYNC) */}
-            <div className="mb-10 animate-fade">
-                <div className="glass p-8 rounded-[3rem] border-orange-500/30 relative overflow-hidden">
-                    <div className="flex justify-between items-start mb-6">
-                        <div>
-                            <p className="text-[10px] text-orange-500 font-black uppercase italic">M3 Load Test Insight</p>
-                            <h2 className="text-xl font-black uppercase">Live Operations</h2>
-                        </div>
-                        <i className="fa-solid fa-tower-broadcast text-orange-500 animate-pulse"></i>
+            {/* COMMERCIAL PULSE CARD (M14 SYNC) */}
+            <div className="mb-6 glass p-6 rounded-[2.5rem] border-emerald-500/30 relative overflow-hidden active:scale-95 transition-all" onClick={() => window.location.href='m14_commercial.html'}>
+                <div className="flex justify-between items-center mb-4">
+                    <span className="text-[9px] text-emerald-500 uppercase font-black italic">Commercial Intel Insight</span>
+                    <i className="fa-solid fa-chart-line text-emerald-500"></i>
+                </div>
+                <div className="flex justify-between items-end">
+                    <div>
+                        <p className="text-[8px] opacity-50 uppercase mb-1">Secured Revenue</p>
+                        <p className="text-2xl font-black tracking-tighter">€{stats.revenue.toLocaleString()}</p>
                     </div>
-
-                    <div className="grid grid-cols-3 gap-4">
-                        <div className="bg-emerald-500/10 p-4 rounded-2xl border border-emerald-500/20 text-center">
-                            <p className="text-[8px] text-emerald-500 uppercase font-black">Won</p>
-                            <p className="text-xl font-black">{m3Stats.won}</p>
-                        </div>
-                        <div className="bg-red-500/10 p-4 rounded-2xl border border-red-500/20 text-center">
-                            <p className="text-[8px] text-red-500 uppercase font-black">Lost</p>
-                            <p className="text-xl font-black">{m3Stats.lost}</p>
-                        </div>
-                        <div className="bg-orange-500/10 p-4 rounded-2xl border border-orange-500/20 text-center">
-                            <p className="text-[8px] text-orange-500 uppercase font-black italic">Alerts</p>
-                            <p className="text-xl font-black">{m3Stats.pendingEvidence}⚠️</p>
-                        </div>
+                    <div className="text-right">
+                        <p className="text-[8px] opacity-50 uppercase mb-1">Conversion</p>
+                        <p className="text-sm font-black text-emerald-400">Stable</p>
                     </div>
-
-                    {m3Stats.pendingEvidence > 0 && (
-                        <div className="mt-6 p-4 bg-orange-500/20 rounded-2xl text-center border border-orange-500/30">
-                            <p className="text-[9px] text-orange-400 uppercase font-black italic">Warning: Evidence missing on active jobs!</p>
-                        </div>
-                    )}
                 </div>
             </div>
 
-            {/* DIVISION SELECTOR */}
+            {/* M3 LOAD TEST INSIGHT CARD */}
+            <div className="mb-10 glass p-6 rounded-[2.5rem] border-orange-500/30 relative overflow-hidden active:scale-95 transition-all" onClick={() => window.location.href='m3_loadtest.html'}>
+                <div className="flex justify-between items-center mb-4 text-orange-500">
+                    <span className="text-[9px] uppercase font-black italic">M3 Load Test Pro</span>
+                    <i className="fa-solid fa-tower-broadcast animate-pulse"></i>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                    <div className="bg-emerald-500/10 p-3 rounded-2xl border border-emerald-500/20 text-center text-emerald-500">
+                        <p className="text-[7px] uppercase font-black">Won</p>
+                        <p className="text-lg font-black">{stats.won}</p>
+                    </div>
+                    <div className="bg-red-500/10 p-3 rounded-2xl border border-red-500/20 text-center text-red-500">
+                        <p className="text-[7px] uppercase font-black">Lost</p>
+                        <p className="text-lg font-black">{stats.lost}</p>
+                    </div>
+                    <div className="bg-orange-500/10 p-3 rounded-2xl border border-orange-500/20 text-center text-orange-500">
+                        <p className="text-[7px] uppercase font-black italic">Alerts</p>
+                        <p className="text-lg font-black">{stats.alerts}⚠️</p>
+                    </div>
+                </div>
+            </div>
+
+            {/* DIVISION SELECTOR - 2x2 GRID (No Gaps) */}
             <div className="grid grid-cols-2 gap-4">
-                <button onClick={() => window.location.href='m2_safety.html'} className="glass p-10 rounded-[3rem] border-blue-500/30 text-center active:scale-95 transition-all">
-                    <i className="fa-solid fa-shield-halved text-3xl mb-4 text-blue-500"></i>
-                    <p className="text-[10px] font-black uppercase">M2 Safety</p>
+                <button onClick={() => window.location.href='m2_safety.html'} className="glass p-8 rounded-[2.5rem] border-blue-500/20 text-center active:scale-95 transition-all">
+                    <i className="fa-solid fa-shield-halved text-2xl mb-3 text-blue-500"></i>
+                    <p className="text-[9px] font-black uppercase">M2 Safety</p>
                 </button>
-                <button onClick={() => window.location.href='m3_loadtest.html'} className="glass p-10 rounded-[3rem] border-orange-500/30 text-center active:scale-95 transition-all">
-                    <i className="fa-solid fa-anchor text-3xl mb-4 text-orange-500"></i>
-                    <p className="text-[10px] font-black uppercase">M3 Load Test</p>
+                <button onClick={() => window.location.href='m3_loadtest.html'} className="glass p-8 rounded-[2.5rem] border-orange-500/20 text-center active:scale-95 transition-all">
+                    <i className="fa-solid fa-anchor text-2xl mb-3 text-orange-500"></i>
+                    <p className="text-[9px] font-black uppercase">M3 Load Test</p>
                 </button>
-                <button className="glass p-10 rounded-[3rem] border-white/5 opacity-30 text-center grayscale">
-                    <i className="fa-solid fa-satellite-dish text-3xl mb-4"></i>
-                    <p className="text-[10px] font-black uppercase">M4 Radar</p>
+                <button className="glass p-8 rounded-[2.5rem] border-white/5 opacity-30 text-center grayscale">
+                    <i className="fa-solid fa-satellite-dish text-2xl mb-3"></i>
+                    <p className="text-[9px] font-black uppercase tracking-widest">M4 Radar</p>
                 </button>
-                <button className="glass p-10 rounded-[3rem] border-white/5 opacity-30 text-center grayscale">
-                    <i className="fa-solid fa-scale-balanced text-3xl mb-4"></i>
-                    <p className="text-[10px] font-black uppercase">M7 Legal</p>
+                <button onClick={() => window.location.href='m14_commercial.html'} className="glass p-8 rounded-[2.5rem] border-emerald-500/20 text-center active:scale-95 transition-all">
+                    <i className="fa-solid fa-vault text-2xl mb-3 text-emerald-500"></i>
+                    <p className="text-[9px] font-black uppercase">M14 Intel</p>
                 </button>
             </div>
 
-            <p className="fixed bottom-6 left-0 right-0 text-center text-[7px] opacity-30 tracking-[0.4rem] uppercase italic">Nautical Technology Systems Command Hub</p>
+            <p className="fixed bottom-6 left-0 right-0 text-center text-[7px] opacity-20 tracking-[0.4rem] uppercase italic">Nautical Technology Hub v4.41</p>
         </div>
     );
 };

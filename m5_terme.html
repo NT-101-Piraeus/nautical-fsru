@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>M5: War Room V6.0 - LOCKDOWN PROTOCOL</title>
+    <title>M5: War Room V6.5 - EVIDENCE MATRIX</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -11,13 +11,19 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');
-        body { background: #020617; color: white; font-family: 'Orbitron', sans-serif; font-style: italic; font-weight: bold; }
-        .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
-        .sun-mode { background: #f8fafc !important; color: #0f172a !important; }
-        .sun-mode .glass { background: white !important; border: 1px solid #cbd5e1 !important; color: #0f172a !important; }
-        .fat-finger { height: 80px; font-weight: 900; text-transform: uppercase; border-radius: 1.5rem; transition: all 0.2s; }
+        body { background: #020617; color: white; font-family: 'Orbitron', sans-serif; overflow-x: hidden; }
+        .glass { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.05); }
+        .node { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; z-index: 10; position: absolute; transform: translate(-50%, -50%); }
+        .node:hover { transform: translate(-50%, -50%) scale(1.1); box-shadow: 0 0 20px currentColor; }
+        .svg-lines { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+        .line-link { stroke: rgba(255, 255, 255, 0.2); stroke-width: 2; cursor: pointer; pointer-events: stroke; transition: all 0.3s; }
+        .line-link:hover { stroke: #f97316; stroke-width: 4; filter: drop-shadow(0 0 5px #f97316); }
+        .status-red { border-color: #ef4444; color: #ef4444; box-shadow: inset 0 0 10px rgba(239, 68, 68, 0.2); }
+        .status-yellow { border-color: #eab308; color: #eab308; box-shadow: inset 0 0 10px rgba(234, 179, 8, 0.2); }
+        .status-green { border-color: #22c55e; color: #22c55e; box-shadow: inset 0 0 10px rgba(34, 197, 94, 0.2); }
+        .fat-finger { height: 60px; font-weight: 900; text-transform: uppercase; border-radius: 1rem; transition: all 0.2s; }
         .fat-finger:active { transform: scale(0.95); }
-        .glitch-red { color: #ef4444; text-shadow: 2px 0 #000, -2px 0 #fff; }
+        .timeline-line { position: absolute; left: 20px; top: 0; bottom: 0; width: 2px; background: rgba(255,255,255,0.1); }
     </style>
 </head>
 <body>
@@ -25,152 +31,184 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        const WarRoom = () => {
-            const [sunMode, setSunMode] = useState(false);
+        const WarRoomSpider = () => {
             const [isAuthenticated, setIsAuthenticated] = useState(false);
-            const [entryPin, setEntryPin] = useState("");
-            
-            const [selectedTarget, setSelectedTarget] = useState(1);
-            const [exportPin, setExportPin] = useState("");
-            const [showExportModal, setShowExportModal] = useState(false);
+            const [pin, setPin] = useState("");
+            const [activeTab, setActiveTab] = useState('SPIDER'); // SPIDER | MATRIX
+            const [activeEvidence, setActiveEvidence] = useState(null);
 
-            // [V6.0] THE SYNDICATE DATA INGESTION
-            const targets = [
-                { id: 1, utid: "UT-9482-926", name: 'Emir Öztürk', role: 'Warsaw Proxy', reg: 'NIP: 5262587598', anomaly: 'NACE 49.32 (TAXI SERVICES)' },
-                { id: 2, utid: "UT-1234-567", name: 'Erkan Zorlu', role: 'Mastermind', reg: 'TR-ID: CONFIDENTIAL', anomaly: 'ASSET CONCEALMENT' },
-                { id: 3, utid: "UT-9876-543", name: 'İpek Banu Karaca', role: 'Associated Party', reg: 'TR-ID: CONFIDENTIAL', anomaly: 'MONEY FUNNEL' },
-                { id: 4, utid: "UT-SYND-001", name: 'Terme Capital / Barker', role: 'Corporate Shells', reg: 'NL-IBAN / TR-REG', anomaly: 'ILLICIT FUND ROUTING' },
-                { id: 5, utid: "UT-SYND-002", name: 'Tugrul, Hasan, Aydin', role: 'Strawmen (Αχυράνθρωποι)', reg: 'MULTIPLE TR-IDs', anomaly: 'FRAUDULENT OWNERSHIP' }
-            ];
+            // Matrix States
+            const [scandalLink, setScandalLink] = useState('');
+            const [scandalCategory, setScandalCategory] = useState('Financial Misconduct');
+            const [scandalLogs, setScandalLogs] = useState([]);
 
-            const currentTarget = targets.find(t => t.id === selectedTarget);
-
-            // [Art. 2] HARD ENTRY GATE (Lockdown Protocol)
             useEffect(() => {
                 if (sessionStorage.getItem('ntg_global_auth') === 'true') setIsAuthenticated(true);
             }, []);
 
-            const handleEntryLogin = () => {
-                if (entryPin === "1234") {
-                    sessionStorage.setItem('ntg_global_auth', 'true');
-                    setIsAuthenticated(true);
-                } else {
-                    alert("SECURITY BREACH DETECTED. ACCESS DENIED.");
-                    setEntryPin("");
-                }
+            const verifyPin = () => {
+                if (pin === "1234") { sessionStorage.setItem('ntg_global_auth', 'true'); setIsAuthenticated(true); } 
+                else { alert("LOCKDOWN V6.5: ACCESS DENIED"); setPin(""); }
             };
 
-            const logAction = (action, target) => {
-                const logEntry = { action, target, ts: new Date().toISOString() };
-                const logs = JSON.parse(localStorage.getItem('ntg_M5_logs') || '[]');
-                localStorage.setItem('ntg_M5_logs', JSON.stringify([...logs, logEntry]));
+            const addScandalLog = () => {
+                if (!scandalLink) return;
+                setScandalLogs([...scandalLogs, { url: scandalLink, category: scandalCategory, id: Date.now() }]);
+                setScandalLink('');
             };
 
-            const generateForensicPDF = async () => {
-                if (exportPin !== "1234") { alert("INVALID MASTER PIN"); return; }
-                
+            const generateBreachSummary = () => {
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF();
-                const ts = new Date().toUTCString();
-                
-                const msgBuffer = new TextEncoder().encode(JSON.stringify(currentTarget) + ts);
-                const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-                const hashHex = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
-
-                doc.setFontSize(14);
+                doc.setFontSize(16);
                 doc.setTextColor(220, 38, 38);
-                doc.text("STRICTLY PRIVATE - FORENSIC DOSSIER", 105, 20, { align: "center" });
-                doc.setTextColor(0,0,0);
-                doc.setFontSize(7);
-                doc.text(`UTID-SYNC: ${currentTarget.utid} | HASH: ${hashHex}`, 105, 30, { align: "center" });
-                
+                doc.text("BREACH SUMMARY: 2008-2015", 105, 20, { align: "center" });
                 doc.setFontSize(10);
-                doc.text(`TARGET IDENTITY: ${currentTarget.name}`, 20, 50);
-                doc.text(`OPERATIONAL ROLE: ${currentTarget.role}`, 20, 60);
-                doc.text(`KNOWN REGISTRY: ${currentTarget.reg}`, 20, 70);
-                doc.setTextColor(220, 38, 38);
-                doc.text(`CRITICAL ANOMALY: ${currentTarget.anomaly}`, 20, 80);
-                
-                doc.setTextColor(0,0,0);
-                doc.text(`CERTIFIED TIMESTAMP: ${ts}`, 20, 110);
-                doc.text(`M10 AUDITOR VERIFIED | PROTOCOL V6.0`, 20, 120);
-
-                doc.save(`DOSSIER_${currentTarget.utid}.pdf`);
-                logAction("PDF_EXPORT_SEALED", currentTarget.utid);
-                setShowExportModal(false);
-                setExportPin("");
+                doc.setTextColor(0, 0, 0);
+                doc.text("PREPARED FOR: YURDAER LEGAL TEAM", 20, 40);
+                doc.text("GENERATED BY: M10 SUPREME AUDITOR (V6.5)", 20, 50);
+                doc.text("CONFIDENTIAL & PRIVILEGED", 20, 60);
+                doc.save("Breach_Summary_Yurdaer.pdf");
+                alert("Breach Summary generated for Yurdaer.");
             };
 
-            if (!isAuthenticated) {
-                return (
-                    <div className="min-h-screen bg-[#020617] flex items-center justify-center p-6">
-                        <div className="glass p-10 rounded-[3rem] w-full max-w-sm text-center border-red-900/50 shadow-2xl shadow-red-900/20">
-                            <i className="fa-solid fa-lock text-5xl text-red-600 mb-6 glitch-red"></i>
-                            <h2 className="text-sm font-black uppercase mb-2 text-red-500 tracking-widest">Lockdown Protocol</h2>
-                            <p className="text-[8px] opacity-50 uppercase tracking-[0.3em] mb-8">Division Isolation V6.0</p>
-                            <input type="password" value={entryPin} onChange={(e) => setEntryPin(e.target.value)} className="w-full bg-black/60 border border-red-900/30 p-6 rounded-2xl text-center text-4xl tracking-[1rem] outline-none text-red-500 mb-6" autoFocus />
-                            <button onClick={handleEntryLogin} className="fat-finger w-full bg-red-900/40 border border-red-600/50 text-red-500 hover:bg-red-600 hover:text-white">DECRYPT</button>
-                        </div>
-                    </div>
-                );
-            }
+            // V6.4 SPIDER WEB DATA
+            const nodes = [
+                { id: 'terme', label: 'Terme Tersanesi', type: 'CENTER', status: 'red', x: 50, y: 50, icon: 'fa-ship' },
+                { id: 'zorlu', label: 'Erkan Zorlu', type: 'Mastermind', status: 'red', x: 20, y: 20, icon: 'fa-user-tie' },
+                { id: 'karaca', label: 'Tuğrul Karaca', type: 'Signatory', status: 'red', x: 80, y: 20, icon: 'fa-file-signature' },
+                { id: 'hasan', label: 'Hasan Öztürk', type: 'Emir Owner', status: 'yellow', x: 80, y: 80, icon: 'fa-user-secret' },
+                { id: 'emir', label: 'Emir Denizcilik', type: 'Vessel Proxy', status: 'yellow', x: 50, y: 85, icon: 'fa-anchor' },
+                { id: 'barker', label: 'Barker Financial', type: 'Dutch Shell', status: 'green', x: 20, y: 80, icon: 'fa-building-columns' }
+            ];
 
-            return (
-                <div className={`min-h-screen p-4 transition-all ${sunMode ? 'sun-mode' : ''}`}>
-                    <div className="flex justify-between items-center mb-6 pt-4 px-2">
-                        <div className="flex gap-2">
-                            <button onClick={() => setSunMode(!sunMode)} className="glass p-3 rounded-xl"><i className={`fa-solid ${sunMode ? 'fa-moon' : 'fa-sun text-orange-500'}`}></i></button>
-                            <a href="index.html" className="glass p-3 rounded-xl"><i className="fa-solid fa-house text-slate-400"></i></a>
-                        </div>
-                        <div className="text-right">
-                            <span className="text-[7px] text-red-600 uppercase tracking-widest animate-pulse border border-red-600/30 px-2 py-1 rounded">V6.0 LOCKED</span>
-                            <p className="text-[10px] font-black italic mt-1">M5: WAR ROOM</p>
-                        </div>
-                    </div>
+            const links = [
+                { source: 'zorlu', target: 'terme', evidence: 'UBO Concealment. Commands all Terme operations.' },
+                { source: 'karaca', target: 'terme', evidence: 'Official Signatory. Signed the fraudulent NTG contracts.' },
+                { source: 'hasan', target: 'emir', evidence: 'Strawman Owner. Registered as sole shareholder.' },
+                { source: 'emir', target: 'terme', evidence: 'Shared Registry Address. Emir operates from within Terme.' },
+                { source: 'terme', target: 'barker', evidence: 'Payment Receipt for $11M. Illicit fund transfer.' }
+            ];
 
-                    <div className="glass p-6 rounded-[2.5rem] mb-6 border-l-4 border-red-600 shadow-2xl">
-                        <p className="text-[8px] opacity-50 uppercase mb-4 tracking-tighter">Syndicate Database</p>
-                        <select value={selectedTarget} onChange={(e) => { setSelectedTarget(Number(e.target.value)); logAction("TARGET_VIEW", targets.find(t=>t.id==e.target.value).utid); }} className="w-full bg-slate-900/50 p-4 rounded-2xl mb-4 border border-white/10 outline-none text-sm text-red-400">
-                            {targets.map(t => <option key={t.id} value={t.id}>{t.name} ({t.utid})</option>)}
-                        </select>
+            // V6.5 BREACH VESSELS (2008-2015)
+            const breachVessels = [
+                { name: 'GHOST HULL 1', imo: '9876543', owner: 'Emir Denizcilik', year: 2011, status: 'Financial Misconduct' },
+                { name: 'PROXY STAR', imo: '9988776', owner: 'Capital Shipping', year: 2013, status: 'Operational Fraud' }
+            ];
 
-                        <div className="bg-black/20 p-4 rounded-2xl mb-6 border border-red-900/20">
-                            <p className="text-[10px] text-red-500 font-black uppercase tracking-widest">{currentTarget.anomaly}</p>
-                            <p className="text-[8px] opacity-40 italic mt-1">Role: {currentTarget.role}</p>
-                        </div>
-
-                        <button onClick={() => setShowExportModal(true)} className="fat-finger w-full bg-red-600/10 border border-red-600/30 text-red-500 hover:bg-red-600 hover:text-white flex items-center justify-center gap-3">
-                            <i className="fa-solid fa-fingerprint text-xl"></i>
-                            <span>Seal Dossier (.PDF)</span>
-                        </button>
-                    </div>
-
-                    {showExportModal && (
-                        <div className="fixed inset-0 bg-black/95 backdrop-blur-xl z-50 flex items-center justify-center p-6">
-                            <div className="glass p-8 rounded-[2.5rem] w-full max-w-sm text-center border border-red-600/30">
-                                <p className="text-xs text-red-500 uppercase mb-6 font-black tracking-widest">Master PIN Required</p>
-                                <input type="password" value={exportPin} onChange={(e) => setExportPin(e.target.value)} className="w-full bg-black/50 border-b-2 border-red-600 text-4xl text-red-500 text-center outline-none mb-8 tracking-[1em]" autoFocus />
-                                <div className="grid grid-cols-2 gap-4">
-                                    <button onClick={() => setShowExportModal(false)} className="p-4 uppercase text-[10px] opacity-50">Cancel</button>
-                                    <button onClick={generateForensicPDF} className="p-4 bg-red-600 rounded-2xl uppercase text-[10px] font-black">Generate</button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    <div className="glass p-6 rounded-[2.5rem] opacity-80 border border-blue-900/30">
-                        <p className="text-[8px] text-blue-400 uppercase mb-4 tracking-widest">M4 Radar Feed: The Hostage Zone</p>
-                        <div className="space-y-3">
-                            <div className="flex justify-between items-center p-4 bg-red-900/10 border border-red-900/30 rounded-2xl animate-pulse">
-                                <span className="text-[10px] italic">S.V. NIKOLAY</span>
-                                <span className="text-[8px] font-black text-red-500">SDN ALERT | TRACKING</span>
-                            </div>
-                        </div>
+            if (!isAuthenticated) return (
+                <div className="min-h-screen flex items-center justify-center p-6">
+                    <div className="glass p-10 rounded-[3rem] w-full max-w-sm text-center border-red-500/30">
+                        <i className="fa-solid fa-fingerprint text-5xl text-red-500 mb-6 animate-pulse"></i>
+                        <h2 className="text-sm font-black uppercase mb-8 tracking-widest text-red-500">M5 Lockdown V6.5</h2>
+                        <input type="password" value={pin} onChange={(e) => setPin(e.target.value)} className="w-full bg-black/50 border border-white/10 p-6 rounded-2xl text-center text-4xl tracking-[1rem] outline-none text-red-500 mb-6 font-black" autoFocus />
+                        <button onClick={verifyPin} className="fat-finger w-full bg-red-900/50 border border-red-500 text-red-500 hover:bg-red-600 hover:text-white transition-all">Authenticate</button>
                     </div>
                 </div>
             );
+
+            return (
+                <div className="min-h-screen relative overflow-hidden bg-slate-950 p-6 flex flex-col">
+                    {/* Header & Tabs */}
+                    <header className="relative z-20 glass p-6 rounded-[2rem] mb-6 border border-red-900/50">
+                        <div className="flex justify-between items-center mb-6">
+                            <div className="flex items-center gap-4">
+                                <i className="fa-solid fa-scale-balanced text-3xl text-red-500"></i>
+                                <div>
+                                    <h1 className="text-lg font-black uppercase italic tracking-tighter">M5: Legal Operations</h1>
+                                    <p className="text-[8px] text-red-500 uppercase tracking-[0.4em] font-bold">V6.5 Active</p>
+                                </div>
+                            </div>
+                            <a href="index.html" className="p-4 glass rounded-xl hover:text-orange-500 transition-colors"><i className="fa-solid fa-house"></i></a>
+                        </div>
+                        <div className="flex gap-4">
+                            <button onClick={() => setActiveTab('SPIDER')} className={`flex-1 py-3 rounded-xl font-black text-xs uppercase transition-all ${activeTab === 'SPIDER' ? 'bg-red-600 text-white' : 'bg-black/40 text-slate-400'}`}>Spider Web</button>
+                            <button onClick={() => setActiveTab('MATRIX')} className={`flex-1 py-3 rounded-xl font-black text-xs uppercase transition-all ${activeTab === 'MATRIX' ? 'bg-orange-600 text-white' : 'bg-black/40 text-slate-400'}`}>Evidence Matrix</button>
+                        </div>
+                    </header>
+
+                    {/* TAB: SPIDER WEB */}
+                    {activeTab === 'SPIDER' && (
+                        <div className="relative flex-grow glass rounded-[3rem] border border-slate-800 overflow-hidden min-h-[500px]">
+                            <svg className="svg-lines">
+                                {links.map((link, i) => {
+                                    const sourceNode = nodes.find(n => n.id === link.source);
+                                    const targetNode = nodes.find(n => n.id === link.target);
+                                    return <line key={i} x1={`${sourceNode.x}%`} y1={`${sourceNode.y}%`} x2={`${targetNode.x}%`} y2={`${targetNode.y}%`} className="line-link" onClick={() => setActiveEvidence(link.evidence)} />
+                                })}
+                            </svg>
+                            {nodes.map(node => (
+                                <div key={node.id} className={`node glass rounded-full flex flex-col items-center justify-center border-2 status-${node.status} ${node.type === 'CENTER' ? 'w-24 h-24 bg-slate-900/90' : 'w-20 h-20 bg-slate-900/60'}`} style={{ left: `${node.x}%`, top: `${node.y}%` }} onClick={() => setActiveEvidence(`${node.label}: ${node.type}`)}>
+                                    <i className={`fa-solid ${node.icon} ${node.type === 'CENTER' ? 'text-2xl mb-1' : 'text-lg mb-1'}`}></i>
+                                    <span className="text-[8px] font-black uppercase tracking-tighter text-center leading-tight px-1">{node.label}</span>
+                                </div>
+                            ))}
+                            {activeEvidence && (
+                                <div className="absolute bottom-6 left-6 right-6 z-30 glass p-6 rounded-[2rem] border-l-4 border-red-500 animate-fade-in shadow-2xl flex justify-between">
+                                    <p className="text-sm italic font-bold">{activeEvidence}</p>
+                                    <button onClick={() => setActiveEvidence(null)} className="text-red-500"><i className="fa-solid fa-xmark"></i></button>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* TAB: EVIDENCE MATRIX */}
+                    {activeTab === 'MATRIX' && (
+                        <div className="flex-grow space-y-6 overflow-y-auto pb-20 no-scrollbar">
+                            
+                            {/* 1. Scandal Log */}
+                            <div className="glass p-6 rounded-[2rem] border border-orange-500/30">
+                                <h3 className="text-xs font-black uppercase text-orange-500 mb-4"><i className="fa-solid fa-link"></i> Scandal Log (Turkish Press)</h3>
+                                <div className="flex flex-col md:flex-row gap-3 mb-4">
+                                    <input type="text" value={scandalLink} onChange={e=>setScandalLink(e.target.value)} placeholder="Paste Article URL..." className="flex-grow bg-black/40 p-4 rounded-xl outline-none text-xs border border-white/5" />
+                                    <select value={scandalCategory} onChange={e=>setScandalCategory(e.target.value)} className="bg-black/40 p-4 rounded-xl outline-none text-xs border border-white/5 text-orange-400">
+                                        <option>Financial Misconduct</option>
+                                        <option>Operational Fraud</option>
+                                    </select>
+                                    <button onClick={addScandalLog} className="bg-orange-600 px-6 py-4 rounded-xl font-black text-xs uppercase">Log</button>
+                                </div>
+                                <div className="space-y-2">
+                                    {scandalLogs.map(log => (
+                                        <div key={log.id} className="bg-white/5 p-3 rounded-lg text-[10px] flex justify-between items-center">
+                                            <span className="truncate w-1/2 opacity-60">{log.url}</span>
+                                            <span className="text-orange-400 font-bold uppercase">{log.category}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* 2. Breach Timeline (2008-2015) & ID Cards */}
+                            <div className="glass p-6 rounded-[2rem] relative border border-white/10">
+                                <h3 className="text-xs font-black uppercase text-white mb-6"><i className="fa-solid fa-timeline"></i> Breach Timeline (2008-2015)</h3>
+                                <div className="relative pl-10 space-y-6">
+                                    <div className="timeline-line"></div>
+                                    {breachVessels.sort((a,b) => a.year - b.year).map((v, i) => (
+                                        <div key={i} className="relative glass p-5 rounded-2xl border-l-4 border-red-600">
+                                            <div className="absolute left-[-45px] top-5 w-4 h-4 rounded-full bg-red-600 border-4 border-slate-900"></div>
+                                            <div className="flex justify-between items-start">
+                                                <div>
+                                                    <span className="text-red-500 font-black text-lg">{v.year}</span>
+                                                    <h4 className="text-sm font-black uppercase mt-1">{v.name} <span className="opacity-50 text-[10px] ml-2">IMO: {v.imo}</span></h4>
+                                                    <p className="text-[10px] text-slate-400 mt-2 uppercase">Owner: <span className="text-white">{v.owner}</span></p>
+                                                </div>
+                                                <span className="text-[9px] bg-red-900/40 text-red-400 px-2 py-1 rounded font-bold uppercase">{v.status}</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* 4. Export Tool */}
+                            <button onClick={generateBreachSummary} className="fat-finger w-full bg-red-600 shadow-xl shadow-red-900/30 text-white flex items-center justify-center gap-3">
+                                <i className="fa-solid fa-file-pdf text-xl"></i> Generate Breach Summary
+                            </button>
+
+                        </div>
+                    )}
+                </div>
+            );
         };
-        ReactDOM.createRoot(document.getElementById('root')).render(<WarRoom />);
+        ReactDOM.createRoot(document.getElementById('root')).render(<WarRoomSpider />);
     </script>
 </body>
 </html>

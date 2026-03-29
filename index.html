@@ -1,104 +1,102 @@
-<!DOCTYPE html>
-<html lang="el">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NauticalOS V5.0 | Command Hub</title>
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        body { background-color: #020617; color: white; font-family: 'Inter', sans-serif; overflow-x: hidden; }
-        .glass { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.05); }
-        .sun-mode { background: #ffffff !important; color: #000000 !important; }
-        .sun-mode .glass { background: #f1f5f9 !important; border: 1px solid #cbd5e1 !important; color: #000000 !important; }
-        .division-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .division-card:active { scale: 0.95; }
-    </style>
-</head>
-<body>
-    <div id="root"></div>
+/* SUPREME ARCHITECT: UNIFIED LOGIC V5.2 
+   Includes M2, M3, M5, M14 Integration
+*/
 
-    <script type="text/babel">
-        const { useState, useEffect } = React;
+const { useState, useEffect } = React;
 
-        const MainHub = () => {
-            const [isLocked, setIsLocked] = useState(true);
-            const [pin, setPin] = useState('');
-            const [sunMode, setSunMode] = useState(false);
+const UnifiedModule = () => {
+    // Global States
+    const [sunMode, setSunMode] = useState(false);
+    const [evidenceLocked, setEvidenceLocked] = useState(true);
+    const [hashGenerated, setHashGenerated] = useState(null);
 
-            useEffect(() => {
-                if (sessionStorage.getItem('ntg_global_auth') === 'true') setIsLocked(false);
-            }, []);
-
-            const unlock = () => {
-                if (pin === "1234") {
-                    sessionStorage.setItem('ntg_global_auth', 'true');
-                    setIsLocked(false);
-                } else {
-                    alert("ACCESS DENIED [Art. 2]");
-                    setPin('');
-                }
-            };
-
-            if (isLocked) {
-                return (
-                    <div className="min-h-screen flex items-center justify-center p-6 bg-slate-950">
-                        <div className="glass p-10 rounded-[3rem] text-center max-w-sm w-full border-orange-500/20">
-                            <i className="fa-solid fa-anchor text-4xl text-orange-500 mb-6"></i>
-                            <h1 className="text-xl font-black uppercase tracking-widest mb-8 italic">NauticalOS V5</h1>
-                            <input 
-                                type="password" 
-                                value={pin} 
-                                onChange={(e) => setPin(e.target.value)}
-                                onKeyDown={(e) => e.key === 'Enter' && unlock()}
-                                className="w-full bg-black/40 border border-white/10 p-5 rounded-2xl text-center text-2xl font-black mb-4 outline-none focus:border-orange-500"
-                                placeholder="PIN"
-                            />
-                            <button onClick={unlock} className="w-full bg-orange-600 p-5 rounded-2xl font-black uppercase text-xs tracking-widest">Authorize</button>
-                        </div>
-                    </div>
-                );
-            }
-
-            return (
-                <div className={`min-h-screen p-6 transition-colors ${sunMode ? 'sun-mode' : ''}`}>
-                    <header className="flex justify-between items-center mb-10 glass p-6 rounded-[2.5rem]">
-                        <div>
-                            <h1 className="text-2xl font-black uppercase italic tracking-tighter">Command Hub</h1>
-                            <p className="text-[10px] font-bold text-orange-500 uppercase tracking-widest">Piraeus Sector Active</p>
-                        </div>
-                        <div className="flex gap-3">
-                            <button onClick={() => setSunMode(!sunMode)} className="p-4 glass rounded-2xl"><i className="fa-solid fa-sun"></i></button>
-                            <button onClick={() => {sessionStorage.clear(); window.location.reload();}} className="p-4 glass rounded-2xl text-red-500"><i className="fa-solid fa-power-off"></i></button>
-                        </div>
-                    </header>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-                        <DivisionLink href="m1_utm.html" title="M1 UTM" sub="Thickness Measurements" icon="fa-arrows-left-right" color="blue" />
-                        <DivisionLink href="m2_safety.html" title="M2 Safety" sub="Compliance Shield" icon="fa-shield-heart" color="red" />
-                        <DivisionLink href="m3_loadtest.html" title="M3 Load Test" sub="LoadMaster Pro" icon="fa-weight-hanging" color="orange" />
-                        <DivisionLink href="m4_radar.html" title="M4 Radar" sub="Vessel Hunter" icon="fa-tower-observation" color="orange" />
-                        <DivisionLink href="m5_terme.html" title="M5 War Room" sub="Silent Siege" icon="fa-gavel" color="red" />
-                        <DivisionLink href="m8_academy.html" title="M8 Academy" sub="Knowledge Fortress" icon="fa-book-open" color="purple" />
-                        <DivisionLink href="m10_auditor.html" title="M10 Auditor" sub="Supreme Oversight" icon="fa-eye" color="slate" />
-                        <DivisionLink href="m14_commercial.html" title="M14 Intel" sub="Commercial Manager" icon="fa-chart-line" color="emerald" />
-                    </div>
-                </div>
-            );
+    // M3 -> M14: "The Feed" Logic (Lost Quote Handler)
+    const handleLostQuote = (quoteData, reasonCode) => {
+        const lostJob = {
+            ...quoteData,
+            status: "LOST",
+            reasonCode: reasonCode, // [cite: 134]
+            timestamp: new Date().toISOString()
         };
+        // Τροφοδοσία στον M14 Commercial Manager [cite: 82]
+        const m14Feed = JSON.parse(localStorage.getItem('ntg_M14_feed') || '[]');
+        localStorage.setItem('ntg_M14_feed', JSON.stringify([...m14Feed, lostJob]));
+        console.log("M3 -> M14: Feed Transmitted.");
+    };
 
-        const DivisionLink = ({ href, title, sub, icon, color }) => (
-            <a href={href} className={`division-card glass p-8 rounded-[2.5rem] border-${color}-500/20 hover:border-${color}-500/50 block relative overflow-hidden group`}>
-                <div className={`text-${color}-500 mb-4 text-2xl`}><i className={`fa-solid ${icon}`}></i></div>
-                <h2 className="text-xl font-black uppercase italic">{title}</h2>
-                <p className="text-[10px] font-bold opacity-50 uppercase tracking-wider">{sub}</p>
-            </a>
-        );
+    // M2 & M5: Evidence Lock with SHA-256 [cite: 27, 111]
+    const generateLegalHash = async (data) => {
+        const msgBuffer = new TextEncoder().encode(JSON.stringify(data));
+        const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        
+        setHashGenerated(hashHex);
+        setEvidenceLocked(false); // Ξεκλείδωμα υπογραφής [cite: 143]
+        return hashHex;
+    };
 
-        ReactDOM.createRoot(document.getElementById('root')).render(<MainHub />);
-    </script>
-</body>
-</html>
+    // Global CSS for Sun Mode & Fat-Finger Design [cite: 14, 15]
+    const globalStyles = `
+        .sun-mode { background: white !important; color: black !important; }
+        .sun-mode .glass { background: #f8fafc !important; border: 1px solid #cbd5e1 !important; color: black !important; }
+        .fat-finger-button { 
+            height: 80px; 
+            font-weight: 900; 
+            text-transform: uppercase; 
+            border-radius: 1.5rem;
+            transition: all 0.2s;
+        }
+        .fat-finger-button:active { transform: scale(0.95); }
+    `;
+
+    return (
+        <div className={`min-h-screen p-6 transition-all ${sunMode ? 'sun-mode' : 'bg-slate-950 text-white'}`}>
+            <style>{globalStyles}</style>
+            
+            {/* Header with Sun Mode Toggle [cite: 116] */}
+            <header className="flex justify-between items-center mb-10 glass p-6 rounded-[2rem]">
+                <h1 className="text-2xl font-black uppercase italic">NauticalOS Bridge</h1>
+                <button onClick={() => setSunMode(!sunMode)} className="p-4 glass rounded-2xl">
+                    <i className={`fa-solid ${sunMode ? 'fa-moon' : 'fa-sun text-orange-500'}`}></i>
+                </button>
+            </header>
+
+            {/* Evidence Lock Status Section [cite: 72, 110] */}
+            <div className="glass p-8 rounded-[2.5rem] mb-6 border-l-4 border-red-600">
+                <h2 className="text-xl font-black uppercase mb-4">Evidence Lock Status</h2>
+                <div className="flex items-center gap-4 mb-6">
+                    <div className={`h-4 w-4 rounded-full ${evidenceLocked ? 'bg-red-500 animate-pulse' : 'bg-emerald-500'}`}></div>
+                    <p className="text-xs font-bold uppercase tracking-widest">
+                        {evidenceLocked ? "Signature Blocked: Awaiting M5 Hash" : "Legal Hash Confirmed"}
+                    </p>
+                </div>
+                
+                {/* M5 Forensic Action [cite: 26] */}
+                <button 
+                    onClick={() => generateLegalHash({vessel: "MV ADASTRA", job: "Load Test"})}
+                    className="fat-finger-button w-full bg-slate-800 hover:bg-slate-700 mb-4"
+                >
+                    Generate SHA-256 Hash
+                </button>
+
+                {/* M2 Signature Lock [cite: 143] */}
+                <button 
+                    disabled={evidenceLocked}
+                    className={`fat-finger-button w-full ${evidenceLocked ? 'bg-slate-900 opacity-20' : 'bg-emerald-600 shadow-lg shadow-emerald-900/20'}`}
+                >
+                    <i className="fa-solid fa-pen-nib mr-2"></i> Confirm Sign Log
+                </button>
+            </div>
+
+            {/* M14 Intelligence: "The Feed" Display [cite: 60, 61] */}
+            <div className="glass p-8 rounded-[2.5rem]">
+                <h2 className="text-xl font-black uppercase mb-4 text-emerald-500">Commercial Intel Feed</h2>
+                <p className="text-[10px] opacity-50 uppercase mb-4 tracking-widest">Recent Lost Quotes from M3</p>
+                <div className="bg-black/20 p-4 rounded-2xl italic text-xs border border-white/5">
+                    "MV MARAN Gas - Status: LOST - Reason: TIMELINE CONFLICT" [cite: 83]
+                </div>
+            </div>
+        </div>
+    );
+};

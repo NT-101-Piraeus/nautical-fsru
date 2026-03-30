@@ -1,7 +1,8 @@
-<!DOCTYPE html><html lang="el"><head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>M3: Load Test Pro v5.65 (MATH ENGINE LOCK)</title>
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>M3: Load Test Pro V5.80</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -9,87 +10,114 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');
-        body { background: #020617; color: white; font-family: 'Orbitron', sans-serif; font-style: italic; font-weight: bold; }
-        .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
-        .math-engine-lock { filter: blur(8px); pointer-events: none; opacity: 0.3; }
-        .fat-finger-button { height: 80px; font-weight: 900; text-transform: uppercase; border-radius: 1.5rem; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.2s; }
-        .status-alert { animation: pulse-orange 2s infinite; }
-        @keyframes pulse-orange { 0%, 100% { color: #f97316; } 50% { color: #431407; } }
-    </style></head><body>
+        body { background: #020617; color: white; font-family: 'Orbitron', sans-serif; font-style: italic; }
+        .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .math-locked { filter: blur(8px); pointer-events: none; }
+    </style>
+</head>
+<body>
     <div id="root"></div>
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        const LoadTestAppV565 = () => {
-            const [isMathReady, setIsMathReady] = useState(false);
-            const [swl, setSwl] = useState("");
-            const [targetLoad, setTargetLoad] = useState(0);
+        const LoadTestApp = () => {
+            const [view, setView] = useState('DASHBOARD'); // DASHBOARD, PROJECT_DETAILS
+            const [isAcademyReady, setIsAcademyReady] = useState(false);
+            const [selectedProject, setSelectedProject] = useState(null);
 
-            // [V5.65] KNOWLEDGE LOCK CHECK (M8 Academy Sync)
             useEffect(() => {
-                const checkClearance = () => {
-                    const ready = localStorage.getItem('ntg_M8_ready') === 'true';
-                    setIsMathReady(ready);
-                };
-                checkClearance();
-                const interval = setInterval(checkClearance, 2000);
+                const checkM8 = () => setIsAcademyReady(localStorage.getItem('ntg_M8_ready') === 'true');
+                checkM8();
+                const interval = setInterval(checkM8, 2000);
                 return () => clearInterval(interval);
             }, []);
 
-            const calculateLoad = () => {
-                const val = parseFloat(swl);
-                if (!val) return;
-                // [Art. 5] ILO 152 Math Engine
-                let result = val < 20 ? val * 1.25 : val + 5;
-                setTargetLoad(result.toFixed(2));
-                
-                // M10 Silent Logging
-                const logs = JSON.parse(localStorage.getItem('ntg_M3_logs') || '[]');
-                logs.push({ ts: new Date().toISOString(), action: 'MATH_CALCULATION', swl: val, target: result, status: 'VERIFIED' });
-                localStorage.setItem('ntg_M3_logs', JSON.stringify(logs));
+            const wonJobs = [
+                { id: 'P-101', name: 'MV ADASTRA', type: 'ILO 152', status: 'ACTIVE' },
+                { id: 'P-102', name: 'MT FELIX', type: 'MEG4 Mooring', status: 'ACTIVE' }
+            ];
+
+            const addNewProject = () => {
+                const pin = prompt("ENTER MASTER PIN (1234)");
+                if (pin === "1234") alert("Project Wizard Initialized...");
+                else alert("ACCESS DENIED");
             };
 
-            return (
-                <div className="min-h-screen p-6 bg-slate-950">
-                    <header className="flex justify-between items-center mb-10 glass p-6 rounded-[2rem]">
+            if (view === 'DASHBOARD') return (
+                <div className="min-h-screen p-6">
+                    <header className="flex justify-between items-center mb-10 glass p-6 rounded-[2rem] border-l-4 border-emerald-500">
                         <div>
-                            <h1 className="text-orange-500 text-lg uppercase font-black tracking-tighter">M3: Load Test Pro</h1>
-                            <p className="text-[8px] opacity-50 uppercase tracking-widest">ILO 152 & MEG4 Compliant</p>
+                            <h1 className="text-sm font-black uppercase text-emerald-500">M3: Load Test Pro</h1>
+                            <p className="text-[8px] opacity-50 uppercase font-black tracking-widest italic">Operational Dashboard</p>
                         </div>
-                        <a href="m8_academy.html" className="p-4 glass rounded-2xl"><i className="fa-solid fa-book-open text-orange-400"></i></a>
+                        <a href="index.html" className="p-4 glass rounded-2xl"><i className="fa-solid fa-house"></i></a>
                     </header>
 
-                    {!isMathReady && (
-                        <div className="glass p-8 rounded-[2.5rem] mb-10 border-orange-500/30 text-center">
-                            <i className="fa-solid fa-lock text-3xl text-orange-600 mb-4 animate-bounce"></i>
-                            <h2 className="status-alert text-xs font-black uppercase tracking-widest italic">Math Engine Locked</h2>
-                            <p className="text-[9px] opacity-40 mt-2 uppercase">Complete M8 Academy Training to unlock ILO 152 calculations</p>
-                        </div>
-                    )}
-
-                    <div className={`space-y-6 ${!isMathReady ? 'math-engine-lock' : ''}`}>
-                        <div className="glass p-8 rounded-[3rem] border-l-4 border-orange-500">
-                            <p className="text-[10px] uppercase opacity-40 mb-4 font-black">Enter SWL (Safe Working Load)</p>
-                            <input type="number" value={swl} onChange={(e) => setSwl(e.target.value)} placeholder="0.00 t" className="w-full bg-black/40 p-6 rounded-2xl text-center text-5xl font-black outline-none border border-white/5 focus:border-orange-500 transition-all" />
-                        </div>
-
-                        <button onClick={calculateLoad} className="fat-finger-button w-full bg-orange-600 shadow-xl shadow-orange-900/30">
-                            <i className="fa-solid fa-calculator text-xl"></i> Calculate Target Load
-                        </button>
-
-                        {targetLoad > 0 && (
-                            <div className="glass p-8 rounded-[3rem] border-l-4 border-emerald-500 text-center animate-pulse">
-                                <p className="text-[10px] uppercase text-emerald-500 font-black tracking-widest mb-2">Target Proof Load (ILO 152)</p>
-                                <h3 className="text-5xl font-black tracking-tighter text-white">{targetLoad} <span className="text-sm opacity-50">tons</span></h3>
+                    <div className="space-y-6">
+                        {/* 🟢 Won Jobs (Active) */}
+                        <section>
+                            <h2 className="text-[10px] font-black uppercase text-emerald-500 mb-3 px-2 tracking-widest italic">🟢 Won Jobs (Active)</h2>
+                            <div className="space-y-3">
+                                {wonJobs.map(job => (
+                                    <div key={job.id} onClick={() => { setSelectedProject(job); setView('PROJECT_DETAILS'); }} 
+                                         className="glass p-6 rounded-[2.5rem] flex justify-between items-center border-l-4 border-emerald-600 active:scale-95 cursor-pointer">
+                                        <div>
+                                            <p className="text-xs font-black uppercase tracking-tight">{job.name}</p>
+                                            <p className="text-[8px] opacity-40 uppercase font-black tracking-widest">{job.type}</p>
+                                        </div>
+                                        <i className="fa-solid fa-chevron-right opacity-30"></i>
+                                    </div>
+                                ))}
                             </div>
-                        )}
-                    </div>
+                        </section>
 
-                    <div className="fixed bottom-6 left-6 right-6 text-center">
-                        <p className="text-[8px] opacity-30 uppercase tracking-[0.4em]">M10 Supreme Auditor Verified Engine</p>
+                        {/* 🔴 Lost Quotes (Archive) */}
+                        <section className="opacity-60 grayscale">
+                            <h2 className="text-[10px] font-black uppercase text-red-500 mb-3 px-2 tracking-widest italic">🔴 Lost Quotes (Archive)</h2>
+                            <div className="glass p-6 rounded-[2.5rem] border-l-4 border-red-900 italic text-[9px] uppercase font-black">No recent lost quotes in sector</div>
+                        </section>
+
+                        {/* ➕ Add New Project */}
+                        <button onClick={addNewProject} className="h-20 w-full glass rounded-[2rem] border-2 border-dashed border-white/20 flex items-center justify-center gap-3 active:scale-95">
+                            <i className="fa-solid fa-plus text-emerald-500"></i>
+                            <span className="text-[10px] font-black uppercase tracking-widest italic">Add New Project (PIN Required)</span>
+                        </button>
                     </div>
                 </div>
             );
+
+            if (view === 'PROJECT_DETAILS') return (
+                <div className="min-h-screen p-6">
+                    <button onClick={() => setView('DASHBOARD')} className="text-[9px] underline text-emerald-500 mb-8 uppercase font-black italic tracking-widest">← Back to Dashboard</button>
+                    
+                    <div className="glass p-8 rounded-[3rem] border-l-4 border-emerald-500 mb-8">
+                        <h2 className="text-2xl font-black uppercase italic tracking-tighter">{selectedProject.name}</h2>
+                        <p className="text-[9px] opacity-40 uppercase font-black tracking-widest">ID: {selectedProject.id} | Engine: {selectedProject.type}</p>
+                    </div>
+
+                    {!isAcademyReady ? (
+                        <div className="glass p-10 rounded-[3rem] border-l-4 border-purple-600 text-center flex flex-col items-center gap-4">
+                            <i className="fa-solid fa-lock text-purple-500 text-2xl animate-pulse"></i>
+                            <h3 className="text-[11px] font-black uppercase tracking-widest">Math Engine Locked</h3>
+                            <p className="text-[9px] opacity-60 uppercase font-black tracking-tighter italic">Complete M8 Academy Training to unlock ILO 152 / MEG4 Calculators</p>
+                            <a href="m8_academy.html" className="mt-2 text-[10px] bg-purple-600/20 text-purple-400 px-6 py-2 rounded-full font-black uppercase italic tracking-widest border border-purple-500/30">Go to M8 Academy</a>
+                        </div>
+                    ) : (
+                        <div className="glass p-8 rounded-[3rem] border-l-4 border-blue-500 space-y-6">
+                             <h3 className="text-[10px] font-black uppercase text-blue-500 italic">Math Engine Unlocked</h3>
+                             <div className="space-y-4">
+                                <div className="flex justify-between items-center text-[11px] font-black uppercase border-b border-white/10 pb-2">
+                                    <span>Proof Load (kN)</span>
+                                    <span className="text-emerald-500">250.0</span>
+                                </div>
+                                <button className="fat-finger-button w-full h-16 bg-blue-600 rounded-[1.5rem] font-black uppercase italic tracking-widest shadow-lg shadow-blue-900/50">Calculate Results</button>
+                             </div>
+                        </div>
+                    )}
+                </div>
+            );
         };
-        ReactDOM.createRoot(document.getElementById('root')).render(<LoadTestAppV565 />);
-    </script></body></html>
+        ReactDOM.createRoot(document.getElementById('root')).render(<LoadTestApp />);
+    </script>
+</body>
+</html>

@@ -1,111 +1,46 @@
-<!DOCTYPE html>
-<html lang="el">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>M10: Supreme Auditor | Forensic Telemetry</title>
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');
-        body { background: #020617; color: #94a3b8; font-family: 'Orbitron', sans-serif; font-style: italic; }
-        .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.05); }
-        .audit-line { border-left: 2px solid #334155; transition: all 0.3s; }
-        .audit-line:hover { border-left-color: #f97316; background: rgba(255,255,255,0.02); }
-        .matrix-alert { color: #ef4444; text-shadow: 0 0 10px rgba(239, 68, 68, 0.5); animation: pulse 1s infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-        .sun-mode { background: #f8fafc !important; color: #0f172a !important; }
-        .sun-mode .glass { background: white !important; border: 1px solid #cbd5e1 !important; color: #0f172a !important; }
-    </style>
-</head>
-<body>
-    <div id="root"></div>
-    <script type="text/babel">
-        const { useState, useEffect } = React;
+<script type="text/babel">
+    const AuditorConsole = () => {
+        const [systemLogs, setSystemLogs] = useState([]);
+        const [clearanceStatus, setClearanceStatus] = useState(false);
 
-        const M10Auditor = () => {
-            const [logs, setLogs] = useState([]);
-            const [activeFilter, setActiveFilter] = useState('ALL');
-            const [sunMode, setSunMode] = useState(false);
+        useEffect(() => {
+            // Ο Auditor διαβάζει τα ίχνη που αφήνουν τα άλλα Divisions
+            const logs = JSON.parse(localStorage.getItem('ntg_M10_logs') || '[]');
+            const academy = localStorage.getItem('ntg_M8_ready') === 'true';
+            setSystemLogs(logs);
+            setClearanceStatus(academy);
+        }, []);
 
-            // [Art. 6] Cross-Division Audit Pulse
-            useEffect(() => {
-                const fetchTelemetry = () => {
-                    const allLogs = [];
-                    // Σάρωση όλων των οχυρών 
-                    ['M2', 'M3', 'M4', 'M5', 'M8', 'M14'].forEach(div => {
-                        try {
-                            const raw = localStorage.getItem(`ntg_${div}_logs`);
-                            const divLogs = raw ? JSON.parse(raw) : [];
-                            divLogs.forEach(entry => allLogs.push({ ...entry, division: div }));
-                        } catch (e) { console.error(`Failed to audit ${div}`); }
-                    });
-                    // Ταξινόμηση βάσει χρόνου [cite: 84]
-                    setLogs(allLogs.sort((a, b) => new Date(b.ts || b.timestamp) - new Date(a.ts || a.timestamp)));
-                };
-
-                fetchTelemetry();
-                const interval = setInterval(fetchTelemetry, 3000); // Live Pulse
-                return () => clearInterval(interval);
-            }, []);
-
-            return (
-                <div className={`min-h-screen p-6 transition-all ${sunMode ? 'sun-mode' : ''}`}>
-                    <header className="flex justify-between items-center mb-10 glass p-6 rounded-[2.5rem]">
-                        <div>
-                            <h1 className="text-xl font-black uppercase italic tracking-tighter text-orange-500">M10: Supreme Auditor</h1>
-                            <p className="text-[8px] font-bold uppercase tracking-[0.4em] opacity-50">Architect's Eye | Forensic Ready</p>
-                        </div>
-                        <div className="flex gap-3">
-                            <button onClick={() => setSunMode(!sunMode)} className="p-4 glass rounded-2xl"><i className="fa-solid fa-sun"></i></button>
-                            <a href="index.html" className="p-4 glass rounded-2xl"><i className="fa-solid fa-house"></i></a>
-                        </div>
-                    </header>
-
-                    {/* Division Filter Bar */}
-                    <div className="flex gap-2 mb-8 overflow-x-auto pb-4 no-scrollbar">
-                        {['ALL', 'M2', 'M3', 'M4', 'M5', 'M14'].map(f => (
-                            <button key={f} onClick={() => setActiveFilter(f)} 
-                                className={`px-6 py-4 rounded-2xl text-[10px] font-black uppercase transition-all flex-shrink-0 ${activeFilter === f ? 'bg-orange-600 text-white' : 'glass opacity-50'}`}>
-                                {f}
-                            </button>
-                        ))}
-                    </div>
-
-                    {/* The Audit Matrix */}
-                    <div className="space-y-3 mb-20">
-                        {logs.filter(l => activeFilter === 'ALL' || l.division === activeFilter).map((log, i) => (
-                            <div key={i} className={`audit-line glass p-5 rounded-2xl flex justify-between items-center ${log.type === 'ERROR' || log.action === 'FAILED_SIGN_LOG_ATTEMPT' ? 'border-l-red-600' : ''}`}>
-                                <div>
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <span className="text-[8px] font-black bg-white/10 px-2 py-1 rounded text-orange-400 tracking-tighter">{log.division}</span>
-                                        <span className={`text-[10px] font-black uppercase ${log.type === 'ERROR' ? 'matrix-alert' : ''}`}>{log.action || log.type}</span>
-                                    </div>
-                                    <p className="text-[11px] opacity-70 italic tracking-tight">{log.details || log.vessel || 'Telemetry Sync Active'}</p>
-                                    {log.utid && <p className="text-[8px] text-blue-400 mt-1">UTID: {log.utid}</p>}
-                                </div>
-                                <div className="text-right">
-                                    <p className="text-[9px] opacity-30">{new Date(log.ts || log.timestamp).toLocaleTimeString()}</p>
-                                    <i className={`fa-solid ${log.action === 'HASH_GENERATED' ? 'fa-fingerprint text-emerald-500' : 'fa-bolt-lightning text-slate-700'} text-xs mt-2 opacity-50`}></i>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-
-                    {/* Forensic Verification Button [Fat-Finger Design] */}
-                    <div className="fixed bottom-6 left-6 right-6">
-                        <button className="fat-finger-button w-full h-20 bg-slate-900 border border-orange-500/30 rounded-3xl font-black uppercase text-xs flex items-center justify-center gap-4 text-orange-500">
-                            <i className="fa-solid fa-shield-halved text-xl"></i> Verify Global Hashes [SHA-256]
-                        </button>
-                    </div>
-                </div>
-            );
+        const emergencyLockdown = () => {
+            localStorage.setItem('ntg_M8_ready', 'false');
+            alert("EMERGENCY LOCKDOWN: ALL MATH ENGINES DISABLED");
+            window.location.reload();
         };
 
-        ReactDOM.createRoot(document.getElementById('root')).render(<M10Auditor />);
-    </script>
-</body>
-</html>
+        return (
+            <div className="p-6">
+                <div className="glass p-6 rounded-[3rem] border-l-4 border-red-600 mb-8">
+                    <h2 className="text-xl font-black text-red-500 uppercase italic">Forensic Integrity Hub</h2>
+                    <div className="flex gap-4 mt-4 text-[10px] font-black uppercase">
+                        <span className={clearanceStatus ? "text-emerald-500" : "text-red-500"}>
+                            Academy Status: {clearanceStatus ? "AUTHORIZED" : "LOCKED"}
+                        </span>
+                    </div>
+                </div>
+
+                <div className="glass p-6 rounded-[2rem] h-64 overflow-y-auto mb-8 font-mono text-[9px] text-blue-400">
+                    <p className="opacity-40 uppercase mb-2">// System Telemetry Feed</p>
+                    {systemLogs.map((log, i) => (
+                        <div key={i} className="mb-1 border-b border-white/5">
+                            [{log.ts}] {log.event} | Source: {log.division}
+                        </div>
+                    ))}
+                </div>
+
+                <button onClick={emergencyLockdown} className="w-full h-16 bg-red-600/20 border border-red-600 text-red-500 font-black uppercase rounded-2xl">
+                    Kill-Switch: Lockdown All Divisions
+                </button>
+            </div>
+        );
+    };
+</script>

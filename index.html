@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NauticalOS | Global Hub V5.77</title>
+    <title>NauticalOS | Global Hub V5.88</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -20,9 +20,11 @@
         const Hub = () => {
             const modules = [
                 { id: 'M2', name: 'Safety Shield', icon: 'fa-shield-halved', color: 'border-blue-500', link: 'm2_safety.html' },
-                { id: 'M3', name: 'Load Test Pro', icon: 'fa-weight-hanging', color: 'border-emerald-500', link: 'm3_load_test.html' },
+                { id: 'M3', name: 'Load Test Pro', icon: 'fa-weight-hanging', color: 'border-emerald-500', link: 'm3_loadtest.html' }, // ΔΙΟΡΘΩΣΗ 404
                 { id: 'M4', name: 'Radar Intel', icon: 'fa-radar', color: 'border-orange-500', link: 'm4_radar.html' },
                 { id: 'M8', name: 'Academy', icon: 'fa-graduation-cap', color: 'border-purple-500', link: 'm8_academy.html' },
+                { id: 'M9', name: 'Ops Control', icon: 'fa-tower-observation', color: 'border-red-500', link: 'm9_ops.html' }, // ΝΕΟ
+                { id: 'M10', name: 'Auditor', icon: 'fa-file-shield', color: 'border-slate-400', link: 'm10_arch.html' },
                 { id: 'M11', name: 'Sensor Hub', icon: 'fa-microchip', color: 'border-cyan-500', link: 'm11_sensors.html' },
                 { id: 'M14', name: 'Commercial', icon: 'fa-comments-dollar', color: 'border-pink-500', link: 'm14_commercial.html' },
                 { id: 'M16', name: 'Safety Officer', icon: 'fa-hard-hat', color: 'border-yellow-500', link: 'm16_safety_officer.html' }
@@ -30,22 +32,26 @@
 
             return (
                 <div className="min-h-screen p-6 flex flex-col items-center">
-                    <header className="w-full max-w-md mb-12 mt-6 text-center">
+                    <header className="w-full max-w-md mb-8 mt-4 text-center">
                         <h1 className="text-2xl font-black tracking-tighter uppercase">Nautical<span className="text-blue-500">OS</span></h1>
-                        <p className="text-[8px] tracking-[0.5em] opacity-40 font-bold uppercase">Supreme Command V5.77</p>
+                        <p className="text-[8px] tracking-[0.5em] opacity-40 font-bold uppercase italic">Alignment Status V5.88</p>
                     </header>
 
-                    <div className="grid grid-cols-2 gap-4 w-full max-w-md">
+                    <div className="grid grid-cols-2 gap-4 w-full max-w-md pb-20">
                         {modules.map(m => (
-                            <a key={m.id} href={m.link} className={`glass p-6 rounded-[2.5rem] flex flex-col items-center gap-3 border-b-4 ${m.color} transition-all active:scale-90`}>
-                                <i className={`fa-solid ${m.icon} text-2xl`}></i>
+                            <a key={m.id} href={m.link} className={`glass p-5 rounded-[2rem] flex flex-col items-center gap-3 border-b-4 ${m.color} transition-all active:scale-90`}>
+                                <i className={`fa-solid ${m.icon} text-xl`}></i>
                                 <div className="text-center">
-                                    <p className="text-[10px] font-black uppercase tracking-tighter">{m.name}</p>
-                                    <p className="text-[7px] opacity-40 font-bold uppercase">{m.id} Division</p>
+                                    <p className="text-[9px] font-black uppercase tracking-tighter italic">{m.name}</p>
+                                    <p className="text-[7px] opacity-40 font-bold uppercase">{m.id}</p>
                                 </div>
                             </a>
                         ))}
                     </div>
+                    
+                    <footer className="mt-4 text-[7px] opacity-20 uppercase font-black tracking-[0.3em]">
+                        Forensic Verified by M10 Auditor
+                    </footer>
                 </div>
             );
         };

@@ -1,28 +1,135 @@
-<div className="space-y-6 pb-40">
-    <div className="glass p-6 rounded-[2.5rem] border-l-4 border-emerald-500">
-        <p className="text-[10px] uppercase opacity-40 mb-2 font-black">Shift Status</p>
-        <p className="text-sm font-black text-emerald-500 uppercase">Authorized | Academy Verified</p>
-    </div>
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>M4 RADAR | Intelligence Hub V5.85</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');
+        body { background: #020617; color: white; font-family: 'Orbitron', sans-serif; font-style: italic; }
+        .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .target-lock { border-left: 4px solid #f97316; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { border-left-color: #f97316; } 50% { border-left-color: #431407; } }
+        .sun-mode { background: #ffffff !important; color: #000000 !important; }
+        .sun-mode .glass { background: #f8fafc !important; border: 1px solid #cbd5e1 !important; color: #000000 !important; }
+        .fat-finger-button { height: 80px; font-weight: 900; text-transform: uppercase; border-radius: 1.5rem; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .fat-finger-button:active { transform: scale(0.95); }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState, useEffect } = React;
 
-    {/* [V5.65] Fat-Finger Controls */}
-    <div className="grid grid-cols-1 gap-4">
-        <button className="fat-finger-button w-full bg-blue-600 text-white">
-            <i className="fa-solid fa-camera"></i> Capture Smart Evidence
-        </button>
-        <button className="fat-finger-button w-full bg-slate-800 text-white opacity-50">
-            <i className="fa-solid fa-file-signature"></i> Sign Daily Log (Evidence Locked)
-        </button>
-    </div>
+        const RadarIntelligence = () => {
+            const [vessels, setVessels] = useState([]);
+            const [sunMode, setSunMode] = useState(false);
 
-    <div className="glass p-6 rounded-[2.5rem] border-l-4 border-orange-500">
-        <h4 className="text-[10px] font-black uppercase mb-4 tracking-widest text-orange-500">P.D. 70/1990 Compliance Tasks</h4>
-        <label className="flex items-center gap-4 mb-4 opacity-70">
-            <input type="checkbox" className="w-5 h-5 rounded" />
-            <span className="text-[10px] uppercase font-black">Fire Watch Established</span>
-        </label>
-        <label className="flex items-center gap-4 opacity-70">
-            <input type="checkbox" className="w-5 h-5 rounded" />
-            <span className="text-[10px] uppercase font-black">Gas-Free Certificate Verified</span>
-        </label>
-    </div>
-</div>
+            useEffect(() => {
+                // Φόρτωση δεδομένων
+                const data = JSON.parse(localStorage.getItem('ntg_M4_radar') || '[]');
+                if (data.length === 0) {
+                    const osintTargets = [
+                        { id: 'NTG-PIR-001', name: 'MT FELIX', type: 'LNG', area: 'PERAMA', status: 'EXPECTED 07:00', source: 'AIS_SENSOR' },
+                        { id: 'NTG-ELE-002', name: 'BADJI MOKHTAR III', type: 'LNG', area: 'ELEFSINA', status: 'EXPECTED 11:00', source: 'WEB_OSINT' }
+                    ];
+                    setVessels(osintTargets);
+                    localStorage.setItem('ntg_M4_radar', JSON.stringify(osintTargets));
+                } else {
+                    setVessels(data);
+                }
+            }, []);
+
+            const generateUTID = (area) => {
+                const sector = area.substring(0, 3).toUpperCase();
+                const hex = Math.floor(Math.random() * 65535).toString(16).toUpperCase().padStart(4, '0');
+                return `NTG-2026-${sector}-${hex}`;
+            };
+
+            const lockManualTarget = () => {
+                const name = prompt("Enter Vessel Name");
+                if (!name) return;
+                
+                const type = prompt("Enter Vessel Type (TUG, TANKER, LNG, BULKER)", "BULKER").toUpperCase();
+                const area = prompt("Enter Area (PIRAEUS, PERAMA, ELEFSINA)", "PIRAEUS").toUpperCase();
+                
+                const utid = generateUTID(area);
+                const newVessel = { 
+                    id: utid, 
+                    name: name.toUpperCase(), 
+                    type: type, 
+                    area: area, 
+                    status: 'LOCKED (MANUAL)',
+                    source: 'FIELD_OP',
+                    ts: new Date().toISOString()
+                };
+                
+                // Ενημέρωση Radar
+                const updated = [...vessels, newVessel];
+                setVessels(updated);
+                localStorage.setItem('ntg_M4_radar', JSON.stringify(updated));
+                
+                // M14 Commercial Feed Handshake (Auto-Pricing)
+                const currentFeed = JSON.parse(localStorage.getItem('ntg_M14_feed') || '[]');
+                const autoQuote = {
+                    utid: utid,
+                    vessel: name.toUpperCase(),
+                    type: type,
+                    status: "PENDING",
+                    value: type === 'LNG' ? 7500 : (type === 'TANKER' ? 5000 : (type === 'TUG' ? 3500 : 2500)),
+                    service: type === 'LNG' ? 'LNG Compliance' : (type === 'TANKER' ? 'MEG4 Test' : 'UTM Survey'),
+                    ts: new Date().toISOString()
+                };
+                localStorage.setItem('ntg_M14_feed', JSON.stringify([autoQuote, ...currentFeed]));
+                
+                // M10 Silent Logging
+                const logs = JSON.parse(localStorage.getItem('ntg_M4_logs') || '[]');
+                logs.push({ action: 'TARGET_LOCK_MANUAL', utid, vessel: name.toUpperCase(), ts: new Date().toISOString() });
+                localStorage.setItem('ntg_M4_logs', JSON.stringify(logs));
+            };
+
+            return (
+                <div className={`min-h-screen p-6 pb-32 transition-all ${sunMode ? 'sun-mode' : 'bg-slate-950 text-white'}`}>
+                    <header className="flex justify-between items-center mb-10 glass p-6 rounded-[2rem]">
+                        <div className="flex items-center gap-4">
+                            <i className="fa-solid fa-radar text-2xl text-orange-500 animate-spin" style={{animationDuration:'3s'}}></i>
+                            <h1 className="text-sm uppercase font-black tracking-widest italic">M4: Radar Hub V5.85</h1>
+                        </div>
+                        <div className="flex gap-3">
+                            <button onClick={() => setSunMode(!sunMode)} className="p-4 glass rounded-2xl"><i className={`fa-solid ${sunMode ? 'fa-moon text-slate-800' : 'fa-sun text-orange-400'}`}></i></button>
+                            <a href="index.html" className="p-4 glass rounded-2xl"><i className="fa-solid fa-house"></i></a>
+                        </div>
+                    </header>
+
+                    <div className="space-y-4">
+                        {vessels.map(v => (
+                            <div key={v.id} className="glass p-6 rounded-[2.5rem] target-lock flex justify-between items-center relative overflow-hidden">
+                                <div>
+                                    <h3 className="text-xl font-black uppercase tracking-tighter">{v.name}</h3>
+                                    <p className="text-[9px] font-bold opacity-60">UTID: {v.id} | TYPE: {v.type}</p>
+                                    <p className="text-[10px] text-orange-500 font-black mt-1 uppercase">{v.area} | {v.status}</p>
+                                </div>
+                                <div className="text-right flex flex-col items-end gap-2">
+                                    <span className={`text-[7px] px-2 py-1 rounded font-black uppercase ${v.source === 'FIELD_OP' ? 'bg-emerald-600/20 text-emerald-500' : 'bg-orange-600/20 text-orange-500'}`}>{v.source}</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Fat-Finger Add Button */}
+                    <div className="fixed bottom-6 left-6 right-6">
+                        <button onClick={lockManualTarget} className="fat-finger-button w-full bg-orange-600 shadow-xl shadow-orange-900/20 text-white">
+                            <i className="fa-solid fa-crosshairs text-xl"></i> Lock New Target
+                        </button>
+                    </div>
+                </div>
+            );
+        };
+        ReactDOM.createRoot(document.getElementById('root')).render(<RadarIntelligence />);
+    </script>
+</body>
+</html>

@@ -2,84 +2,91 @@
 <html lang="el">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>M8: Academy - LNG Project Forge</title>
+    <title>M10: Forensic Auditor | NauticalOS</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <style>@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');body{background:#020617;color:white;font-family:'Orbitron',sans-serif;font-style:italic;font-weight:bold;}.glass{background:rgba(15,23,42,0.7);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.1);}</style>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');
+        body { background: #020617; color: white; font-family: 'Orbitron', sans-serif; font-style: italic; }
+        .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
+        .log-terminal { background: #000; border: 1px solid #1e293b; font-family: monospace; }
+    </style>
 </head>
-<body><div id="root"></div><script type="text/babel">
-const AcademyApp = () => {
-    // Φόρτωση προόδου από το LocalStorage για να μην χάνεται
-    const [readDocs, setReadDocs] = React.useState(JSON.parse(localStorage.getItem('ntg_academy_read')) || []);
-    const progress = readDocs.length * 25;
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState, useEffect } = React;
 
-    const docs = [
-        { id: 'isgott', name: 'ISGOTT v6', desc: 'Hot Works & Gas Freeing (LNG)', icon: 'fa-fire-extinguisher' },
-        { id: 'dnv', name: 'DNV-OS-E401', desc: 'Offshore Logistics & Personnel Transfer', icon: 'fa-helicopter' },
-        { id: 'ilo', name: 'ILO 152 / Lifting', desc: 'Offshore Crane Operations & Safety', icon: 'fa-hook' },
-        { id: 'pd70', name: 'Π.Δ. 70/1990', desc: 'Confined Spaces & Tank Entry', icon: 'fa-person-shelter' }
-    ];
+        const AuditorDashboard = () => {
+            const [logs, setLogs] = useState([]);
+            const [academyStatus, setAcademyStatus] = useState(false);
 
-    const handleDocClick = (id) => {
-        if (!readDocs.includes(id)) {
-            const updated = [...readDocs, id];
-            setReadDocs(updated);
-            localStorage.setItem('ntg_academy_read', JSON.stringify(updated));
-        }
-        alert("Ανοίγει το έγγραφο για μελέτη. Η πρόοδος καταγράφηκε.");
-    };
+            useEffect(() => {
+                const syncData = () => {
+                    const systemLogs = JSON.parse(localStorage.getItem('ntg_M10_logs') || '[]');
+                    const m8Ready = localStorage.getItem('ntg_M8_ready') === 'true';
+                    setLogs(systemLogs.reverse()); // Τα τελευταία νέα πάνω-πάνω
+                    setAcademyStatus(m8Ready);
+                };
+                syncData();
+                const interval = setInterval(syncData, 2000);
+                return () => clearInterval(interval);
+            }, []);
 
-    return (
-        <div className="min-h-screen p-6 animate-fade bg-slate-950">
-            <div className="flex justify-between items-center mb-8">
-                <a href="index.html" className="text-[10px] underline opacity-50 text-emerald-400 font-black tracking-widest">← BACK TO HUB</a>
-                <span className="text-[9px] text-emerald-500 font-black uppercase italic tracking-widest">ALEXANDROUPOLIS FSRU</span>
-            </div>
+            const triggerEmergencyLockdown = () => {
+                if(confirm("ACTIVATE GLOBAL LOCKDOWN? ALL DIVISIONS WILL BE DISABLED.")) {
+                    localStorage.setItem('ntg_M8_ready', 'false');
+                    localStorage.setItem('ntg_M10_logs', JSON.stringify([{
+                        ts: new Date().toLocaleTimeString(),
+                        event: "GLOBAL EMERGENCY LOCKDOWN ACTIVATED",
+                        division: "M10_AUDITOR"
+                    }, ...logs]));
+                }
+            };
 
-            <h1 className="text-emerald-500 text-lg uppercase mb-8 text-center italic tracking-tighter">M8: PROJECT ACADEMY</h1>
-
-            {/* PROGRESS TRACKER */}
-            <div className="glass p-6 rounded-[2.5rem] border-emerald-500/20 mb-8 text-center shadow-2xl relative overflow-hidden">
-                <p className="text-[8px] uppercase text-slate-500 mb-4 tracking-widest">Study Progress Checklist</p>
-                <div className="w-full bg-slate-900 h-4 rounded-full overflow-hidden mb-4 border border-white/5">
-                    <div style={{width: `${progress}%`}} className="h-full bg-gradient-to-r from-emerald-600 to-emerald-400 transition-all duration-1000"></div>
-                </div>
-                <p className="text-4xl font-black text-white">{progress}<span className="text-sm opacity-50">%</span></p>
-                {progress === 100 && <p className="text-[8px] text-emerald-400 mt-2 animate-bounce uppercase tracking-widest italic">Mission Ready: FSRU Deployment</p>}
-            </div>
-
-            {/* STUDY DEPOT (DYNAMICALY UPDATING) */}
-            <div className="space-y-4 mb-10">
-                <p className="text-[9px] text-emerald-500 uppercase tracking-widest ml-2 font-black italic">Study Depot: Required Reading</p>
-                {docs.map(doc => (
-                    <div key={doc.id} onClick={() => handleDocClick(doc.id)} 
-                         className={`glass p-5 rounded-3xl flex justify-between items-center border-l-4 transition-all active:scale-95 cursor-pointer ${readDocs.includes(doc.id) ? 'border-emerald-500 bg-emerald-500/5' : 'border-slate-700 opacity-70'}`}>
-                        <div className="flex items-center gap-4">
-                            <i className={`fa-solid ${doc.icon} ${readDocs.includes(doc.id) ? 'text-emerald-500' : 'text-slate-500'} text-lg`}></i>
-                            <div>
-                                <p className="text-[11px] text-white uppercase font-black italic">{doc.name}</p>
-                                <p className="text-[8px] text-slate-500 italic mt-0.5">{doc.desc}</p>
-                            </div>
+            return (
+                <div className="min-h-screen p-6 bg-slate-950">
+                    <header className="glass p-6 rounded-[2.5rem] mb-8 border-l-4 border-red-600 flex justify-between items-center">
+                        <div>
+                            <h1 className="text-red-500 font-black uppercase text-lg tracking-tighter">M10: Forensic Auditor</h1>
+                            <p className="text-[8px] font-black opacity-50 uppercase tracking-[0.3em]">Integrity Hub V6.0</p>
                         </div>
-                        {readDocs.includes(doc.id) ? <i className="fa-solid fa-circle-check text-emerald-500"></i> : <i className="fa-solid fa-file-pdf text-slate-700"></i>}
+                        <a href="index.html" className="p-4 glass rounded-2xl"><i className="fa-solid fa-house"></i></a>
+                    </header>
+
+                    {/* System Integrity Status */}
+                    <div className="grid grid-cols-1 gap-4 mb-8 text-center">
+                        <div className={`glass p-6 rounded-[2.5rem] border ${academyStatus ? 'border-emerald-500 text-emerald-500' : 'border-red-500 text-red-500'}`}>
+                            <p className="text-[10px] font-black uppercase opacity-60 mb-1">Academy Clearance Status</p>
+                            <h2 className="text-2xl font-black">{academyStatus ? "AUTHORIZED" : "LOCKED"}</h2>
+                        </div>
                     </div>
-                ))}
-            </div>
 
-            {/* QUICK ACTIONS */}
-            <button onClick={() => {setReadDocs([]); localStorage.removeItem('ntg_academy_read');}} 
-                    className="w-full p-4 border border-dashed border-slate-800 rounded-2xl text-[7px] text-slate-600 uppercase tracking-widest italic">
-                Reset Progress Data
-            </button>
+                    {/* Forensic Telemetry Feed */}
+                    <div className="glass p-6 rounded-[3rem] border-l-4 border-blue-500 mb-8 overflow-hidden">
+                        <h4 className="text-[10px] font-black uppercase text-blue-500 mb-4 tracking-widest italic">
+                            <i className="fa-solid fa-microchip mr-2"></i> Forensic Telemetry Feed
+                        </h4>
+                        <div className="log-terminal h-64 overflow-y-auto p-4 rounded-2xl text-[9px] space-y-2">
+                            {logs.length > 0 ? logs.map((log, i) => (
+                                <div key={i} className="border-b border-white/5 pb-1 opacity-80">
+                                    <span className="text-blue-500">[{log.ts}]</span> <span className="text-white uppercase font-bold">{log.division}:</span> {log.event}
+                                </div>
+                            )) : <p className="opacity-30 italic">Awaiting telemetry pulses...</p>}
+                        </div>
+                    </div>
 
-            <p className="text-[7px] text-emerald-900/60 text-center mt-12 uppercase italic tracking-widest">
-                System: NauticalOS v3.54 | Project: FSRU Alexandroupolis
-            </p>
-        </div>
-    );
-};
-ReactDOM.createRoot(document.getElementById('root')).render(<AcademyApp />);
-</script></body></html>
+                    {/* Emergency Controls */}
+                    <button onClick={triggerEmergencyLockdown} className="h-20 w-full bg-red-600/10 border-2 border-red-600 text-red-500 rounded-[2rem] font-black uppercase italic tracking-widest active:scale-95 transition-all">
+                        <i className="fa-solid fa-skull-crossbones mr-2"></i> Activate Emergency Kill-Switch
+                    </button>
+                </div>
+            );
+        };
+        ReactDOM.createRoot(document.getElementById('root')).render(<AuditorDashboard />);
+    </script>
+</body>
+</html>

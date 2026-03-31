@@ -1,7 +1,6 @@
 <!DOCTYPE html><html lang="el"><head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>M2: Compliance Shield v5.66 (DYNAMIC INTERLOCK)</title>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>M2: Safety Sync Hub | NauticalOS Central</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -9,126 +8,81 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');
-        body { background: #020617; color: white; font-family: 'Orbitron', sans-serif; font-style: italic; font-weight: bold; overflow-x: hidden; }
-        .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
-        .fat-finger-button { height: 80px; font-weight: 900; text-transform: uppercase; border-radius: 1.5rem; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.3s; }
-        .matrix-blink { animation: blink 1s infinite; }
-        @keyframes blink { 0%, 100% { opacity: 1; box-shadow: 0 0 20px rgba(16, 185, 129, 0.5); } 50% { opacity: 0.7; box-shadow: none; } }
+        body { background: #020617; color: white; font-family: 'Orbitron', sans-serif; font-style: italic; }
+        .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .status-pulse { animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
     </style></head><body>
     <div id="root"></div>
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        const SafetyAppV566 = () => {
-            const [isAcademyReady, setIsAcademyReady] = useState(false);
-            const [view, setView] = useState('WATCHLIST');
-            const [activeVessel, setActiveVessel] = useState(null);
-            
-            // DYNAMIC STATES [V5.66 Update]
-            const [photos, setPhotos] = useState([]);
-            const [complianceChecks, setComplianceChecks] = useState({ fireWatch: false, gasFree: false });
+        const SafetySyncHub = () => {
+            const [syncStatus, setSyncStatus] = useState('CONNECTING');
+            const [recentVisits, setRecentVisits] = useState([]);
 
-            // KNOWLEDGE LOCK CHECK
             useEffect(() => {
-                const checkClearance = () => {
-                    const ready = localStorage.getItem('ntg_M8_ready') === 'true';
-                    setIsAcademyReady(ready);
-                };
-                checkClearance();
-                const interval = setInterval(checkClearance, 2000);
-                return () => clearInterval(interval);
+                // Προσομοίωση σύνδεσης με τη Database (Supabase)
+                setTimeout(() => {
+                    setSyncStatus('LIVE_STREAMING');
+                    // Εδώ στο μέλλον θα τραβάμε τα πραγματικά δεδομένα από το νέο App
+                    const mockData = JSON.parse(localStorage.getItem('ntg_M2_logs') || '[]');
+                    setRecentVisits(mockData.filter(l => l.action === 'SHIFT_SIGNED'));
+                }, 1500);
             }, []);
 
-            // [V5.66] Evidence Lock Logic: 2 Photos + All Checks
-            const canSignLog = photos.length >= 2 && complianceChecks.fireWatch && complianceChecks.gasFree;
-
-            const sepeVessels = [
-                { id: 'SEPE-01', name: 'FELIX', imo: '9464182', type: 'LNG_CONV', secure: true },
-                { id: 'SEPE-02', name: 'BADJI MOKHTAR III', imo: '9827889', type: 'LNG_CONV', secure: true },
-                { id: 'SEPE-03', name: 'ΑΡΙΑΔΝΗ', imo: '9135262', type: 'STANDARD', secure: false },
-                { id: 'SEPE-04', name: 'RIGEL III', imo: '7807744', type: 'STANDARD', secure: false }
-            ];
-
-            const handleVesselSelect = (v) => {
-                if (v.secure && !isAcademyReady) {
-                    alert("M8 ACADEMY CLEARANCE REQUIRED FOR LNG OPERATIONS");
-                    return;
-                }
-                setActiveVessel(v);
-                setView('INSPECTION');
-            };
-
-            const signLog = () => {
-                if (!canSignLog) return;
-                alert("Shift Locked & Signed Securely! [M10 Audit Pulse Activated]");
-                // Telemetry.log() would go here
-                setView('WATCHLIST');
-                setPhotos([]);
-                setComplianceChecks({ fireWatch: false, gasFree: false });
-            };
-
-            if (view === 'WATCHLIST') return (
-                <div className="min-h-screen p-6 bg-slate-950">
-                    <div className="flex justify-between items-center mb-8">
-                        <h1 className="text-blue-500 text-lg uppercase font-black tracking-tighter">M2: Compliance Shield</h1>
-                        <a href="m8_academy.html" className="text-[9px] bg-blue-900/30 px-4 py-2 rounded-xl border border-blue-500/30 text-blue-400 font-black uppercase tracking-widest">M8 Academy</a>
-                    </div>
-                    {!isAcademyReady && (
-                        <div className="glass p-4 rounded-2xl mb-8 border-red-600/30 text-center">
-                            <p className="text-red-500 text-[10px] font-black uppercase tracking-widest italic animate-pulse">Academy Clearance Required</p>
-                        </div>
-                    )}
-                    <div className="space-y-4">
-                        {sepeVessels.map(v => (
-                            <div key={v.id} onClick={() => handleVesselSelect(v)} 
-                                 className={`glass p-6 rounded-[2.5rem] border-l-4 ${v.secure && !isAcademyReady ? 'opacity-40 border-red-600 grayscale' : 'border-blue-600'} flex justify-between items-center transition-all active:scale-95 cursor-pointer`}>
-                                <div>
-                                    <h3 className="text-sm font-black uppercase tracking-tighter">{v.name}</h3>
-                                    <p className="text-[9px] opacity-50 uppercase tracking-widest">IMO: {v.imo}</p>
-                                </div>
-                                {v.secure && !isAcademyReady ? <i className="fa-solid fa-lock text-red-600"></i> : <i className="fa-solid fa-chevron-right opacity-30"></i>}
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            );
-
             return (
-                <div className="min-h-screen p-6 bg-slate-950">
-                    <button onClick={() => setView('WATCHLIST')} className="text-[10px] underline text-blue-500 mb-6 uppercase tracking-widest">← Exit Inspection</button>
-                    
-                    <div className="glass p-8 rounded-[3rem] text-center mb-10 border-l-4 border-emerald-500">
-                        <h2 className="text-2xl font-black uppercase italic mb-1 tracking-tighter">{activeVessel.name}</h2>
-                        <p className="text-[9px] text-emerald-500 font-black uppercase tracking-widest">Shift Authorized | Forensic Ready</p>
-                    </div>
-
-                    <div className="glass p-8 rounded-[3rem] border-l-4 border-orange-500 mb-40">
-                        <h4 className="text-[10px] font-black uppercase mb-6 tracking-widest text-orange-500">P.D. 70/1990 Compliance Tasks</h4>
-                        <div className="space-y-6">
-                            <label className="flex items-center gap-5 cursor-pointer group">
-                                <input type="checkbox" checked={complianceChecks.fireWatch} onChange={(e) => setComplianceChecks({...complianceChecks, fireWatch: e.target.checked})} className="w-6 h-6 rounded accent-orange-600" />
-                                <span className={`text-[11px] uppercase font-black tracking-wider transition-all ${complianceChecks.fireWatch ? 'text-white' : 'text-slate-500'}`}>Fire Watch Established</span>
-                            </label>
-                            <label className="flex items-center gap-5 cursor-pointer group">
-                                <input type="checkbox" checked={complianceChecks.gasFree} onChange={(e) => setComplianceChecks({...complianceChecks, gasFree: e.target.checked})} className="w-6 h-6 rounded accent-orange-600" />
-                                <span className={`text-[11px] uppercase font-black tracking-wider transition-all ${complianceChecks.gasFree ? 'text-white' : 'text-slate-500'}`}>Gas-Free Verified</span>
-                            </label>
+                <div className="min-h-screen p-6">
+                    <header className="flex justify-between items-center mb-10 glass p-6 rounded-[2.5rem] border-l-4 border-blue-500">
+                        <div>
+                            <h1 className="text-sm font-black uppercase text-blue-500 tracking-tighter">M2: Safety Sync Hub</h1>
+                            <p className="text-[7px] opacity-40 font-bold uppercase tracking-widest italic text-blue-300">Central Monitoring Station</p>
                         </div>
-                    </div>
+                        <div className="flex items-center gap-2">
+                            <span className={`w-2 h-2 rounded-full ${syncStatus === 'LIVE_STREAMING' ? 'bg-emerald-500 status-pulse' : 'bg-red-500'}`}></span>
+                            <span className="text-[8px] font-black uppercase opacity-60">{syncStatus}</span>
+                        </div>
+                    </header>
 
-                    {/* Fixed Fat-Finger Controls */}
-                    <div className="fixed bottom-6 left-6 right-6 grid grid-cols-1 gap-4 glass p-4 rounded-[2.5rem] border-t border-white/10 z-50">
-                        <button onClick={() => setPhotos([...photos, Date.now()])} className="fat-finger-button w-full bg-slate-800 border border-slate-700 text-white">
-                            <i className="fa-solid fa-camera text-xl"></i> Evidence Captured ({photos.length}/2)
-                        </button>
-                        <button disabled={!canSignLog} onClick={signLog} 
-                                className={`fat-finger-button w-full transition-all duration-300 ${canSignLog ? 'bg-emerald-600 matrix-blink text-white shadow-lg' : 'bg-slate-900 text-slate-600 opacity-50'}`}>
-                            <i className="fa-solid fa-file-signature text-xl"></i> 
-                            {canSignLog ? "Sign Daily Log [UNLOCKED]" : "Locked: Missing Evidence"}
-                        </button>
+                    <div className="grid grid-cols-1 gap-6">
+                        {/* Summary Card */}
+                        <div className="glass p-8 rounded-[3rem] border-l-4 border-emerald-500">
+                            <h3 className="text-[10px] font-black uppercase text-emerald-500 mb-4 italic tracking-widest">Σύνοψη Σήμερα (V2 App Feed)</h3>
+                            <div className="flex justify-between items-center">
+                                <div>
+                                    <p className="text-3xl font-black italic">{recentVisits.length}</p>
+                                    <p className="text-[8px] opacity-40 uppercase font-black tracking-tighter">Ολοκληρωμένα Πλοία</p>
+                                </div>
+                                <i className="fa-solid fa-ship text-3xl opacity-10"></i>
+                            </div>
+                        </div>
+
+                        {/* Visit Log Feed */}
+                        <div className="glass p-6 rounded-[2.5rem]">
+                            <h4 className="text-[10px] font-black uppercase mb-6 opacity-40 italic">Πρόσφατες Επισκέψεις</h4>
+                            <div className="space-y-4">
+                                {recentVisits.length > 0 ? recentVisits.map((visit, i) => (
+                                    <div key={i} className="flex justify-between items-center border-b border-white/5 pb-3">
+                                        <div>
+                                            <p className="text-[11px] font-black uppercase italic">{visit.details.split('.')[0]}</p>
+                                            <p className="text-[8px] opacity-40">{new Date(visit.ts).toLocaleTimeString()}</p>
+                                        </div>
+                                        <span className="text-[7px] bg-emerald-500/20 text-emerald-500 px-2 py-1 rounded font-black uppercase tracking-widest">Verified</span>
+                                    </div>
+                                )) : (
+                                    <p className="text-[9px] italic opacity-30 text-center py-10 uppercase font-black">Αναμονή για δεδομένα από το Safety V2...</p>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Commercial Redirect */}
+                        <a href="m14_commercial.html" className="h-16 glass rounded-2xl flex items-center justify-center gap-3 border-2 border-dashed border-blue-500/30 active:scale-95">
+                            <i className="fa-solid fa-file-invoice-dollar text-blue-500"></i>
+                            <span className="text-[10px] font-black uppercase italic">Μεταφορά στη Λίστα Πελατών (M14)</span>
+                        </a>
                     </div>
                 </div>
             );
         };
-        ReactDOM.createRoot(document.getElementById('root')).render(<SafetyAppV566 />);
+        ReactDOM.createRoot(document.getElementById('root')).render(<SafetySyncHub />);
     </script></body></html>

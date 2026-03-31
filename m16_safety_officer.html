@@ -1,8 +1,6 @@
-<!DOCTYPE html>
-<html lang="el">
-<head>
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>M16: Safety Officer (Ν. 3850/2010)</title>
+<!DOCTYPE html><html lang="el"><head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>M16: Safety Officer | Βιβλίο Υποδείξεων</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -10,58 +8,89 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');
-        body { background: #0f172a; color: white; font-family: 'Orbitron', sans-serif; }
-        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
-        .status-pill { padding: 4px 12px; border-radius: 99px; font-size: 10px; font-weight: 900; text-transform: uppercase; }
-    </style>
-</head>
-<body>
+        body { background: #020617; color: white; font-family: 'Orbitron', sans-serif; font-style: italic; }
+        .log-entry { border-left: 4px solid #eab308; background: rgba(255, 255, 255, 0.03); }
+        .high-risk { border-left-color: #ef4444; background: rgba(239, 68, 68, 0.05); }
+        .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
+    </style></head><body>
     <div id="root"></div>
     <script type="text/babel">
-        const { useState } = React;
+        const { useState, useEffect } = React;
 
-        const SafetyOfficerApp = () => {
-            const [logs] = useState([
-                { id: 1, date: '30/03/2026', subject: 'Έλεγχος Πυροσβεστήρων', status: 'COMPLETED' },
-                { id: 2, date: '01/04/2026', subject: 'Εκπαίδευση Χρήσης ΜΑΠ', status: 'PENDING' }
-            ]);
+        const SafetyLogbook = () => {
+            const [entries, setEntries] = useState([]);
+            const [newSuggestion, setNewSuggestion] = useState('');
+            const [riskLevel, setRiskLevel] = useState('LOW');
+
+            useEffect(() => {
+                const saved = JSON.parse(localStorage.getItem('ntg_M16_logbook') || '[]');
+                setEntries(saved);
+            }, []);
+
+            const saveEntry = () => {
+                if(!newSuggestion) return;
+                const entry = {
+                    id: Date.now(),
+                    text: newSuggestion,
+                    risk: riskLevel,
+                    ts: new Date().toLocaleString('el-GR'),
+                    officer: "Technical Safety Consultant"
+                };
+                const updated = [entry, ...entries];
+                setEntries(updated);
+                localStorage.setItem('ntg_M16_logbook', JSON.stringify(updated));
+                setNewSuggestion('');
+                
+                // M10 Silent Audit
+                const logs = JSON.parse(localStorage.getItem('ntg_M10_audit') || '[]');
+                logs.push({ action: 'SAFETY_ENTRY_CREATED', entryId: entry.id, risk: riskLevel });
+                localStorage.setItem('ntg_M10_audit', JSON.stringify(logs));
+            };
 
             return (
-                <div className="min-h-screen p-6 flex flex-col">
-                    <header className="flex justify-between items-center mb-8 glass p-6 rounded-[2rem] border-l-4 border-yellow-500">
+                <div className="min-h-screen p-4 pb-20">
+                    <header className="flex justify-between items-center mb-8 glass p-6 rounded-[2rem] border-b-4 border-yellow-500">
                         <div>
-                            <h1 className="text-lg font-black uppercase tracking-tighter text-yellow-500">M16: Safety Officer</h1>
-                            <p className="text-[8px] opacity-60 font-bold uppercase tracking-widest">Compliance Law 3850/2010</p>
+                            <h1 className="text-xs font-black uppercase text-yellow-500 tracking-widest">M16: Safety Architect</h1>
+                            <p className="text-[10px] font-bold opacity-60 italic">Βιβλίο Υποδείξεων ΤΑ (Ν.3850/10)</p>
                         </div>
-                        <a href="index.html" className="p-4 glass rounded-2xl"><i className="fa-solid fa-house"></i></a>
+                        <i className="fa-solid fa-user-shield text-xl text-yellow-500"></i>
                     </header>
 
-                    <div className="grid grid-cols-1 gap-4 mb-8">
-                        <div className="glass p-6 rounded-[2.5rem]">
-                            <h2 className="text-[10px] font-black uppercase opacity-50 mb-4 tracking-widest text-yellow-500">Βιβλίο Υποδείξεων</h2>
-                            <div className="space-y-4">
-                                {logs.map(log => (
-                                    <div key={log.id} className="flex justify-between items-center border-b border-white/5 pb-3">
-                                        <div>
-                                            <p className="text-xs font-bold">{log.subject}</p>
-                                            <p className="text-[9px] opacity-40">{log.date}</p>
-                                        </div>
-                                        <span className={`status-pill ${log.status === 'COMPLETED' ? 'bg-emerald-500/20 text-emerald-500' : 'bg-yellow-500/20 text-yellow-500'}`}>
-                                            {log.status}
-                                        </span>
-                                    </div>
-                                ))}
-                            </div>
+                    {/* New Entry Form */}
+                    <div className="glass p-6 rounded-[2.5rem] mb-8">
+                        <textarea 
+                            className="w-full bg-transparent border border-white/10 rounded-2xl p-4 text-xs italic focus:outline-none focus:border-yellow-500"
+                            placeholder="Γράψτε τη νέα υπόδειξη ασφαλείας..."
+                            rows="4"
+                            value={newSuggestion}
+                            onChange={(e) => setNewSuggestion(e.target.value)}
+                        ></textarea>
+                        <div className="flex gap-2 mt-4">
+                            <button onClick={() => setRiskLevel('LOW')} className={`flex-1 py-2 rounded-xl text-[8px] font-black ${riskLevel==='LOW' ? 'bg-emerald-500' : 'bg-slate-800'}`}>NORMAL</button>
+                            <button onClick={() => setRiskLevel('HIGH')} className={`flex-1 py-2 rounded-xl text-[8px] font-black ${riskLevel==='HIGH' ? 'bg-red-500 animate-pulse' : 'bg-slate-800'}`}>URGENT</button>
                         </div>
+                        <button onClick={saveEntry} className="w-full mt-4 bg-yellow-500 py-4 rounded-2xl text-black font-black uppercase text-[10px] flex items-center justify-center gap-2">
+                            <i className="fa-solid fa-pen-nib"></i> Καταχωρηση στο Βιβλιο
+                        </button>
                     </div>
 
-                    <button className="h-16 w-full bg-yellow-600 rounded-[1.5rem] font-black uppercase italic shadow-lg shadow-yellow-900/40 active:scale-95 transition-all">
-                        <i className="fa-solid fa-file-signature mr-2"></i> Νέα Καταχώρηση
-                    </button>
+                    {/* History Feed */}
+                    <div className="space-y-4">
+                        <h3 className="text-[9px] font-black opacity-40 uppercase ml-4">Ιστορικο Υποδειξεων</h3>
+                        {entries.map(e => (
+                            <div key={e.id} className={`log-entry p-5 rounded-2xl ${e.risk === 'HIGH' ? 'high-risk' : ''}`}>
+                                <div className="flex justify-between items-start mb-2">
+                                    <span className="text-[7px] font-black opacity-50 uppercase tracking-tighter">{e.ts}</span>
+                                    <span className={`text-[6px] px-2 py-0.5 rounded font-black ${e.risk === 'HIGH' ? 'bg-red-500' : 'bg-emerald-500'}`}>{e.risk}</span>
+                                </div>
+                                <p className="text-[11px] leading-relaxed italic">{e.text}</p>
+                                <p className="text-[7px] mt-3 font-bold text-yellow-500 uppercase tracking-widest">Signed: {e.officer}</p>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             );
         };
-        ReactDOM.createRoot(document.getElementById('root')).render(<SafetyOfficerApp />);
-    </script>
-</body>
-</html>
+        ReactDOM.createRoot(document.getElementById('root')).render(<SafetyLogbook />);
+    </script></body></html>

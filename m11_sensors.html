@@ -1,8 +1,6 @@
-<!DOCTYPE html>
-<html lang="el">
-<head>
+<!DOCTYPE html><html lang="el"><head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>M11: Sensor Hub & Fleet Commander V6.2</title>
+    <title>M11: Sensor Hub | NauticalOS</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -11,102 +9,70 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');
         body { background: #020617; color: white; font-family: 'Orbitron', sans-serif; font-style: italic; }
-        .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.05); }
-        .sensor-pulse { animation: pulse-blue 2s infinite; }
-        @keyframes pulse-blue { 0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.4); border-color: rgba(59, 130, 246, 0.5); } 50% { box-shadow: 0 0 5px rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.1); } }
-        .priority-blink { border-left: 4px solid #ef4444; animation: blink-red 1.5s infinite; }
-        @keyframes blink-red { 0%, 100% { border-left-color: #ef4444; } 50% { border-left-color: transparent; } }
-    </style>
-</head>
-<body>
+        .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .gauge-ring { width: 120px; height: 120px; border-radius: 50%; border: 8px solid #1e293b; border-top-color: #06b6d4; display: flex; align-items: center; justify-content: center; position: relative; }
+        .danger-blink { animation: danger 0.8s infinite alternate; }
+        @keyframes danger { from { background: rgba(239, 68, 68, 0.1); border-color: #ef4444; } to { background: rgba(239, 68, 68, 0.4); border-color: transparent; } }
+    </style></head><body>
     <div id="root"></div>
     <script type="text/babel">
         const { useState, useEffect } = React;
 
         const SensorHub = () => {
-            const [vessels, setVessels] = useState([]);
-            const [loading, setLoading] = useState(true);
+            const [temp, setTemp] = useState(24.5);
+            const [o2, setO2] = useState(20.9);
+            const [isDanger, setIsDanger] = useState(false);
 
             useEffect(() => {
-                // Διαβάζει το JSON που παράγει ο Ghost Server
-                const fetchData = () => {
-                    fetch('data/radar_feed.json?t=' + Date.now()) // cache busting
-                        .then(res => res.json())
-                        .then(data => {
-                            setVessels(data);
-                            setLoading(false);
-                        })
-                        .catch(err => {
-                            console.log("Waiting for M11 Ghost Server...");
-                            setLoading(false);
-                        });
-                };
-                fetchData();
-                const interval = setInterval(fetchData, 30000); // Ανανέωση κάθε 30 δευτ.
+                const interval = setInterval(() => {
+                    // Προσομοίωση αλλαγής αισθητήρων
+                    const newTemp = (24 + Math.random() * 2).toFixed(1);
+                    setTemp(newTemp);
+                    if (newTemp > 45 || o2 < 20.5) setIsDanger(true);
+                    else setIsDanger(false);
+                }, 2000);
                 return () => clearInterval(interval);
-            }, []);
+            }, [o2]);
 
             return (
-                <div className="min-h-screen p-6 bg-slate-950 flex flex-col">
-                    <header className="glass p-6 rounded-[2.5rem] mb-8 border-blue-500/20 flex justify-between items-center">
+                <div className={`min-h-screen p-6 transition-colors duration-500 ${isDanger ? 'bg-red-950/50' : 'bg-slate-950'}`}>
+                    <header className="flex justify-between items-center mb-10 glass p-6 rounded-[2.5rem] border-l-4 border-cyan-500">
                         <div>
-                            <h1 className="text-blue-500 font-black uppercase text-lg tracking-tighter italic">M11: Sensor Hub</h1>
-                            <p className="text-[8px] font-bold uppercase tracking-[0.3em] opacity-50">Ghost Server Active</p>
+                            <h1 className="text-sm font-black uppercase text-cyan-500 tracking-tighter">M11: Sensor Hub</h1>
+                            <p className="text-[7px] opacity-40 font-bold uppercase tracking-widest italic">Hardware Telemetry Layer</p>
                         </div>
-                        <a href="index.html" className="p-4 glass rounded-2xl text-blue-400"><i className="fa-solid fa-house"></i></a>
+                        <i className="fa-solid fa-microchip text-2xl text-cyan-900/50"></i>
                     </header>
 
-                    {/* Hardware Pulse */}
-                    <div className="grid grid-cols-2 gap-4 mb-8">
-                        <div className="glass p-5 rounded-[2rem] sensor-pulse text-center">
-                            <p className="text-[7px] opacity-40 uppercase font-black">Pressure</p>
-                            <h3 className="text-xl font-black italic">1.2 Bar</h3>
+                    <div className="grid grid-cols-1 gap-6">
+                        {/* Temperature Gauge */}
+                        <div className={`glass p-8 rounded-[3rem] flex flex-col items-center gap-4 ${temp > 40 ? 'border-2 border-red-500 danger-blink' : ''}`}>
+                            <div className="gauge-ring border-t-orange-500">
+                                <span className="text-2xl font-black">{temp}°C</span>
+                            </div>
+                            <p className="text-[9px] font-black uppercase tracking-widest opacity-40">Ambient Temperature</p>
                         </div>
-                        <div className="glass p-5 rounded-[2rem] sensor-pulse text-center">
-                            <p className="text-[7px] opacity-40 uppercase font-black">Temp</p>
-                            <h3 className="text-xl font-black italic">42°C</h3>
+
+                        {/* Oxygen Level */}
+                        <div className="glass p-8 rounded-[3rem] flex flex-col items-center gap-4">
+                            <div className="gauge-ring border-t-cyan-500">
+                                <span className="text-2xl font-black">{o2}%</span>
+                            </div>
+                            <p className="text-[9px] font-black uppercase tracking-widest opacity-40">Oxygen Concentration (O2)</p>
                         </div>
+
+                        {/* Quick Action Button */}
+                        <button onClick={() => setO2(19.8)} className="h-16 glass rounded-2xl flex items-center justify-center gap-3 border border-white/5 active:scale-95">
+                            <i className="fa-solid fa-triangle-exclamation text-yellow-500"></i>
+                            <span className="text-[10px] font-black uppercase">Simulate Gas Alarm</span>
+                        </button>
                     </div>
-
-                    {/* Autonomous OSINT Feed */}
-                    <div className="flex-grow glass p-6 rounded-[3rem] border-l-4 border-orange-500 overflow-hidden">
-                        <div className="flex justify-between items-center mb-6">
-                            <h4 className="text-[10px] font-black uppercase tracking-widest text-orange-500 italic">
-                                <i className="fa-solid fa-satellite-dish mr-2 animate-pulse"></i> OSINT Fleet Commander
-                            </h4>
-                            <span className="text-[7px] bg-orange-500/10 text-orange-500 px-2 py-1 rounded font-black tracking-widest">AUTO-SYNC ON</span>
-                        </div>
-
-                        <div className="space-y-4">
-                            {loading ? (
-                                <p className="text-[10px] text-center opacity-30 animate-pulse">INITIALIZING SENSORS...</p>
-                            ) : vessels.length > 0 ? vessels.map(v => (
-                                <div key={v.utid} className={`bg-white/5 p-4 rounded-2xl border border-white/5 flex justify-between items-center ${v.status === 'PRIORITY TARGET' ? 'priority-blink' : ''}`}>
-                                    <div>
-                                        <div className="flex items-center gap-2">
-                                            <p className="text-xs font-black uppercase tracking-tight">{v.name}</p>
-                                            {v.status === 'PRIORITY TARGET' && <i className="fa-solid fa-star text-[8px] text-red-500"></i>}
-                                        </div>
-                                        <p className="text-[8px] opacity-40 uppercase font-bold">{v.company} | {v.area}</p>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className="text-[7px] text-orange-500 font-black uppercase mb-1">{v.status}</p>
-                                        <p className="text-[9px] font-black opacity-80">{v.utid}</p>
-                                    </div>
-                                </div>
-                            )) : (
-                                <p className="text-[10px] text-center opacity-30 italic">No targets locked. Radar scanning...</p>
-                            )}
-                        </div>
-                    </div>
-
-                    <footer className="mt-8 text-center opacity-20">
-                        <p className="text-[8px] font-black uppercase tracking-[0.5em]">M10 Supreme Auditor Verified | Piraeus 2026</p>
+                    
+                    <footer className="fixed bottom-6 left-0 w-full text-center">
+                        <p className="text-[7px] opacity-20 uppercase font-black tracking-[0.5em]">Isolated Hardware Feed • V2.1</p>
                     </footer>
                 </div>
             );
         };
         ReactDOM.createRoot(document.getElementById('root')).render(<SensorHub />);
-    </script>
-</body>
-</html>
+    </script></body></html>
